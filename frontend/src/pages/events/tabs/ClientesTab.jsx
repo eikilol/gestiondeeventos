@@ -65,9 +65,18 @@ export default function ClientesTab({ evento }) {
           <h2 className="text-2xl font-bold font-display text-text-1 tracking-tight">Clientes</h2>
           <p className="text-sm text-text-2 mt-1">Personas que han reservado o comprado boletas para este evento.</p>
         </div>
-        <button onClick={() => setImportOpen(true)} className="btn-secondary btn-sm">
-          <UploadIcon className="w-3.5 h-3.5" /> Importar CSV
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => exportarCSV(clientes, evento)}
+            disabled={clientes.length === 0}
+            className="btn-secondary btn-sm"
+            title="Descarga un CSV con todos los clientes (respeta filtros activos)">
+            <DownloadIcon className="w-3.5 h-3.5" /> Exportar CSV
+          </button>
+          <button onClick={() => setImportOpen(true)} className="btn-secondary btn-sm">
+            <UploadIcon className="w-3.5 h-3.5" /> Importar CSV
+          </button>
+        </div>
       </div>
 
       {/* Stats compactos */}
@@ -458,6 +467,46 @@ function downloadTemplate() {
   a.href = url; a.download = 'plantilla-asistentes.csv';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function exportarCSV(clientes, evento) {
+  if (!clientes?.length) return;
+
+  /* Headers + filas. Quote-escape básico (envolvemos siempre en comillas, escapamos las internas). */
+  const headers = ['nombre', 'email', 'codigo', 'estado', 'tipo', 'precio_pagado', 'created_at', 'checked_in_at'];
+  const escape = (v) => {
+    if (v == null) return '';
+    const s = String(v).replace(/"/g, '""');
+    return `"${s}"`;
+  };
+  const rows = clientes.map(c => [
+    c.usuario?.nombre || c.guest_nombre || '',
+    c.usuario?.email  || c.guest_email  || '',
+    c.codigo,
+    c.estado,
+    c.tipo?.nombre || '',
+    c.precio_pagado ?? '',
+    c.created_at,
+    c.checked_in_at || '',
+  ].map(escape).join(','));
+
+  /* BOM para que Excel respete UTF-8 */
+  const csv = '﻿' + headers.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+
+  const slug = (evento?.slug || 'evento').replace(/[^a-z0-9-]/gi, '-');
+  const fecha = new Date().toISOString().slice(0, 10);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `clientes-${slug}-${fecha}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+
+function DownloadIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 11l5 5m0 0l5-5m-5 5V4" /></svg>;
 }
 
 function UploadIcon({ className }) {

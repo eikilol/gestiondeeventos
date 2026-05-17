@@ -189,7 +189,7 @@ function GaleriaEventoPreview({ data, evento, isEditor }) {
 }
 
 /* TICKETS */
-function TicketsPreview({ data, evento, onReservar, isEditor }) {
+function TicketsPreview({ data, evento, onReservar, onWaitlist, isEditor }) {
   const tickets = (evento.tipos_ticket || []).filter(t => t.activo);
   if (tickets.length === 0) {
     if (!isEditor) return null;
@@ -233,13 +233,22 @@ function TicketsPreview({ data, evento, onReservar, isEditor }) {
                     </div>
                   )}
               </div>
-              <button
-                disabled={agotado || ventaCerr}
-                onClick={onReservar ? () => onReservar(t) : undefined}
-                className="px-4 py-2 rounded-full text-xs font-semibold bg-text-1 text-bg hover:bg-white transition-all disabled:bg-surface-3 disabled:text-text-3 disabled:cursor-not-allowed"
-              >
-                {agotado ? 'Agotado' : ventaCerr ? 'Cerrado' : isFree ? 'Reservar' : 'Comprar'}
-              </button>
+              {agotado && !ventaCerr && onWaitlist ? (
+                <button
+                  onClick={() => onWaitlist(t)}
+                  className="px-4 py-2 rounded-full text-xs font-semibold border border-warning/40 bg-warning/10 text-warning hover:bg-warning/20 transition-all"
+                >
+                  Anotarme en lista
+                </button>
+              ) : (
+                <button
+                  disabled={agotado || ventaCerr}
+                  onClick={onReservar ? () => onReservar(t) : undefined}
+                  className="px-4 py-2 rounded-full text-xs font-semibold bg-text-1 text-bg hover:bg-white transition-all disabled:bg-surface-3 disabled:text-text-3 disabled:cursor-not-allowed"
+                >
+                  {agotado ? 'Agotado' : ventaCerr ? 'Cerrado' : isFree ? 'Reservar' : 'Comprar'}
+                </button>
+              )}
             </div>
           </div>
         );

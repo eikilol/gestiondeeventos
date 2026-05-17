@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { eventosApi } from '../../api/eventos.js';
 import { pagosApi }   from '../../api/pagos.js';
 import { BLOCKS } from '../events/editor/blocks.jsx';
+import { BrandingProvider, BrandHeader, PoweredBy } from '../../components/public/Branding.jsx';
 
 /* Página pública de un evento.
    Renderiza los bloques de page_json.pages[N].blocks dinámicamente.
@@ -17,6 +18,7 @@ export default function EventoPublicoPage() {
   const [error,   setError]   = useState('');
   const [reservaTipo, setReservaTipo] = useState(null);
   const [reservaOk,   setReservaOk]   = useState(null);
+  const [waitlistTipo, setWaitlistTipo] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -59,7 +61,13 @@ export default function EventoPublicoPage() {
   );
 
   return (
+    <BrandingProvider organizador={evento.organizador}>
     <section className="px-5 sm:px-8 py-12 max-w-3xl mx-auto">
+      {/* Brand header del organizador (si configuró logo o nombre de plataforma) */}
+      <div className="mb-8 flex justify-center">
+        <BrandHeader organizador={evento.organizador} />
+      </div>
+
       {/* Bloques */}
       <div className="space-y-8" key={activePage?.id}>
         {(activePage?.blocks || []).map(block => {
@@ -69,7 +77,7 @@ export default function EventoPublicoPage() {
           const Preview = B.Preview;
           return (
             <div key={block.id} className="animate-[fadeUp_0.4s_ease_both]">
-              <Preview data={block.data || {}} evento={evento} onReservar={setReservaTipo} />
+              <Preview data={block.data || {}} evento={evento} onReservar={setReservaTipo} onWaitlist={setWaitlistTipo} />
             </div>
           );
         })}
@@ -101,6 +109,7 @@ export default function EventoPublicoPage() {
         <Link to="/explorar" className="text-xs text-text-3 hover:text-text-1 transition-colors">
           ← Volver a explorar
         </Link>
+        <PoweredBy organizador={evento.organizador} />
       </div>
 
       {/* Modales */}
@@ -117,7 +126,93 @@ export default function EventoPublicoPage() {
       {reservaOk && (
         <ConfirmacionModal ticket={reservaOk} onClose={() => setReservaOk(null)} />
       )}
+      {waitlistTipo && (
+        <WaitlistModal
+          tipo={waitlistTipo}
+          slug={slug}
+          onClose={() => setWaitlistTipo(null)}
+        />
+      )}
     </section>
+    </BrandingProvider>
+  );
+}
+
+/* ─────────── Modal lista de espera ─────────── */
+
+function WaitlistModal({ tipo, slug, onClose }) {
+  const [form, setForm] = useState({ nombre: '', email: '', telefono: '' });
+  const [working, setWorking] = useState(false);
+  const [done, setDone] = useState(null); // { posicion }
+  const [err, setErr] = useState('');
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setWorking(true); setErr('');
+    try {
+      const { waitlistApi } = await import('../../api/waitlist.js');
+      const r = await waitlistApi.join(slug, {
+        ticket_type_id: tipo.id,
+        nombre: form.nombre, email: form.email,
+      });
+      setDone({ posicion: r.entry?.posicion });
+    } catch (e) {
+      setErr(e.response?.data?.error || e.message);
+    } finally { setWorking(false); }
+  };
+
+  return (
+    <ModalShell onClose={onClose}>
+      {done ? (
+        <div className="text-center py-3">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-warning/15 border border-warning/30 mb-5">
+            <svg className="w-7 h-7 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold font-display text-text-1 tracking-tight mb-2">¡Estás en la lista!</h2>
+          <p className="text-sm text-text-2 mb-5 leading-relaxed max-w-sm mx-auto">
+            Sos el <strong className="text-text-1">#{done.posicion}</strong> en la lista de espera de <strong className="text-text-1">{tipo.nombre}</strong>. Si se libera un cupo, el organizador te contactará por email.
+          </p>
+          <button onClick={onClose} className="px-5 py-2.5 rounded-full bg-text-1 text-bg hover:bg-white text-sm font-semibold transition-all">
+            Entendido
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={submit} className="space-y-5">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-text-3 font-semibold mb-2">Lista de espera</p>
+            <h2 className="text-2xl font-bold font-display text-text-1 tracking-tight">{tipo.nombre}</h2>
+            <p className="text-sm text-text-2 mt-2 leading-relaxed">
+              Este tipo de boleta está agotado. Anotate y te avisamos si se libera un cupo.
+            </p>
+          </div>
+          {err && <div className="px-4 py-3 rounded-2xl bg-danger/10 border border-danger/20 text-danger-light text-sm">{err}</div>}
+          <div className="field">
+            <label className="label">Nombre completo *</label>
+            <input required value={form.nombre} onChange={e => setForm(f => ({...f, nombre: e.target.value}))}
+              className="input rounded-2xl py-3 text-base" placeholder="Tu nombre" autoFocus />
+          </div>
+          <div className="field">
+            <label className="label">Email *</label>
+            <input required type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}
+              className="input rounded-2xl py-3 text-base" placeholder="tu@email.com" />
+          </div>
+          <div className="field">
+            <label className="label">Teléfono <span className="lowercase tracking-normal font-normal text-text-3">(opcional)</span></label>
+            <input value={form.telefono} onChange={e => setForm(f => ({...f, telefono: e.target.value}))}
+              className="input rounded-2xl py-3 text-base" placeholder="300 000 0000" />
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-full text-sm text-text-2 hover:text-text-1">Cancelar</button>
+            <button type="submit" disabled={working}
+              className="px-5 py-2.5 rounded-full bg-warning/90 text-bg hover:bg-warning text-sm font-semibold disabled:opacity-60 transition-all">
+              {working ? 'Anotando...' : 'Anotarme en la lista'}
+            </button>
+          </div>
+        </form>
+      )}
+    </ModalShell>
   );
 }
 

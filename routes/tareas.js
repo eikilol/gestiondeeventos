@@ -1,6 +1,36 @@
 const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
+const { notificar, notificarVarios } = require('../lib/notificar.js');
+const { otorgarPuntos, otorgarBadge } = require('../lib/gamificacion.js');
+
+/* Notifica al asignado de una tarea (usuario directo o todos los del rol). */
+async function notificarAsignacion(tarea, eventoId) {
+  try {
+    const { data: ev } = await supabase
+      .from('eventos').select('titulo').eq('id', eventoId).maybeSingle();
+    const base = {
+      tipo: 'tarea',
+      titulo: 'Nueva tarea asignada',
+      cuerpo: `"${tarea.titulo}" en ${ev?.titulo || 'un evento'}.`,
+      link: `/eventos/${eventoId}`,
+      eventoId,
+    };
+    if (tarea.asignado_user_id) {
+      await notificar({ ...base, userId: tarea.asignado_user_id });
+    } else if (tarea.asignado_rol_id) {
+      const { data: miembros } = await supabase
+        .from('event_members')
+        .select('user_id')
+        .eq('evento_id', eventoId)
+        .eq('rol_id', tarea.asignado_rol_id)
+        .eq('status', 'active');
+      await notificarVarios((miembros || []).map(m => m.user_id), base);
+    }
+  } catch (e) {
+    console.warn('[notificarAsignacion] error:', e.message);
+  }
+}
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
@@ -85,6 +115,9 @@ router.post('/:eventoId/tareas', async (req, res) => {
     if (error) return res.status(500).json({ error: error.message });
 
     await logTarea(data.id, req.user.id, 'created', { titulo: data.titulo });
+    if (data.asignado_user_id || data.asignado_rol_id) {
+      notificarAsignacion(data, eventoId);
+    }
     res.status(201).json({ tarea: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
@@ -125,12 +158,33 @@ router.patch('/:eventoId/tareas/:tareaId', async (req, res) => {
     /* Log de cambios */
     if (updates.estado && updates.estado !== actual.estado) {
       await logTarea(tareaId, req.user.id, 'estado', { de: actual.estado, a: updates.estado });
+
+      /* Gamificación: tarea pasada a 'hecho' → puntos de empleado a quien la
+         tenía asignada (o quien la marcó si era por rol). */
+      if (updates.estado === 'hecho' && actual.estado !== 'hecho') {
+        const empleadoId = data.asignado_user_id || req.user.id;
+        const { data: ev } = await supabase
+          .from('eventos').select('owner_id').eq('id', eventoId).maybeSingle();
+        if (ev?.owner_id && empleadoId !== ev.owner_id) {
+          otorgarPuntos({
+            userId: empleadoId, organizadorId: ev.owner_id, audiencia: 'empleado',
+            eventoId, accion: 'tarea_completada',
+          }).then(async () => {
+            const { count } = await supabase
+              .from('points_log').select('id', { count: 'exact', head: true })
+              .eq('user_id', empleadoId).eq('audiencia', 'empleado').eq('accion', 'tarea_completada');
+            if ((count || 0) >= 20) otorgarBadge(empleadoId, 'trabajador');
+          });
+        }
+      }
     }
     if ('asignado_user_id' in updates && updates.asignado_user_id !== actual.asignado_user_id) {
       await logTarea(tareaId, req.user.id, 'asignacion', { tipo: 'usuario', user_id: updates.asignado_user_id });
+      if (updates.asignado_user_id) notificarAsignacion(data, eventoId);
     }
     if ('asignado_rol_id' in updates && updates.asignado_rol_id !== actual.asignado_rol_id) {
       await logTarea(tareaId, req.user.id, 'asignacion', { tipo: 'rol', rol_id: updates.asignado_rol_id });
+      if (updates.asignado_rol_id && !updates.asignado_user_id) notificarAsignacion(data, eventoId);
     }
 
     res.json({ tarea: data });

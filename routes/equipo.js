@@ -1,6 +1,7 @@
 const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
+const { notificar } = require('../lib/notificar.js');
 
 /* Se monta en /eventos. Los paths internos incluyen :eventoId.
    Esto evita issues con path-to-regexp v6 al usar param en mount path. */
@@ -87,6 +88,21 @@ router.post('/:eventoId/equipo', async (req, res) => {
       if (error.code === '23505') return res.status(409).json({ error: 'Ese email ya está en el equipo.' });
       return res.status(500).json({ error: error.message });
     }
+
+    /* Si el invitado ya tiene cuenta, le notificamos in-app */
+    if (existingProfile?.id) {
+      const { data: ev } = await supabase
+        .from('eventos').select('titulo').eq('id', eventoId).maybeSingle();
+      notificar({
+        userId : existingProfile.id,
+        tipo   : 'equipo',
+        titulo : 'Te sumaron a un equipo',
+        cuerpo : `Ahora sos ${rol.nombre} en ${ev?.titulo || 'un evento'}.`,
+        link   : `/eventos/${eventoId}`,
+        eventoId,
+      });
+    }
+
     res.status(201).json({ miembro: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });

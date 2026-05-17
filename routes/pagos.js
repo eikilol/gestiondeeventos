@@ -6,10 +6,46 @@
    - DELETE /me/mercadopago                      — desconecta. */
 
 const express = require('express');
+const crypto  = require('crypto');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT, verifySupabaseJWTOptional } = require('../middleware/auth.js');
 const { signTicketQR } = require('../lib/qr.js');
 const mp = require('../lib/mercadopago.js');
+
+const MP_WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET || null;
+
+/* MP firma cada webhook con HMAC-SHA256.
+   Header `x-signature` viene tipo: ts=1234567890,v1=hexhash
+   Manifest: `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` (con punto y coma final)
+   Si MP_WEBHOOK_SECRET no está configurado, NO verificamos (modo dev).
+   En producción, configurar el secret desde el panel del webhook MP. */
+function verifyMPSignature(req) {
+  if (!MP_WEBHOOK_SECRET) return { ok: true, reason: 'no_secret_configured' };
+
+  const sigHeader = req.headers['x-signature'];
+  const requestId = req.headers['x-request-id'];
+  if (!sigHeader || !requestId) return { ok: false, reason: 'missing_headers' };
+
+  const parts = String(sigHeader).split(',').reduce((acc, part) => {
+    const [k, v] = part.split('=').map(s => s.trim());
+    if (k && v) acc[k] = v;
+    return acc;
+  }, {});
+  const ts = parts.ts;
+  const v1 = parts.v1;
+  if (!ts || !v1) return { ok: false, reason: 'malformed_signature' };
+
+  /* Ventana de tolerancia de 5 minutos contra replay */
+  const tsAge = Math.abs(Date.now() / 1000 - Number(ts));
+  if (tsAge > 300) return { ok: false, reason: 'timestamp_too_old' };
+
+  const dataId = req.body?.data?.id || req.query?.['data.id'] || req.query?.id || '';
+  const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
+  const hmac = crypto.createHmac('sha256', MP_WEBHOOK_SECRET).update(manifest).digest('hex');
+
+  if (hmac !== v1) return { ok: false, reason: 'signature_mismatch' };
+  return { ok: true };
+}
 
 const router = express.Router();
 
@@ -329,6 +365,14 @@ router.post('/eventos/publicos/slug/:slug/comprar', verifySupabaseJWTOptional, a
 /* ────────────── Webhook Mercado Pago ────────────── */
 
 router.post('/webhooks/mercadopago', async (req, res) => {
+  /* Verificación de firma HMAC. Si falla, log y descartamos.
+     Si MP_WEBHOOK_SECRET no está configurado, se acepta (modo dev). */
+  const sig = verifyMPSignature(req);
+  if (!sig.ok) {
+    console.warn('[webhook MP] firma inválida:', sig.reason);
+    return res.status(401).json({ error: 'Invalid signature', reason: sig.reason });
+  }
+
   /* MP envía dos formatos posibles: ?type=payment&data.id=...  o  body.action / body.data.id.
      Respondemos 200 rápido y procesamos best-effort. */
   res.status(200).json({ received: true });

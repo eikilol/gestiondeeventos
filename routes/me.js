@@ -1,6 +1,7 @@
 const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
+const { otorgarBadge } = require('../lib/gamificacion.js');
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
@@ -36,6 +37,12 @@ router.patch('/', async (req, res) => {
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
+
+  /* Badge plataforma: perfil completo (idempotente) */
+  if (data.nombre && data.telefono && data.ciudad) {
+    otorgarBadge(req.user.id, 'perfil_completo');
+  }
+
   res.json({ profile: data });
 });
 

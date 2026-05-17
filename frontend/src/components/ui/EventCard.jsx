@@ -23,7 +23,7 @@ export default function EventCard({ evento, onPublicar, onDelete, canEdit, canDe
       {/* Cover */}
       <div className="relative h-44 overflow-hidden flex-shrink-0">
         {evento.cover_url
-          ? <img src={evento.cover_url} alt={evento.titulo} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+          ? <img src={evento.cover_url} alt={evento.titulo} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
           : <PlaceholderCover nombre={evento.titulo} />
         }
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />

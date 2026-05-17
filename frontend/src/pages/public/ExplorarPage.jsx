@@ -54,7 +54,7 @@ export default function ExplorarPage() {
             >
               <div className="aspect-video bg-gradient-to-br from-primary/20 via-accent/10 to-bg flex items-center justify-center border-b border-border overflow-hidden">
                 {(ev.cover_url || ev.gallery?.[0])
-                  ? <img src={ev.cover_url || ev.gallery[0]} alt={ev.titulo} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  ? <img src={ev.cover_url || ev.gallery[0]} alt={ev.titulo} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   : <span className="text-xs font-medium text-text-3 uppercase tracking-widest">{ev.categoria?.nombre || 'Evento'}</span>}
               </div>
               <div className="p-5 flex-1 flex flex-col">

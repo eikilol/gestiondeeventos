@@ -2,6 +2,7 @@ const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { verifyTicketQR, signTicketQR } = require('../lib/qr.js');
+const { otorgarPuntos, otorgarBadge } = require('../lib/gamificacion.js');
 
 function generarCodigo() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -197,7 +198,7 @@ router.post('/:eventoId/checkin', async (req, res) => {
   if (!qr_token && !codigo) return res.status(400).json({ error: 'qr_token o codigo requerido.' });
 
   try {
-    await assertCheckinAccess(eventoId, req.user.id);
+    const evCtx = await assertCheckinAccess(eventoId, req.user.id);
 
     /* Resolver el ticket: por qr_token (verificar firma) o por código corto */
     let ticketQuery;
@@ -238,6 +239,32 @@ router.post('/:eventoId/checkin', async (req, res) => {
       .select(`*, tipo:ticket_types!ticket_type_id(nombre)`)
       .single();
     if (e2) return res.status(500).json({ error: e2.message });
+
+    /* Gamificación escopada por organizador (best-effort) */
+    const organizadorId = evCtx?.owner_id;
+    if (organizadorId) {
+      /* Cliente con cuenta: acumula puntos de fidelidad con este organizador */
+      if (updated.user_id) {
+        otorgarPuntos({
+          userId: updated.user_id, organizadorId, audiencia: 'cliente',
+          eventoId, accion: 'asistencia',
+        }).then(async () => {
+          /* Badge "fiel": 5+ asistencias al mismo organizador */
+          const { count } = await supabase
+            .from('points_log').select('id', { count: 'exact', head: true })
+            .eq('user_id', updated.user_id).eq('organizador_id', organizadorId)
+            .eq('audiencia', 'cliente').eq('accion', 'asistencia');
+          if ((count || 0) >= 5) otorgarBadge(updated.user_id, 'fiel');
+        });
+      }
+      /* Empleado que operó el check-in (si no es el propio owner) */
+      if (req.user.id !== organizadorId) {
+        otorgarPuntos({
+          userId: req.user.id, organizadorId, audiencia: 'empleado',
+          eventoId, accion: 'checkin_operado',
+        });
+      }
+    }
 
     res.json({ ok: true, ticket: updated, advertencia, sound: 'ok' });
   } catch (e) {

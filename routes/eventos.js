@@ -2,6 +2,7 @@ const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { slugify, uniqueEventoSlug } = require('../lib/slug.js');
+const { otorgarBadge } = require('../lib/gamificacion.js');
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
@@ -75,6 +76,15 @@ router.post('/', async (req, res) => {
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
+
+  /* Badges plataforma: primer evento / organizador pro (best-effort) */
+  supabase.from('eventos').select('id', { count: 'exact', head: true })
+    .eq('owner_id', req.user.id).is('deleted_at', null)
+    .then(({ count }) => {
+      if ((count || 0) >= 1) otorgarBadge(req.user.id, 'primer_evento');
+      if ((count || 0) >= 5) otorgarBadge(req.user.id, 'organizador_pro');
+    });
+
   res.status(201).json({ evento: data });
 });
 
@@ -149,6 +159,7 @@ router.post('/:id/estado', async (req, res) => {
     .from('eventos').update(updates).eq('id', req.params.id)
     .select('*, categoria:categorias(slug, nombre)').single();
   if (error) return res.status(500).json({ error: error.message });
+
   res.json({ evento: data });
 });
 

@@ -12,6 +12,8 @@ const TABS = [
   { label: 'Pagos',          icon: WalletIcon     },
   { label: 'Notificaciones', icon: BellIcon       },
   { label: 'White-label',    icon: PaintIcon      },
+  { label: 'Logros',         icon: TrophyIcon     },
+  { label: 'Recompensas',    icon: GiftIcon       },
   { label: 'API',            icon: CodeIcon       },
 ];
 
@@ -167,8 +169,14 @@ export default function SettingsPage() {
       {/* White-label */}
       {tab === 3 && <WhiteLabelTab />}
 
+      {/* Logros */}
+      {tab === 4 && <LogrosTab />}
+
+      {/* Recompensas (organizador) */}
+      {tab === 5 && <RecompensasTab />}
+
       {/* API */}
-      {tab === 4 && (
+      {tab === 6 && (
         <div className="card">
           <div className="card-header">
             <h3 className="text-sm font-semibold text-text-1">Referencia de la API</h3>
@@ -601,6 +609,359 @@ function PlanProCard() {
 }
 
 function DevIcon() { return <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>; }
+function TrophyIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8m-4-4v4m7-13a3 3 0 003-3V3H6v2a3 3 0 003 3m6 0a6 6 0 11-6 0m9-3h2a2 2 0 01-2 2m-13-2H3a2 2 0 002 2" /></svg>;
+}
+function GiftIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h3.5a2 2 0 012 2v2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-7 12V8m0 0V6a2 2 0 012-2H17a2 2 0 110 4m-5 0h5" /></svg>;
+}
+
+/* ──────────── Logros Tab (fidelidad: cliente / empleado / insignias) ──────────── */
+function LogrosTab() {
+  const { error: toastErr, success } = useToast();
+  const [sub, setSub] = useState('cliente'); // cliente | empleado | insignias
+  const [cli, setCli] = useState(null);
+  const [emp, setEmp] = useState(null);
+  const [badges, setBadges] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [canjeando, setCanjeando] = useState(null);
+
+  const cargar = async () => {
+    setLoading(true);
+    try {
+      const { loyaltyApi } = await import('../../api/loyalty.js');
+      const [c, e, b] = await Promise.all([
+        loyaltyApi.cliente(), loyaltyApi.empleado(), loyaltyApi.badges(),
+      ]);
+      setCli(c); setEmp(e); setBadges(b.badges || []);
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally    { setLoading(false); }
+  };
+  useEffect(() => { cargar(); /* eslint-disable-next-line */ }, []);
+
+  const canjear = async (rec) => {
+    setCanjeando(rec.id);
+    try {
+      const { loyaltyApi } = await import('../../api/loyalty.js');
+      const r = await loyaltyApi.canjear(rec.id);
+      success(`¡Canjeado! Tu código: ${r.codigo}`);
+      await cargar();
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally     { setCanjeando(null); }
+  };
+
+  if (loading) return <div className="card p-6"><Spinner size="md" /></div>;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-1 bg-surface-2 border border-border rounded-xl p-1 w-fit">
+        {[['cliente', 'Como cliente'], ['empleado', 'Como empleado'], ['insignias', 'Insignias']].map(([k, l]) => (
+          <button key={k} onClick={() => setSub(k)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${sub === k ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-2'}`}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {sub === 'cliente' && <ComunidadesCliente data={cli} onCanjear={canjear} canjeando={canjeando} />}
+      {sub === 'empleado' && <ComunidadesEmpleado data={emp} onCanjear={canjear} canjeando={canjeando} />}
+      {sub === 'insignias' && <InsigniasGrid badges={badges} />}
+    </div>
+  );
+}
+
+function ComunidadesCliente({ data, onCanjear, canjeando }) {
+  const comunidades = data?.comunidades || [];
+  const canjes = data?.canjes || [];
+  if (comunidades.length === 0) {
+    return <EmptyMini titulo="Sin puntos todavía" desc="Asistí a eventos (con tu cuenta) y vas a acumular puntos con cada organizador. Después los canjeás por recompensas." />;
+  }
+  return (
+    <div className="space-y-5">
+      {comunidades.map(c => (
+        <div key={c.organizador.id} className="card">
+          <div className="card-header">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold">
+                {c.organizador.avatar_url ? <img src={c.organizador.avatar_url} alt="" className="w-full h-full object-cover" /> : (c.organizador.nombre?.[0] || 'O').toUpperCase()}
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-text-1">{c.organizador.empresa || c.organizador.nombre}</h3>
+                <p className="text-xs text-text-3">Tus puntos con este organizador</p>
+              </div>
+            </div>
+            <span className="text-2xl font-bold font-display text-primary-light tabular-nums">{c.puntos.toLocaleString('es-CO')}</span>
+          </div>
+          <div className="card-body">
+            {c.recompensas.length === 0 ? (
+              <p className="text-sm text-text-3 text-center py-4">Este organizador todavía no publicó recompensas.</p>
+            ) : (
+              <div className="space-y-2">
+                {c.recompensas.map(r => (
+                  <div key={r.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-surface-2/40 border border-border">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text-1">{r.titulo}</p>
+                      {r.descripcion && <p className="text-xs text-text-3 truncate">{r.descripcion}</p>}
+                    </div>
+                    <span className="text-sm font-bold text-text-1 tabular-nums whitespace-nowrap">{r.costo_puntos.toLocaleString('es-CO')} pts</span>
+                    <button
+                      onClick={() => onCanjear(r)}
+                      disabled={r.agotada || !r.alcanzable || canjeando === r.id}
+                      className="btn-primary btn-sm whitespace-nowrap disabled:opacity-50">
+                      {canjeando === r.id ? <Spinner size="sm" /> : r.agotada ? 'Agotada' : r.alcanzable ? 'Canjear' : 'Faltan pts'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+
+      {canjes.length > 0 && (
+        <div className="card">
+          <div className="card-header"><h3 className="text-sm font-semibold text-text-1">Mis canjes</h3></div>
+          <div className="card-body space-y-2">
+            {canjes.map(k => (
+              <div key={k.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-surface-2/40">
+                <span className="text-sm text-text-1">{k.titulo}</span>
+                <code className="text-xs font-mono text-primary-light bg-primary/10 px-2 py-0.5 rounded">{k.codigo}</code>
+                <span className="text-[11px] text-text-3">{new Date(k.created_at).toLocaleDateString('es-CO')}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ComunidadesEmpleado({ data, onCanjear, canjeando }) {
+  const comunidades = data?.comunidades || [];
+  if (comunidades.length === 0) {
+    return <EmptyMini titulo="Sin actividad de equipo" desc="Cuando completes tareas o ayudes en check-ins de un organizador, vas a acumular puntos y entrar en su ranking de equipo." />;
+  }
+  return (
+    <div className="space-y-5">
+      {comunidades.map(c => (
+        <div key={c.organizador.id} className="card">
+          <div className="card-header">
+            <div>
+              <h3 className="text-base font-semibold text-text-1">{c.organizador.empresa || c.organizador.nombre}</h3>
+              <p className="text-xs text-text-3">Puesto #{c.mi_posicion} · {c.puntos.toLocaleString('es-CO')} pts</p>
+            </div>
+          </div>
+          <div className="card-body space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-text-3 font-semibold mb-2">Ranking del equipo</p>
+              <div className="space-y-1">
+                {c.ranking.map(r => (
+                  <div key={r.posicion}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg ${r.es_yo ? 'bg-primary/10 border border-primary/20' : 'hover:bg-surface-2/40'}`}>
+                    <span className={`w-6 text-center text-sm font-bold tabular-nums ${r.posicion <= 3 ? 'text-warning' : 'text-text-3'}`}>{r.posicion}</span>
+                    <div className="w-7 h-7 rounded-lg overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
+                      {r.avatar_url ? <img src={r.avatar_url} alt="" className="w-full h-full object-cover" /> : (r.nombre?.[0] || 'U').toUpperCase()}
+                    </div>
+                    <span className="flex-1 text-sm text-text-1 truncate">{r.nombre}{r.es_yo && <span className="text-xs text-primary-light ml-1.5">(vos)</span>}</span>
+                    <span className="text-sm font-bold text-text-1 tabular-nums">{r.puntos.toLocaleString('es-CO')}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {c.recompensas.length > 0 && (
+              <div>
+                <p className="text-xs uppercase tracking-widest text-text-3 font-semibold mb-2">Recompensas del equipo</p>
+                <div className="space-y-2">
+                  {c.recompensas.map(r => (
+                    <div key={r.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-surface-2/40 border border-border">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-text-1">{r.titulo}</p>
+                        {r.descripcion && <p className="text-xs text-text-3 truncate">{r.descripcion}</p>}
+                      </div>
+                      <span className="text-sm font-bold text-text-1 tabular-nums whitespace-nowrap">{r.costo_puntos.toLocaleString('es-CO')} pts</span>
+                      <button onClick={() => onCanjear(r)}
+                        disabled={r.agotada || !r.alcanzable || canjeando === r.id}
+                        className="btn-primary btn-sm whitespace-nowrap disabled:opacity-50">
+                        {canjeando === r.id ? <Spinner size="sm" /> : r.agotada ? 'Agotada' : r.alcanzable ? 'Canjear' : 'Faltan pts'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InsigniasGrid({ badges }) {
+  if (!badges?.length) return <EmptyMini titulo="Sin insignias" desc="Las insignias se desbloquean usando la plataforma." />;
+  return (
+    <div className="card">
+      <div className="card-header"><h3 className="text-base font-semibold text-text-1">Insignias de plataforma</h3></div>
+      <div className="card-body grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {badges.map(b => (
+          <div key={b.slug}
+            className={`rounded-2xl border p-4 text-center transition-all ${b.obtenida ? 'border-primary/30 bg-primary/5' : 'border-border bg-surface/40 opacity-50 grayscale'}`}>
+            <div className="text-3xl mb-2">{b.icon}</div>
+            <p className="text-sm font-semibold text-text-1 leading-tight">{b.nombre}</p>
+            <p className="text-[11px] text-text-3 mt-1 leading-snug">{b.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EmptyMini({ titulo, desc }) {
+  return (
+    <div className="rounded-3xl border border-dashed border-border bg-surface/40 px-6 py-14 text-center">
+      <h3 className="text-lg font-bold font-display text-text-1 mb-1">{titulo}</h3>
+      <p className="text-sm text-text-2 max-w-sm mx-auto leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+/* ──────────── Recompensas Tab (organizador define cliente + empleado) ──────────── */
+function RecompensasTab() {
+  const { success, error: toastErr } = useToast();
+  const [aud, setAud] = useState('cliente'); // cliente | empleado
+  const [items, setItems] = useState([]);
+  const [canjes, setCanjes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ titulo: '', descripcion: '', costo_puntos: '', stock: '' });
+  const [saving, setSaving] = useState(false);
+
+  const cargar = async () => {
+    setLoading(true);
+    try {
+      const { recompensasApi } = await import('../../api/loyalty.js');
+      const [r, c] = await Promise.all([recompensasApi.list(aud), recompensasApi.canjes()]);
+      setItems(r.recompensas || []);
+      setCanjes(c.canjes || []);
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally     { setLoading(false); }
+  };
+  useEffect(() => { cargar(); /* eslint-disable-next-line */ }, [aud]);
+
+  const crear = async (e) => {
+    e.preventDefault();
+    if (!form.titulo.trim() || !form.costo_puntos) return;
+    setSaving(true);
+    try {
+      const { recompensasApi } = await import('../../api/loyalty.js');
+      await recompensasApi.crear({ ...form, audiencia: aud });
+      success('Recompensa creada.');
+      setForm({ titulo: '', descripcion: '', costo_puntos: '', stock: '' });
+      cargar();
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally     { setSaving(false); }
+  };
+
+  const toggle = async (r) => {
+    try {
+      const { recompensasApi } = await import('../../api/loyalty.js');
+      await recompensasApi.editar(r.id, { activo: !r.activo });
+      cargar();
+    } catch (e) { toastErr(e.message); }
+  };
+  const borrar = async (r) => {
+    if (!window.confirm(`¿Borrar "${r.titulo}"?`)) return;
+    try {
+      const { recompensasApi } = await import('../../api/loyalty.js');
+      await recompensasApi.borrar(r.id);
+      success('Borrada.'); cargar();
+    } catch (e) { toastErr(e.message); }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-1 bg-surface-2 border border-border rounded-xl p-1 w-fit">
+        {[['cliente', 'Para clientes'], ['empleado', 'Para el equipo']].map(([k, l]) => (
+          <button key={k} onClick={() => setAud(k)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${aud === k ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-2'}`}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      <div className="card">
+        <div className="card-header"><h3 className="text-base font-semibold text-text-1">Nueva recompensa {aud === 'cliente' ? 'para clientes' : 'para el equipo'}</h3></div>
+        <form onSubmit={crear} className="card-body grid sm:grid-cols-2 gap-3">
+          <div className="field sm:col-span-2">
+            <label className="label">Título</label>
+            <input className="input rounded-2xl py-3" value={form.titulo}
+              onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
+              placeholder={aud === 'cliente' ? 'Ej. Entrada gratis al próximo evento' : 'Ej. Día libre'} required />
+          </div>
+          <div className="field sm:col-span-2">
+            <label className="label">Descripción (opcional)</label>
+            <input className="input rounded-2xl py-3" value={form.descripcion}
+              onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} />
+          </div>
+          <div className="field">
+            <label className="label">Costo en puntos</label>
+            <input type="number" min="1" className="input rounded-2xl py-3" value={form.costo_puntos}
+              onChange={e => setForm(f => ({ ...f, costo_puntos: e.target.value }))} required />
+          </div>
+          <div className="field">
+            <label className="label">Stock (vacío = ilimitado)</label>
+            <input type="number" min="0" className="input rounded-2xl py-3" value={form.stock}
+              onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} />
+          </div>
+          <div className="sm:col-span-2 flex justify-end">
+            <button type="submit" disabled={saving} className="btn-gradient">
+              {saving ? <><Spinner size="sm" /> Creando...</> : 'Crear recompensa'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="card">
+        <div className="card-header"><h3 className="text-sm font-semibold text-text-1">Recompensas {aud === 'cliente' ? 'de clientes' : 'del equipo'}</h3></div>
+        <div className="card-body">
+          {loading ? <Spinner size="md" /> : items.length === 0 ? (
+            <p className="text-sm text-text-3 text-center py-4">Todavía no definiste recompensas.</p>
+          ) : (
+            <div className="space-y-2">
+              {items.map(r => (
+                <div key={r.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${r.activo ? 'border-border bg-surface-2/40' : 'border-border bg-surface/40 opacity-50'}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-text-1">{r.titulo}</p>
+                    <p className="text-xs text-text-3">{r.costo_puntos} pts · {r.stock == null ? 'ilimitado' : `${r.canjeados}/${r.stock}`} · {r.canjeados} canjeados</p>
+                  </div>
+                  <button onClick={() => toggle(r)} className="btn-ghost btn-sm">{r.activo ? 'Pausar' : 'Activar'}</button>
+                  <button onClick={() => borrar(r)} aria-label="Borrar"
+                    className="w-8 h-8 rounded-lg text-text-3 hover:text-danger hover:bg-danger/10 flex items-center justify-center">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {canjes.length > 0 && (
+        <div className="card">
+          <div className="card-header"><h3 className="text-sm font-semibold text-text-1">Canjes recibidos</h3></div>
+          <div className="card-body space-y-2">
+            {canjes.map(k => (
+              <div key={k.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface-2/40">
+                <span className="text-sm text-text-1 flex-1 truncate">{k.usuario?.nombre || k.usuario?.email || 'Usuario'} · {k.titulo}</span>
+                <code className="text-xs font-mono text-primary-light bg-primary/10 px-2 py-0.5 rounded">{k.codigo}</code>
+                <span className="text-[10px] uppercase tracking-widest text-text-3">{k.estado}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ──────────── Notificaciones Tab ──────────── */
 function NotificacionesTab() {

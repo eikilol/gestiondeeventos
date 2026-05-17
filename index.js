@@ -23,6 +23,9 @@ app.use((req, _res, next) => {
 
 /* Rutas */
 app.use('/me',               require('./routes/me.js'));
+app.use('/',                 require('./routes/notificaciones.js'));
+app.use('/',                 require('./routes/recompensas.js'));
+app.use('/',                 require('./routes/loyalty.js'));
 app.use('/categorias',       require('./routes/categorias.js'));
 app.use('/eventos/publicos', require('./routes/eventos.publicos.js'));
 /* Pagos (MP): define sus propios paths absolutos — /me/mercadopago, /eventos/publicos/.../comprar, /webhooks/mercadopago */
@@ -39,8 +42,8 @@ app.use('/eventos',          require('./routes/clientes.js'));
 app.use('/eventos',          require('./routes/chat.js'));
 app.use('/eventos',          require('./routes/agenda.js'));
 app.use('/eventos',          require('./routes/tareas.js'));
-app.use('/eventos',          require('./routes/analytics.js'));
 app.use('/eventos',          require('./routes/waitlist.js'));
+app.use('/eventos',          require('./routes/analytics.js'));
 app.use('/eventos',          require('./routes/eventos.js'));
 
 app.get('/', (_req, res) => {

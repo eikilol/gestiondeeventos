@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
@@ -6,27 +7,30 @@ import GLoader from './components/ui/GLoader.jsx';
 import PublicLayout       from './components/layout/PublicLayout.jsx';
 import AppLayout          from './components/layout/AppLayout.jsx';
 
+/* Páginas livianas que aparecen primero — carga directa */
 import LandingHomePage    from './pages/public/LandingHomePage.jsx';
-import ComoFuncionaPage   from './pages/public/ComoFuncionaPage.jsx';
-import ProductoPage       from './pages/public/ProductoPage.jsx';
-import ExplorarPage       from './pages/public/ExplorarPage.jsx';
-import EventoPublicoPage  from './pages/public/EventoPublicoPage.jsx';
-import MiTicketPage       from './pages/public/MiTicketPage.jsx';
-import PlanesPage         from './pages/public/PlanesPage.jsx';
-import FAQPage            from './pages/public/FAQPage.jsx';
+import AuthPage           from './pages/AuthPage.jsx';
 
-import AuthPage             from './pages/AuthPage.jsx';
-import RecuperarPage        from './pages/RecuperarPage.jsx';
-import ResetPasswordPage    from './pages/ResetPasswordPage.jsx';
-import ConfirmarPage        from './pages/ConfirmarPage.jsx';
-import CompletarPerfilPage  from './pages/CompletarPerfilPage.jsx';
-import DashboardPage        from './pages/DashboardPage.jsx';
-import EventsListPage     from './pages/events/EventsListPage.jsx';
-import EventCreatePage    from './pages/events/EventCreatePage.jsx';
-import EventDetailPage    from './pages/events/EventDetailPage.jsx';
-import EventEditPage      from './pages/events/EventEditPage.jsx';
-import UsersPage          from './pages/users/UsersPage.jsx';
-import SettingsPage       from './pages/settings/SettingsPage.jsx';
+/* El resto se carga on-demand (code splitting por ruta) */
+const ComoFuncionaPage   = lazy(() => import('./pages/public/ComoFuncionaPage.jsx'));
+const ProductoPage       = lazy(() => import('./pages/public/ProductoPage.jsx'));
+const ExplorarPage       = lazy(() => import('./pages/public/ExplorarPage.jsx'));
+const EventoPublicoPage  = lazy(() => import('./pages/public/EventoPublicoPage.jsx'));
+const MiTicketPage       = lazy(() => import('./pages/public/MiTicketPage.jsx'));
+const PlanesPage         = lazy(() => import('./pages/public/PlanesPage.jsx'));
+const FAQPage            = lazy(() => import('./pages/public/FAQPage.jsx'));
+
+const RecuperarPage      = lazy(() => import('./pages/RecuperarPage.jsx'));
+const ResetPasswordPage  = lazy(() => import('./pages/ResetPasswordPage.jsx'));
+const ConfirmarPage      = lazy(() => import('./pages/ConfirmarPage.jsx'));
+const CompletarPerfilPage= lazy(() => import('./pages/CompletarPerfilPage.jsx'));
+const DashboardPage      = lazy(() => import('./pages/DashboardPage.jsx'));
+const EventsListPage     = lazy(() => import('./pages/events/EventsListPage.jsx'));
+const EventCreatePage    = lazy(() => import('./pages/events/EventCreatePage.jsx'));
+const EventDetailPage    = lazy(() => import('./pages/events/EventDetailPage.jsx'));
+const EventEditPage      = lazy(() => import('./pages/events/EventEditPage.jsx'));
+const UsersPage          = lazy(() => import('./pages/users/UsersPage.jsx'));
+const SettingsPage       = lazy(() => import('./pages/settings/SettingsPage.jsx'));
 
 function AuthLoader() {
   return (
@@ -64,6 +68,7 @@ export default function App() {
     <BrowserRouter>
       <ToastProvider>
         <AuthProvider>
+          <Suspense fallback={<AuthLoader />}>
           <Routes>
             {/* Public site */}
             <Route element={<PublicLayout />}>
@@ -101,6 +106,7 @@ export default function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </AuthProvider>
       </ToastProvider>
     </BrowserRouter>

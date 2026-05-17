@@ -47,7 +47,59 @@ export default function EquipoTab({ evento }) {
         roles={roles}
         onChange={reload}
       />
+
+      <RankingEquipoSection eventoId={evento.id} />
     </div>
+  );
+}
+
+/* ─────────── RANKING DE EQUIPO (gamificación por evento) ─────────── */
+function RankingEquipoSection({ eventoId }) {
+  const [ranking, setRanking] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let activo = true;
+    import('../../../api/loyalty.js')
+      .then(m => m.loyaltyApi.rankingEvento(eventoId))
+      .then(d => { if (activo) setRanking(d.ranking || []); })
+      .catch(() => {})
+      .finally(() => { if (activo) setLoading(false); });
+    return () => { activo = false; };
+  }, [eventoId]);
+
+  return (
+    <section>
+      <div className="mb-3">
+        <h3 className="text-lg font-bold font-display text-text-1 tracking-tight">Ranking del equipo</h3>
+        <p className="text-sm text-text-2 mt-0.5">Puntos ganados por tareas completadas y check-ins operados en este evento.</p>
+      </div>
+      <div className="rounded-3xl border border-border bg-surface/40 overflow-hidden">
+        {loading ? (
+          <div className="p-6"><Spinner size="md" /></div>
+        ) : ranking.length === 0 ? (
+          <p className="text-sm text-text-3 text-center py-10">
+            Todavía nadie sumó puntos en este evento. Completar tareas u operar check-ins otorga puntos al equipo.
+          </p>
+        ) : (
+          ranking.map(r => (
+            <div key={r.user_id}
+              className={`flex items-center gap-3 px-5 py-3 border-b border-border last:border-0 ${r.es_yo ? 'bg-primary/10' : ''}`}>
+              <span className={`w-7 text-center text-sm font-bold font-display tabular-nums ${r.posicion <= 3 ? 'text-warning' : 'text-text-3'}`}>
+                {r.posicion}
+              </span>
+              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                {r.avatar_url ? <img src={r.avatar_url} alt="" className="w-full h-full object-cover" /> : (r.nombre?.[0] || 'U').toUpperCase()}
+              </div>
+              <span className="flex-1 text-sm font-medium text-text-1 truncate">
+                {r.nombre}{r.es_yo && <span className="text-xs text-primary-light ml-1.5">(vos)</span>}
+              </span>
+              <span className="text-sm font-bold text-text-1 tabular-nums">{r.puntos.toLocaleString('es-CO')} pts</span>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
   );
 }
 

@@ -137,3 +137,58 @@ select cron.unschedule('send-reminders-hourly');
 - Edge Function: ~500K invocations/mes gratis (con plan Free de Supabase).
 
 Con un evento típico de 200 asistentes recibiendo 3 recordatorios = 600 emails. **Caben ~5 eventos/mes en el tier gratis de Resend.**
+
+---
+
+# Recordatorios in-app (notificaciones internas)
+
+Independiente del email. Crea filas en `notificaciones` para owner + equipo +
+asistentes con cuenta, en las mismas ventanas T-7d / T-1d / T-1h.
+
+**No requiere Edge Function ni Resend** — es una función SQL pura que pg_cron
+puede llamar directo.
+
+## Setup
+
+### 1. Aplicar migration
+
+`db/migrations/0023_recordatorios_inapp.sql` en el SQL editor.
+
+Verificá que funcione:
+```sql
+select public.generar_recordatorios_inapp();  -- devuelve cuántas creó
+```
+
+### 2. Schedule con pg_cron
+
+```sql
+create extension if not exists pg_cron;
+
+select cron.schedule(
+  'recordatorios-inapp-hourly',
+  '10 * * * *',                       -- cada hora en el minuto :10
+  $$ select public.generar_recordatorios_inapp(); $$
+);
+```
+
+Listo. No hay provider externo, no hay secrets, no hay Edge Function.
+
+### 3. Probar sin esperar el cron
+
+Desde la app (logueado), el backend expone:
+```
+POST /me/notificaciones/generar-recordatorios
+```
+Devuelve `{ ok: true, creadas: N }`. Si tenés un evento publicado con
+`fecha_inicio` dentro de alguna de las ventanas, vas a ver `creadas > 0` y la
+campana del TopBar recibirá la notificación en tiempo real.
+
+## Desactivar para un evento
+
+Mismo toggle que email: tab Resumen del evento → "Recordatorios email"
+(`eventos.email_reminders = false`) apaga **ambos** (email + in-app).
+
+## Idempotencia
+
+Tabla `recordatorio_inapp_log` con unique `(scope_id, evento_id, tipo)`. Correr
+la función mil veces no duplica notificaciones.

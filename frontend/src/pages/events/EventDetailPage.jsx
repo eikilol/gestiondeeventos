@@ -19,6 +19,7 @@ import TareasTab         from './tabs/TareasTab.jsx';
 import AnalyticsTab      from './tabs/AnalyticsTab.jsx';
 import BroadcastModal    from './BroadcastModal.jsx';
 import PlaceholderTab    from './tabs/PlaceholderTab.jsx';
+import WaitlistTab      from './tabs/WaitlistTab.jsx';
 
 /* Workspace por evento. Header + tabs. Cada tab carga su contenido. */
 
@@ -34,6 +35,7 @@ const TABS = [
   { id: 'checkin',  label: 'Check-in' },
   { id: 'pagos',    label: 'Pagos' },
   { id: 'analytics',label: 'Analytics' },
+  { id: 'waitlist',  label: 'Lista de espera' },
 ];
 
 export default function EventDetailPage() {
@@ -151,6 +153,7 @@ export default function EventDetailPage() {
         {tab === 'pagos'     && <PlaceholderTab title="Pagos" desc="Configura tu llave BRE-B, recibe transacciones, emite reembolsos." icon="wallet" />}
         {tab === 'chat'      && <ChatTab evento={evento} />}
         {tab === 'analytics' && <AnalyticsTab evento={evento} />}
+        {tab === 'waitlist'  && <WaitlistTab evento={evento} />}
       </div>
 
       {broadcastOpen && (

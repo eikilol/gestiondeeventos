@@ -122,10 +122,10 @@ router.post('/slug/:slug/reservar', async (req, res) => {
     return res.status(400).json({ error: 'La venta de este tipo de boleta ya cerró.' });
   }
   if (tipo.cupo != null && tipo.vendidos >= tipo.cupo) {
-    return res.status(400).json({ error: 'Este tipo de boleta está agotado.' });
+    return res.status(400).json({ error: 'Este tipo de boleta está agotado.', waitlistAvailable: true });
   }
   if (evento.aforo_total && evento.aforo_vendido >= evento.aforo_total) {
-    return res.status(400).json({ error: 'El evento está al aforo máximo.' });
+    return res.status(400).json({ error: 'El evento está al aforo máximo.', waitlistAvailable: true });
   }
 
   /* Precio efectivo: Early Bird si aplica, si no normal */
@@ -187,106 +187,67 @@ router.post('/slug/:slug/reservar', async (req, res) => {
   });
 });
 
-/* POST /eventos/publicos/slug/:slug/waitlist — anotarse en lista de espera.
-   Público (sin auth). Se usa cuando el ticket_type está agotado. */
+
+/* POST /eventos/publicos/slug/:slug/waitlist — unirse a la lista de espera.
+   No requiere auth. Si el usuario está logueado (verifySupabaseJWTOptional) se vincula su user_id. */
 router.post('/slug/:slug/waitlist', async (req, res) => {
   const { slug } = req.params;
-  const { ticket_type_id, nombre, email, telefono } = req.body;
+  const { ticket_type_id, email, nombre } = req.body;
 
+  if (!ticket_type_id)       return res.status(400).json({ error: 'Selecciona un tipo de boleta.' });
   if (!email?.includes('@')) return res.status(400).json({ error: 'Email válido requerido.' });
   if (!nombre?.trim())       return res.status(400).json({ error: 'Tu nombre es requerido.' });
 
   const { data: evento, error: e1 } = await supabase
-    .from('eventos').select('id, owner_id, titulo, estado, deleted_at')
+    .from('eventos')
+    .select('id, estado, deleted_at')
     .eq('slug', slug).maybeSingle();
   if (e1) return res.status(500).json({ error: e1.message });
   if (!evento || evento.deleted_at || evento.estado !== 'publicado')
     return res.status(404).json({ error: 'Evento no disponible.' });
 
-  /* Posición = cantidad de gente esperando + 1 (para ese tipo) */
-  const { count } = await supabase
-    .from('waitlist')
-    .select('id', { count: 'exact', head: true })
+  const { data: tipo, error: e2 } = await supabase
+    .from('ticket_types')
+    .select('id, nombre, activo')
+    .eq('id', ticket_type_id)
     .eq('evento_id', evento.id)
-    .eq('estado', 'esperando');
-
-  const { error: e2 } = await supabase.from('waitlist').insert({
-    evento_id     : evento.id,
-    ticket_type_id: ticket_type_id || null,
-    guest_nombre  : nombre.trim(),
-    guest_email   : email.toLowerCase().trim(),
-    guest_telefono: telefono || null,
-    posicion      : (count || 0) + 1,
-  });
-
-  if (e2) {
-    if (e2.code === '23505') return res.status(409).json({ error: 'Ya estás en la lista de espera.' });
-    return res.status(500).json({ error: e2.message });
-  }
-
-  notificar({
-    userId : evento.owner_id,
-    tipo   : 'reserva',
-    titulo : 'Nuevo en lista de espera',
-    cuerpo : `${nombre.trim()} se anotó a la lista de espera de ${evento.titulo}.`,
-    link   : `/eventos/${evento.id}`,
-    eventoId: evento.id,
-  });
-
-  res.status(201).json({ ok: true, posicion: (count || 0) + 1 });
-});
-
-/* GET /eventos/publicos/slug/:slug — evento por slug.
-   - Si está publicado: cualquiera lo ve.
-   - Si NO está publicado: solo el owner puede verlo (modo preview).
-   Esto permite al organizador ver su evento en modo cliente antes de publicarlo. */
-router.get('/slug/:slug', async (req, res) => {
-  const { data, error } = await supabase
-    .from('eventos')
-    .select(
-      `id, slug, owner_id, estado, titulo, descripcion, cover_url, gallery, modalidad,
-       fecha_inicio, fecha_fin, timezone,
-       location_nombre, location_direccion, lat, lng, url_virtual, links,
-       page_json, currency, edad_minima, aforo_total, aforo_vendido,
-       pago_llave, pago_qr_url, pago_instrucciones,
-       categoria:categorias(slug, nombre),
-       organizador:profiles!owner_id(nombre, handle, avatar_url, empresa, ciudad, branding, empresa_logo_url, plan, plan_expires_at),
-       tipos_ticket:ticket_types(id, nombre, descripcion, precio, currency, cupo, vendidos, early_bird_precio, early_bird_hasta, venta_hasta, zonas_acceso, activo)`
-    )
-    .eq('slug', req.params.slug)
-    .is('deleted_at', null)
     .maybeSingle();
+  if (e2) return res.status(500).json({ error: e2.message });
+  if (!tipo)        return res.status(404).json({ error: 'Tipo de boleta no encontrado.' });
+  if (!tipo.activo) return res.status(400).json({ error: 'Este tipo de boleta no está disponible.' });
 
-  if (error) return res.status(500).json({ error: error.message });
-  if (!data) return res.status(404).json({ error: 'Evento no encontrado.' });
+  /* posicion = max(posicion) + 1 para este evento+tipo */
+  const { data: maxRow } = await supabase
+    .from('event_waitlist')
+    .select('posicion')
+    .eq('evento_id', evento.id)
+    .eq('ticket_type_id', tipo.id)
+    .order('posicion', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const posicion = (maxRow?.posicion || 0) + 1;
 
-  const esOwner = req.user && req.user.id === data.owner_id;
-  if (data.estado !== 'publicado' && !esOwner) {
-    return res.status(404).json({ error: 'Evento no encontrado.' });
+  const { data: entry, error: e3 } = await supabase
+    .from('event_waitlist')
+    .insert({
+      evento_id     : evento.id,
+      ticket_type_id: tipo.id,
+      user_id       : req.user?.id || null,
+      guest_email   : email.toLowerCase().trim(),
+      guest_nombre  : nombre.trim(),
+      posicion,
+    })
+    .select('id, posicion, estado, added_at')
+    .single();
+
+  if (e3) {
+    if (e3.code === '23505') {
+      return res.status(409).json({ error: 'Ya estás en la lista de espera para este tipo de boleta.' });
+    }
+    return res.status(500).json({ error: e3.message });
   }
 
-  /* Normaliza plan del organizador: considera 'pro' solo si está vigente.
-     Esto evita white-label fantasma cuando el plan venció. */
-  if (data.organizador) {
-    const exp = data.organizador.plan_expires_at;
-    const proActivo = data.organizador.plan === 'pro' && (!exp || new Date(exp) > new Date());
-    data.organizador.plan = proActivo ? 'pro' : 'free';
-    delete data.organizador.plan_expires_at;
-  }
-
-  /* Track visit: solo si está publicado y el visitante NO es el owner */
-  if (data.estado === 'publicado' && !esOwner) {
-    const referrer = req.headers.referer || req.headers.referrer || null;
-    supabase.from('event_views').insert({
-      evento_id   : data.id,
-      visitor_hash: visitorHash(req),
-      referrer    : referrer ? referrer.slice(0, 500) : null,
-      source      : classifySource(referrer),
-      user_agent  : (req.headers['user-agent'] || '').slice(0, 300),
-    }).then(() => {}, () => {}); // best-effort, no bloqueamos response
-  }
-
-  res.json({ evento: data, isPreview: data.estado !== 'publicado' });
+  res.status(201).json({ entry });
 });
 
 module.exports = router;

@@ -277,9 +277,9 @@ router.post('/eventos/publicos/slug/:slug/comprar', verifySupabaseJWTOptional, a
   if (tipo.venta_hasta && new Date(tipo.venta_hasta) < new Date())
     return res.status(400).json({ error: 'La venta de este tipo de boleta ya cerró.' });
   if (tipo.cupo != null && tipo.vendidos >= tipo.cupo)
-    return res.status(400).json({ error: 'Este tipo de boleta está agotado.' });
+    return res.status(400).json({ error: 'Este tipo de boleta está agotado.', waitlistAvailable: true });
   if (evento.aforo_total && evento.aforo_vendido >= evento.aforo_total)
-    return res.status(400).json({ error: 'El evento está al aforo máximo.' });
+    return res.status(400).json({ error: 'El evento está al aforo máximo.', waitlistAvailable: true });
 
   const hasEarly = tipo.early_bird_precio != null && tipo.early_bird_hasta && new Date(tipo.early_bird_hasta) > new Date();
   const precioEfectivo = hasEarly ? Number(tipo.early_bird_precio) : Number(tipo.precio);
@@ -520,7 +520,83 @@ async function procesarPago(pago) {
       }
     }
   } else if (status === 'refunded' || status === 'cancelled') {
+    const { data: ticketRefund } = await supabase
+      .from('tickets')
+      .select('ticket_type_id, evento_id, estado')
+      .eq('id', ticketId)
+      .maybeSingle();
+
     await supabase.from('tickets').update({ estado: 'cancelado' }).eq('id', ticketId);
+
+    /* Solo decrementamos y notificamos si el ticket estaba efectivamente pagado */
+    if (ticketRefund?.estado === 'pagado') {
+      const { data: ev } = await supabase
+        .from('eventos').select('aforo_vendido, slug, titulo').eq('id', ticketRefund.evento_id).single();
+      if (ev && ev.aforo_vendido > 0) {
+        await supabase.from('eventos')
+          .update({ aforo_vendido: ev.aforo_vendido - 1 })
+          .eq('id', ticketRefund.evento_id);
+      }
+      const { data: tipoCt } = await supabase
+        .from('ticket_types').select('vendidos').eq('id', ticketRefund.ticket_type_id).single();
+      if (tipoCt && tipoCt.vendidos > 0) {
+        await supabase.from('ticket_types')
+          .update({ vendidos: tipoCt.vendidos - 1 })
+          .eq('id', ticketRefund.ticket_type_id);
+      }
+      await notificarTopWaitlist(ticketRefund.ticket_type_id, ticketRefund.evento_id, ev?.slug, ev?.titulo);
+    }
+  }
+}
+
+/* Notifica al primero de la lista de espera cuando se libera un cupo (best-effort). */
+async function notificarTopWaitlist(ticketTypeId, eventoId, eventoSlug, eventoTitulo) {
+  const { data: top } = await supabase
+    .from('event_waitlist')
+    .select('*')
+    .eq('ticket_type_id', ticketTypeId)
+    .eq('evento_id', eventoId)
+    .eq('estado', 'active')
+    .order('posicion', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (!top) return;
+
+  await supabase.from('event_waitlist').update({
+    estado               : 'contacted',
+    notified_at          : new Date().toISOString(),
+    last_contact_at      : new Date().toISOString(),
+    notification_attempts: (top.notification_attempts || 0) + 1,
+  }).eq('id', top.id);
+
+  if (!top.user_id) return;
+
+  const pub = process.env.VAPID_PUBLIC_KEY;
+  const pri = process.env.VAPID_PRIVATE_KEY;
+  if (!pub || !pri) return;
+
+  const webpush = require('web-push');
+  webpush.setVapidDetails(process.env.VAPID_CONTACT || 'mailto:hello@gestek.io', pub, pri);
+
+  const { data: subs } = await supabase
+    .from('push_subscriptions').select('*').eq('user_id', top.user_id);
+  if (!subs || subs.length === 0) return;
+
+  const payload = JSON.stringify({
+    title: '¡Hay un cupo disponible!',
+    body : `Se liberó un lugar en "${eventoTitulo || 'tu evento'}". Entrá rápido antes de que se llene.`,
+    url  : eventoSlug ? `/explorar/${eventoSlug}` : '/',
+  });
+
+  for (const sub of subs) {
+    try {
+      await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload);
+    } catch (err) {
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        await supabase.from('push_subscriptions').delete().eq('id', sub.id);
+      }
+    }
   }
 }
 

@@ -151,11 +151,11 @@ function WaitlistModal({ tipo, slug, onClose }) {
     setWorking(true); setErr('');
     try {
       const { waitlistApi } = await import('../../api/waitlist.js');
-      const r = await waitlistApi.anotarse(slug, {
+      const r = await waitlistApi.join(slug, {
         ticket_type_id: tipo.id,
-        nombre: form.nombre, email: form.email, telefono: form.telefono,
+        nombre: form.nombre, email: form.email,
       });
-      setDone({ posicion: r.posicion });
+      setDone({ posicion: r.entry?.posicion });
     } catch (e) {
       setErr(e.response?.data?.error || e.message);
     } finally { setWorking(false); }

@@ -1,105 +1,179 @@
-/* GESTEK — Gestión de lista de espera (owner del evento).
-   GET    /eventos/:eventoId/waitlist             — listar
-   POST   /eventos/:eventoId/waitlist/:id/promover — marcar promovido + notificar
-   DELETE /eventos/:eventoId/waitlist/:id          — quitar de la lista
+/* GESTEK — Lista de espera (admin endpoints, auth requerida).
+   Montado en /eventos en index.js.
 
-   Se monta en /eventos (paths con :eventoId internos). */
+   GET    /:eventoId/waitlist                     — lista completa (owner)
+   PATCH  /:eventoId/waitlist/:waitlistId         — cambiar estado
+   POST   /:eventoId/waitlist/:waitlistId/notify  — notificar manualmente
+   DELETE /:eventoId/waitlist/:waitlistId         — quitar de la lista
+*/
 
-const express = require('express');
+'use strict';
+
+const express  = require('express');
+const webpush  = require('web-push');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
-const { notificar } = require('../lib/notificar.js');
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
 
-async function assertOwner(eventoId, userId) {
-  const { data, error } = await supabase
-    .from('eventos').select('id, owner_id, titulo, slug').eq('id', eventoId).maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Evento no encontrado.');
-  if (data.owner_id !== userId) throw new Error('No autorizado.');
-  return data;
+const ESTADOS_VALIDOS = ['active', 'contacted', 'purchased', 'cancelled'];
+
+/* ── Helpers ─────────────────────────────────────────────── */
+
+async function verificarOwner(eventoId, userId) {
+  const { data } = await supabase
+    .from('eventos').select('owner_id').eq('id', eventoId).maybeSingle();
+  if (!data) return false;
+  return data.owner_id === userId;
 }
 
-router.get('/:eventoId/waitlist', async (req, res) => {
-  const { eventoId } = req.params;
-  try {
-    await assertOwner(eventoId, req.user.id);
-    const { data, error } = await supabase
-      .from('waitlist')
-      .select(`id, guest_nombre, guest_email, guest_telefono, estado, posicion,
-               promovido_at, created_at,
-               tipo:ticket_types!ticket_type_id(id, nombre)`)
-      .eq('evento_id', eventoId)
-      .order('created_at', { ascending: true });
-    if (error) return res.status(500).json({ error: error.message });
+/* Envía push a un user_id con el mensaje de cupo disponible (best-effort). */
+async function enviarPushWaitlist(userId, eventoSlug, eventoTitulo) {
+  const pub = process.env.VAPID_PUBLIC_KEY;
+  const pri = process.env.VAPID_PRIVATE_KEY;
+  if (!pub || !pri || !userId) return 0;
 
-    const stats = (data || []).reduce((acc, w) => {
-      acc.total++;
-      acc[w.estado] = (acc[w.estado] || 0) + 1;
-      return acc;
-    }, { total: 0 });
+  webpush.setVapidDetails(process.env.VAPID_CONTACT || 'mailto:hello@gestek.io', pub, pri);
 
-    res.json({ waitlist: data || [], stats });
-  } catch (e) {
-    res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
-  }
-});
+  const { data: subs } = await supabase
+    .from('push_subscriptions').select('*').eq('user_id', userId);
+  if (!subs || subs.length === 0) return 0;
 
-router.post('/:eventoId/waitlist/:id/promover', async (req, res) => {
-  const { eventoId, id } = req.params;
-  try {
-    const ev = await assertOwner(eventoId, req.user.id);
+  const payload = JSON.stringify({
+    title: '¡Hay un cupo disponible!',
+    body : `Se liberó un lugar en "${eventoTitulo}". Entrá rápido antes de que se llene.`,
+    url  : eventoSlug ? `/explorar/${eventoSlug}` : '/',
+  });
 
-    const { data: entry, error: e1 } = await supabase
-      .from('waitlist').select('*').eq('id', id).eq('evento_id', eventoId).maybeSingle();
-    if (e1) return res.status(500).json({ error: e1.message });
-    if (!entry) return res.status(404).json({ error: 'Entrada no encontrada.' });
-    if (entry.estado !== 'esperando') return res.status(400).json({ error: 'Ya fue procesada.' });
-
-    const { error: e2 } = await supabase
-      .from('waitlist')
-      .update({ estado: 'promovido', promovido_at: new Date().toISOString() })
-      .eq('id', id);
-    if (e2) return res.status(500).json({ error: e2.message });
-
-    /* Si el invitado tiene cuenta, le mandamos notificación in-app además del link */
-    const { data: profile } = await supabase
-      .from('profiles').select('id').ilike('email', entry.guest_email).maybeSingle();
-    if (profile?.id) {
-      notificar({
-        userId : profile.id,
-        tipo   : 'reserva',
-        titulo : '¡Se liberó un cupo!',
-        cuerpo : `Te promovieron de la lista de espera de ${ev.titulo}. Reservá tu boleta ahora.`,
-        link   : `/explorar/${ev.slug}`,
-        eventoId,
-      });
+  let ok = 0;
+  for (const sub of subs) {
+    try {
+      await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload);
+      ok++;
+    } catch (err) {
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        await supabase.from('push_subscriptions').delete().eq('id', sub.id);
+      }
     }
-
-    res.json({
-      ok: true,
-      reserva_url: `/explorar/${ev.slug}`,
-      email: entry.guest_email,
-      tiene_cuenta: Boolean(profile?.id),
-    });
-  } catch (e) {
-    res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
   }
+  return ok;
+}
+
+/* ── GET /:eventoId/waitlist ─────────────────────────────── */
+
+router.get('/:eventoId/waitlist', async (req, res) => {
+  if (!(await verificarOwner(req.params.eventoId, req.user.id))) {
+    return res.status(403).json({ error: 'No autorizado.' });
+  }
+
+  const { q, estado, ticket_type_id } = req.query;
+
+  let query = supabase
+    .from('event_waitlist')
+    .select('*, tipo:ticket_types!ticket_type_id(id, nombre)')
+    .eq('evento_id', req.params.eventoId)
+    .order('ticket_type_id', { ascending: true })
+    .order('posicion', { ascending: true });
+
+  if (estado)         query = query.eq('estado', estado);
+  if (ticket_type_id) query = query.eq('ticket_type_id', ticket_type_id);
+  if (q)              query = query.or(`guest_email.ilike.%${q}%,guest_nombre.ilike.%${q}%`);
+
+  const { data, error } = await query;
+  if (error) return res.status(500).json({ error: error.message });
+
+  const lista = data || [];
+  const stats = {
+    total    : lista.length,
+    active   : lista.filter(e => e.estado === 'active').length,
+    contacted: lista.filter(e => e.estado === 'contacted').length,
+    purchased: lista.filter(e => e.estado === 'purchased').length,
+    cancelled: lista.filter(e => e.estado === 'cancelled').length,
+  };
+
+  res.json({ waitlist: lista, stats });
 });
 
-router.delete('/:eventoId/waitlist/:id', async (req, res) => {
-  const { eventoId, id } = req.params;
-  try {
-    await assertOwner(eventoId, req.user.id);
-    const { error } = await supabase
-      .from('waitlist').delete().eq('id', id).eq('evento_id', eventoId);
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
+/* ── PATCH /:eventoId/waitlist/:waitlistId ───────────────── */
+
+router.patch('/:eventoId/waitlist/:waitlistId', async (req, res) => {
+  const { estado } = req.body;
+  if (!ESTADOS_VALIDOS.includes(estado)) {
+    return res.status(400).json({ error: `estado inválido. Usa: ${ESTADOS_VALIDOS.join(', ')}.` });
   }
+  if (!(await verificarOwner(req.params.eventoId, req.user.id))) {
+    return res.status(403).json({ error: 'No autorizado.' });
+  }
+
+  const updates = { estado };
+  if (estado === 'purchased') updates.purchased_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('event_waitlist')
+    .update(updates)
+    .eq('id', req.params.waitlistId)
+    .eq('evento_id', req.params.eventoId)
+    .select('*, tipo:ticket_types!ticket_type_id(id, nombre)')
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  if (!data)  return res.status(404).json({ error: 'Entrada no encontrada.' });
+  res.json({ entry: data });
+});
+
+/* ── POST /:eventoId/waitlist/:waitlistId/notify ─────────── */
+
+router.post('/:eventoId/waitlist/:waitlistId/notify', async (req, res) => {
+  const esOwner = await verificarOwner(req.params.eventoId, req.user.id);
+  if (!esOwner) return res.status(403).json({ error: 'No autorizado.' });
+
+  const { data: evento } = await supabase
+    .from('eventos').select('titulo, slug').eq('id', req.params.eventoId).single();
+
+  const { data: entry, error: eEntry } = await supabase
+    .from('event_waitlist')
+    .select('*')
+    .eq('id', req.params.waitlistId)
+    .eq('evento_id', req.params.eventoId)
+    .maybeSingle();
+
+  if (eEntry) return res.status(500).json({ error: eEntry.message });
+  if (!entry) return res.status(404).json({ error: 'Entrada no encontrada.' });
+  if (!['active', 'contacted'].includes(entry.estado)) {
+    return res.status(400).json({ error: 'Solo se puede notificar entradas activas o ya contactadas.' });
+  }
+
+  await supabase.from('event_waitlist').update({
+    estado               : 'contacted',
+    notified_at          : new Date().toISOString(),
+    last_contact_at      : new Date().toISOString(),
+    notification_attempts: (entry.notification_attempts || 0) + 1,
+  }).eq('id', entry.id);
+
+  const pushSent = entry.user_id
+    ? await enviarPushWaitlist(entry.user_id, evento?.slug, evento?.titulo)
+    : 0;
+
+  res.json({ ok: true, pushSent });
+});
+
+/* ── DELETE /:eventoId/waitlist/:waitlistId ──────────────── */
+
+router.delete('/:eventoId/waitlist/:waitlistId', async (req, res) => {
+  if (!(await verificarOwner(req.params.eventoId, req.user.id))) {
+    return res.status(403).json({ error: 'No autorizado.' });
+  }
+
+  const { error } = await supabase
+    .from('event_waitlist')
+    .delete()
+    .eq('id', req.params.waitlistId)
+    .eq('evento_id', req.params.eventoId);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
 });
 
 module.exports = router;
+module.exports.enviarPushWaitlist = enviarPushWaitlist;

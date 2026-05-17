@@ -1,11 +1,18 @@
 import client from './client.js';
 
 export const waitlistApi = {
-  /* Público (sin auth) */
-  anotarse : (slug, body)            => client.post(`/eventos/publicos/slug/${slug}/waitlist`, body).then(r => r.data),
+  list: (eventoId, params = {}) =>
+    client.get(`/eventos/${eventoId}/waitlist`, { params }).then(r => r.data),
 
-  /* Owner */
-  list     : (eventoId)              => client.get(`/eventos/${eventoId}/waitlist`).then(r => r.data),
-  promover : (eventoId, id)          => client.post(`/eventos/${eventoId}/waitlist/${id}/promover`).then(r => r.data),
-  quitar   : (eventoId, id)          => client.delete(`/eventos/${eventoId}/waitlist/${id}`).then(r => r.data),
+  join: (slug, body) =>
+    client.post(`/eventos/publicos/slug/${slug}/waitlist`, body).then(r => r.data),
+
+  updateEstado: (eventoId, waitlistId, estado) =>
+    client.patch(`/eventos/${eventoId}/waitlist/${waitlistId}`, { estado }).then(r => r.data),
+
+  notify: (eventoId, waitlistId) =>
+    client.post(`/eventos/${eventoId}/waitlist/${waitlistId}/notify`).then(r => r.data),
+
+  remove: (eventoId, waitlistId) =>
+    client.delete(`/eventos/${eventoId}/waitlist/${waitlistId}`).then(r => r.data),
 };

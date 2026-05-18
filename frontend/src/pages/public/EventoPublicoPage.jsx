@@ -6,7 +6,6 @@ import { pagosApi }   from '../../api/pagos.js';
 import { BLOCKS } from '../events/editor/blocks.jsx';
 import { BrandingProvider, BrandHeader, PoweredBy } from '../../components/public/Branding.jsx';
 import Turnstile, { turnstileActivo } from '../../components/public/Turnstile.jsx';
-import LangSwitch from '../../components/public/LangSwitch.jsx';
 import { useT } from '../../lib/i18n.js';
 
 /* Página pública de un evento.
@@ -66,15 +65,22 @@ export default function EventoPublicoPage() {
 
   return (
     <BrandingProvider organizador={evento.organizador}>
-    <section className="px-5 sm:px-8 py-12 max-w-3xl mx-auto">
-      <div className="flex justify-end mb-3"><LangSwitch /></div>
-      {/* Brand header del organizador (si configuró logo o nombre de plataforma) */}
-      <div className="mb-8 flex justify-center">
+    <section className="px-5 sm:px-8 py-8 sm:py-12 max-w-5xl mx-auto">
+      {/* Barra superior: volver + marca del organizador */}
+      <div className="flex items-center justify-between gap-4 mb-8 flex-wrap">
+        <Link to="/explorar"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border
+                     text-sm text-text-2 hover:text-text-1 hover:bg-surface-2 transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Explorar eventos
+        </Link>
         <BrandHeader organizador={evento.organizador} />
       </div>
 
       {/* Bloques */}
-      <div className="space-y-8" key={activePage?.id}>
+      <div className="space-y-8 max-w-3xl mx-auto" key={activePage?.id}>
         {(activePage?.blocks || []).map(block => {
           if (block.data?.oculto) return null;
           const B = BLOCKS[block.type];

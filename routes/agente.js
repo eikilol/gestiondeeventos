@@ -7,7 +7,7 @@ router.use(verifySupabaseJWT);
 
 /* GET /me/agente/estado — ¿está disponible el asistente IA? */
 router.get('/me/agente/estado', (_req, res) => {
-  res.json({ disponible: agente.disponible });
+  res.json({ disponible: agente.disponible, provider: agente.provider || null });
 });
 
 /* POST /me/agente/chat — { mensajes: [{role, content}] } → { reply, mood, acciones } */

@@ -31,6 +31,7 @@ const EventDetailPage    = lazy(() => import('./pages/events/EventDetailPage.jsx
 const EventEditPage      = lazy(() => import('./pages/events/EventEditPage.jsx'));
 const UsersPage          = lazy(() => import('./pages/users/UsersPage.jsx'));
 const SettingsPage       = lazy(() => import('./pages/settings/SettingsPage.jsx'));
+const GestbotPage        = lazy(() => import('./pages/agente/GestbotPage.jsx'));
 
 function AuthLoader() {
   return (
@@ -100,6 +101,7 @@ export default function App() {
               <Route path="/eventos/nuevo"      element={<EventCreatePage />} />
               <Route path="/eventos/:id"        element={<EventDetailPage />} />
               <Route path="/eventos/:id/editar" element={<EventEditPage />} />
+              <Route path="/gestbot"          element={<GestbotPage />} />
               <Route path="/usuarios"         element={<UsersPage />} />
               <Route path="/configuracion"    element={<SettingsPage />} />
             </Route>

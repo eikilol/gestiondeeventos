@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
-import AgenteGestek from '../agente/AgenteGestek.jsx';
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
@@ -38,8 +37,6 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
-
-      <AgenteGestek />
     </div>
   );
 }

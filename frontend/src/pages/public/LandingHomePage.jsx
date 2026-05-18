@@ -136,11 +136,13 @@ function Hero() {
   const [ref, visible] = useReveal(0);
   return (
     <section className="relative px-5 sm:px-8 pt-12 sm:pt-20 pb-24 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-primary/10 blur-[160px] rounded-full animate-[glowPulse_6s_ease-in-out_infinite]" />
-        <div className="absolute top-1/3 left-10 w-[400px] h-[400px] bg-accent/8 blur-[140px] rounded-full animate-[glowPulse_8s_ease-in-out_infinite_2s]" />
-        <div className="absolute top-1/4 right-10 w-[300px] h-[300px] bg-primary/8 blur-[120px] rounded-full animate-[glowPulse_7s_ease-in-out_infinite_1s]" />
-      </div>
+      <div className="absolute inset-0 pointer-events-none" style={{
+        transform: 'translateZ(0)',
+        backgroundImage:
+          'radial-gradient(48rem 30rem at 50% 0%, rgba(59,130,246,0.12), transparent 60%),'
+          + 'radial-gradient(26rem 26rem at 12% 35%, rgba(139,92,246,0.08), transparent 60%),'
+          + 'radial-gradient(20rem 20rem at 88% 25%, rgba(59,130,246,0.08), transparent 60%)',
+      }} />
 
       {/* Decorative orbits */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
@@ -556,10 +558,12 @@ function AIPro() {
 
   return (
     <section className="px-5 sm:px-8 py-28 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[760px] h-[560px] bg-accent/14 blur-[170px] rounded-full animate-[glowPulse_8s_ease-in-out_infinite]" />
-        <div className="absolute top-1/3 right-1/4 w-[360px] h-[360px] bg-primary/12 blur-[140px] rounded-full animate-[glowPulse_7s_ease-in-out_infinite_1s]" />
-      </div>
+      <div className="absolute inset-0 pointer-events-none" style={{
+        transform: 'translateZ(0)',
+        backgroundImage:
+          'radial-gradient(42rem 30rem at 50% 50%, rgba(139,92,246,0.12), transparent 62%),'
+          + 'radial-gradient(22rem 22rem at 75% 30%, rgba(59,130,246,0.10), transparent 60%)',
+      }} />
 
       <div ref={ref} className={`relative max-w-6xl mx-auto transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
         {/* Claim de protagonismo */}

@@ -20,10 +20,21 @@
       radial-gradient(ellipse 60% 40% at 50% -10%, rgba(59,130,246,0.10), transparent 60%),
       radial-gradient(ellipse 50% 35% at 100% 100%, rgba(139,92,246,0.08), transparent 70%),
       url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(255,255,255,0.025)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
-    background-attachment: fixed;
+    /* background-attachment: fixed quitado: causaba jank de scroll
+       (repintaba el fondo en cada frame). */
   }
 
   * { box-sizing: border-box; }
+
+  /* Respeta a quien prefiere menos movimiento: corta animaciones
+     decorativas continuas (no las micro-transiciones de UI). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
 
   ::selection { background: rgba(59,130,246,0.3); color: #F1F5F9; }
 

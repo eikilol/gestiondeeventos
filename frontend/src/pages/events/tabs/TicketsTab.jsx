@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { confirmDialog } from '../../../components/ui/Confirm.jsx';
 import { ticketsApi } from '../../../api/tickets.js';
 import { useToast } from '../../../context/ToastContext.jsx';
 import Spinner from '../../../components/ui/Spinner.jsx';
@@ -43,7 +44,7 @@ export default function TicketsTab({ evento }) {
   };
 
   const onBorrar = async (t) => {
-    if (!window.confirm(`¿Borrar "${t.nombre}"?${t.vendidos > 0 ? ' (Tiene ventas — se archivará en vez de borrar)' : ''}`)) return;
+    if (!(await confirmDialog({ message:(`¿Borrar "${t.nombre}"?${t.vendidos > 0 ? ' (Tiene ventas — se archivará en vez de borrar)' : ''}`), danger:true }))) return;
     try {
       await ticketsApi.borrar(evento.id, t.id);
       success('Ticket eliminado.');

@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
+import { ConfirmHost } from './components/ui/Confirm.jsx';
 import GLoader from './components/ui/GLoader.jsx';
 
 import PublicLayout       from './components/layout/PublicLayout.jsx';
@@ -121,6 +122,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </Suspense>
+          <ConfirmHost />
         </AuthProvider>
       </ToastProvider>
     </BrowserRouter>

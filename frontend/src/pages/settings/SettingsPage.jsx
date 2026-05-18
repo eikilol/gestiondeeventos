@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { confirmDialog } from '../../components/ui/Confirm.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
@@ -446,7 +447,7 @@ function IntegracionesTab() {
     finally     { setBusy(false); }
   };
   const revocar = async (id) => {
-    if (!window.confirm('¿Revocar este token? Las integraciones que lo usen dejarán de funcionar.')) return;
+    if (!(await confirmDialog({ message:('¿Revocar este token? Las integraciones que lo usen dejarán de funcionar.'), danger:true }))) return;
     try {
       const { integracionesApi } = await import('../../api/integraciones.js');
       await integracionesApi.revocarToken(id); success('Token revocado.'); cargar();
@@ -463,7 +464,7 @@ function IntegracionesTab() {
     finally     { setBusy(false); }
   };
   const borrarWebhook = async (id) => {
-    if (!window.confirm('¿Borrar webhook?')) return;
+    if (!(await confirmDialog({ message:('¿Borrar webhook?'), danger:true }))) return;
     try {
       const { integracionesApi } = await import('../../api/integraciones.js');
       await integracionesApi.borrarWebhook(id); success('Borrado.'); cargar();
@@ -647,7 +648,7 @@ export function PagosTab() {
   };
 
   const onDesconectar = async () => {
-    if (!window.confirm('¿Desconectar tu cuenta de Mercado Pago? Los pagos quedarán deshabilitados.')) return;
+    if (!(await confirmDialog({ message:('¿Desconectar tu cuenta de Mercado Pago? Los pagos quedarán deshabilitados.'), danger:true }))) return;
     setWorking(true);
     try {
       await pagosApi.desconectar();
@@ -804,19 +805,21 @@ function PlanProCard() {
           <h3 className="text-base font-semibold text-text-1">Plan {esPro ? 'Pro' : 'Free'}</h3>
           <p className="text-xs text-text-3 mt-0.5">
             {esPro
-              ? `Activo hasta ${plan.expires_at ? new Date(plan.expires_at).toLocaleDateString() : '—'}`
-              : `Subí a Pro por ${formatPrecio(plan)} y desbloqueá white-label, dominio propio y la API.`}
+              ? `${plan.en_trial ? 'Prueba Pro · ' : ''}Activo hasta ${plan.expires_at ? new Date(plan.expires_at).toLocaleDateString() : '—'}`
+              : `Pro: white-label, API, webhooks, auditoría y Gestbot. ${plan?.trial_dias || 14} días de prueba gratis, luego US$ ${plan?.precio_usd ?? 19.99}/mes.`}
           </p>
         </div>
         {esPro
-          ? <span className="badge badge-green">Pro</span>
+          ? <span className="badge badge-green">{plan.en_trial ? 'Prueba' : 'Pro'}</span>
           : <span className="badge badge-gray">Free</span>}
       </div>
       <div className="card-body flex items-center justify-between flex-wrap gap-3">
         <div className="text-sm text-text-2 max-w-md">
           {esPro
-            ? 'Renovás manualmente cuando se acerque la fecha. Sin cobros automáticos.'
-            : 'Pago único de 30 días vía Mercado Pago. Sin renovación automática, sin atarte a nada.'}
+            ? (plan.en_trial
+                ? 'Estás en tu prueba gratuita. Cuando termine, paga para seguir con Pro.'
+                : 'Renovás manualmente cuando se acerque la fecha. Sin cobros automáticos.')
+            : `Empieza con ${plan?.trial_dias || 14} días de Pro gratis (sin tarjeta). Después, US$ ${plan?.precio_usd ?? 19.99}/mes — sin renovación automática.`}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {plan?.dev_activation && (
@@ -829,8 +832,21 @@ function PlanProCard() {
               <DevIcon /> Activar dev
             </button>
           )}
+          {plan?.trial_disponible && (
+            <button onClick={async () => {
+              setWorking(true);
+              try {
+                const r = await pagosApi.trial();
+                success(`¡Prueba activada! Tienes ${r.trial_dias} días de Pro gratis.`);
+                await cargar(); notificarPlanCambiado();
+              } catch (e) { error(e.response?.data?.error || e.message); }
+              finally { setWorking(false); }
+            }} disabled={working} className="btn-secondary btn-sm">
+              Probar 14 días gratis
+            </button>
+          )}
           <button onClick={comprar} disabled={working} className="btn-gradient">
-            {working ? <><Spinner size="sm" /> Redirigiendo...</> : (esPro ? 'Renovar Pro 30 días más' : 'Pagar y activar Pro')}
+            {working ? <><Spinner size="sm" /> Redirigiendo...</> : (esPro ? 'Renovar Pro' : 'Pagar y activar Pro')}
           </button>
         </div>
       </div>
@@ -1099,7 +1115,7 @@ export function RecompensasTab() {
     } catch (e) { toastErr(e.message); }
   };
   const borrar = async (r) => {
-    if (!window.confirm(`¿Borrar "${r.titulo}"?`)) return;
+    if (!(await confirmDialog({ message:(`¿Borrar "${r.titulo}"?`), danger:true }))) return;
     try {
       const { recompensasApi } = await import('../../api/loyalty.js');
       await recompensasApi.borrar(r.id);

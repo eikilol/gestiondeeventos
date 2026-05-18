@@ -14,4 +14,5 @@ export const pagosApi = {
   planEstado : ()                  => client.get('/me/plan').then(r => r.data),
   comprarPro : ()                  => client.post('/me/plan/pro/comprar').then(r => r.data),
   activarProDev: ()                => client.post('/me/plan/pro/activar-dev').then(r => r.data),
+  trial      : ()                  => client.post('/me/plan/pro/trial').then(r => r.data),
 };

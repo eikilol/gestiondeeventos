@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { confirmDialog } from '../../../components/ui/Confirm.jsx';
 import { useAuth } from '../../../context/AuthContext.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { agendaApi } from '../../../api/agenda.js';
@@ -188,7 +189,7 @@ export default function AgendaTab({ evento }) {
                 catch (e) { toastErr(e.message); }
               }}
               onDelete={async (s) => {
-                if (!window.confirm(`¿Borrar "${s.titulo}"?`)) return;
+                if (!(await confirmDialog({ message:(`¿Borrar "${s.titulo}"?`), danger:true }))) return;
                 try { await agendaApi.borrarSession(evento.id, s.id); success('Sesión borrada.'); reload(); }
                 catch (e) { toastErr(e.message); }
               }}
@@ -202,7 +203,7 @@ export default function AgendaTab({ evento }) {
           onCrearAt={(date) => openCreate(date)}
           onEditar={(s) => { setSubView('lista'); setEditing(s.id); }}
           onDelete={async (s) => {
-            if (!window.confirm(`¿Borrar "${s.titulo}"?`)) return;
+            if (!(await confirmDialog({ message:(`¿Borrar "${s.titulo}"?`), danger:true }))) return;
             try { await agendaApi.borrarSession(evento.id, s.id); success('Sesión borrada.'); reload(); }
             catch (e) { toastErr(e.message); }
           }}
@@ -231,7 +232,7 @@ export default function AgendaTab({ evento }) {
                 catch (e) { toastErr(e.message); }
               }}
               onDelete={async (s) => {
-                if (!window.confirm(`¿Borrar a "${s.nombre}"?`)) return;
+                if (!(await confirmDialog({ message:(`¿Borrar a "${s.nombre}"?`), danger:true }))) return;
                 try { await agendaApi.borrarSpeaker(evento.id, s.id); success('Speaker borrado.'); reload(); }
                 catch (e) { toastErr(e.message); }
               }}

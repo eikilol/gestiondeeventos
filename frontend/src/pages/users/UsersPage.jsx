@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { confirmDialog } from '../../components/ui/Confirm.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { usuariosApi } from '../../api/usuarios.js';
@@ -39,7 +40,7 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (id, nombre) => {
-    if (!window.confirm(`¿Eliminar a "${nombre}"?`)) return;
+    if (!(await confirmDialog({ message:(`¿Eliminar a "${nombre}"?`), danger:true }))) return;
     setDeleting(id);
     try {
       await usuariosApi.delete(id);

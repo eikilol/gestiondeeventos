@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { confirmDialog } from '../../components/ui/Confirm.jsx';
 import { Link } from 'react-router-dom';
 import { eventosApi } from '../../api/eventos.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -53,7 +54,7 @@ export default function EventsListPage() {
   const handleFilter = (key, val) => setFilters(f => ({ ...f, [key]: val, page: 1 }));
 
   const handleDelete = async (id, nombre) => {
-    if (!window.confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    if (!(await confirmDialog({ message:(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`), danger:true }))) return;
     setDeleting(id);
     try {
       await eventosApi.delete(id);

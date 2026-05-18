@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { eventosApi } from '../api/eventos.js';
+import { solicitudesApi } from '../api/solicitudes.js';
 import { EstadoBadge, ModalidadBadge } from '../components/ui/Badge.jsx';
 
 export default function DashboardPage() {
@@ -9,6 +10,22 @@ export default function DashboardPage() {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats,   setStats]   = useState({ total: 0, publicados: 0, borradores: 0, asistentes: 0 });
+  const [sugerencias, setSugerencias] = useState([]);
+  const [solicitudes, setSolicitudes] = useState([]);
+
+  useEffect(() => {
+    solicitudesApi.misSolicitudes()
+      .then(d => {
+        const map = (r) => ({
+          titulo: r.titulo || r.contenido?.slice(0, 60) || '(sin texto)',
+          subtitulo: `${r.evento_titulo} · ${r.autor?.nombre || 'Miembro'} · ${r.estado}`,
+        });
+        const all = d.solicitudes || [];
+        setSugerencias(all.filter(r => r.tipo === 'sugerencia').slice(0, 6).map(map));
+        setSolicitudes(all.filter(r => r.tipo !== 'sugerencia').slice(0, 6).map(map));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     eventosApi.list({ limit: 50 })
@@ -126,15 +143,15 @@ export default function DashboardPage() {
           title="Sugerencias del equipo"
           empty="Cuando tu staff agregue sugerencias en sus eventos, aparecerán aquí."
           icon={LightbulbIcon}
-          items={[]}
+          items={sugerencias}
         />
         <FeedSection
           className="lg:col-span-5"
           eyebrow="Tus asistentes"
           title="Solicitudes y mensajes"
-          empty="Aquí llegan preguntas, inconformidades y solicitudes de tus clientes."
+          empty="Aquí llegan solicitudes, mensajes y reportes de tu equipo."
           icon={InboxIcon}
-          items={[]}
+          items={solicitudes}
         />
         <section className="lg:col-span-2 rounded-3xl border border-border bg-surface/40 px-5 py-5 flex flex-col">
           <p className="text-xs uppercase tracking-widest text-text-3 font-semibold mb-3">Estado</p>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { confirmDialog } from '../../../components/ui/Confirm.jsx';
 import { equipoApi } from '../../../api/equipo.js';
 import { rolesApi }  from '../../../api/roles.js';
 import { useToast }  from '../../../context/ToastContext.jsx';
@@ -215,7 +216,7 @@ function RolesSection({ eventoId, roles, onChange }) {
   };
 
   const onBorrar = async (rol) => {
-    if (!window.confirm(`¿Borrar el rol "${rol.nombre}"?`)) return;
+    if (!(await confirmDialog({ message:(`¿Borrar el rol "${rol.nombre}"?`), danger:true }))) return;
     try {
       await rolesApi.borrar(eventoId, rol.id);
       success('Rol borrado.');
@@ -458,7 +459,7 @@ function MiembrosSection({ eventoId, equipo, roles, onChange }) {
   };
 
   const onRemover = async (miembroId, label) => {
-    if (!window.confirm(`Quitar a ${label} del equipo?`)) return;
+    if (!(await confirmDialog({ message:(`Quitar a ${label} del equipo?`), danger:true }))) return;
     try {
       await equipoApi.remover(eventoId, miembroId);
       success('Miembro removido.');

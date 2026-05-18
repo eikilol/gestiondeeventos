@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import Criatura from '../../components/agente/Criatura.jsx';
 
 function useReveal(threshold = 0.15) {
   const ref = useRef(null);
@@ -39,6 +40,8 @@ export default function LandingHomePage() {
     <>
       <Hero />
       <Marquee />
+      <AIPro />
+      <FreeIntro />
       <Stats />
       <Pillars />
       <FeatureSplit
@@ -70,30 +73,57 @@ export default function LandingHomePage() {
       <FeatureSplit
         side="left"
         kicker="Equipo y comunicación · Gratis"
-        title="Trabaja en equipo y mantén a todos al tanto"
-        desc="Invita a tu equipo con roles granulares y deja que cada quien se encargue de lo suyo. Las notificaciones automáticas mantienen informados a asistentes y organizadores."
+        title="Tu equipo, con roles, tareas y voz propia"
+        desc="Define roles con permisos granulares por evento. Cada miembro entra a su vista 'Mi trabajo', ve sus tareas, chatea por canales y te envía sugerencias o solicitudes que tú gestionas."
         bullets={[
-          'Multi-usuario con roles granulares (admin, editor, lector)',
-          'Notificaciones de eventos por email y dentro de la app',
-          'Subpaths personalizadas (gestek.io/tu-empresa)',
-          'Recordatorios automáticos pre-evento (T-7d, T-1d, T-1h)',
+          'Roles con permisos por evento (tickets, check-in, clientes…)',
+          'Vista de empleado "Mi trabajo": sus eventos y tareas',
+          'Chat del equipo por canales (general / staff)',
+          'Sugerencias, solicitudes y reportes del equipo → al organizador',
+          'Tareas tipo Kanban + recordatorios in-app (T-7d, T-1d, T-1h)',
         ]}
         visual={<TeamMockup />}
       />
       <FeatureSplit
         side="right"
+        kicker="Agenda, fidelidad y analítica · Gratis"
+        title="Programa el evento y premia a tu gente"
+        desc="Arma la agenda con vistas Lista, Día (timeline por horas), Semana y Mes, con speakers y patrocinadores. Suma un programa de puntos y recompensas, ranking del equipo y analítica real."
+        bullets={[
+          'Agenda con vista Día (timeline), Semana y Mes',
+          'Speakers, patrocinadores y bloques de sesión',
+          'Fidelidad: puntos, recompensas y canjes (clientes y staff)',
+          'Ranking del equipo por evento',
+          'Analítica: visitas, conversión, ingresos por tipo',
+        ]}
+        visual={<QRMockup />}
+      />
+      <FeatureSplit
+        side="left"
+        kicker="White-label · Todos los planes"
+        title="Tu marca, no la nuestra"
+        desc="Personaliza el panel y las páginas públicas: logo, nombre, colores, fondo, tipografía, radio de bordes, tagline y redes. En Pro, además quitas la marca GESTEK y pones tu footer."
+        bullets={[
+          'Logo, colores, fondo y tipografía propios',
+          'Se aplica en el panel y en las páginas públicas del evento',
+          'Tagline + enlaces (web, Instagram, WhatsApp)',
+          'En Pro: sin "Powered by GESTEK" y footer propio',
+        ]}
+        visual={<BrandMock />}
+      />
+      <FeatureSplit
+        side="right"
         kicker="API + Webhooks · Plan Pro"
         title="Conecta GESTEK con todo tu stack"
-        desc="Plan Pro incluye API REST documentada con API key y webhooks que disparan en cada inscripción, pago o check-in. Para cuando ya tienes CRM, ERP o flujos automatizados."
+        desc="El plan Pro incluye API REST con API key (HMAC), webhooks que disparan en cada inscripción, pago o check-in, y auditoría de todas las acciones del equipo."
         bullets={[
-          'API key por organización con HMAC',
-          'Webhooks: registro, pago, check-in, cancelación',
-          'OpenAPI / Postman + reintentos automáticos',
-          'Rate limit 600 req/min',
+          'API key por organización con firma HMAC',
+          'Webhooks: registro, pago, check-in, cancelación + reintentos',
+          'Auditoría de acciones del equipo (quién hizo qué y cuándo)',
+          'Rate limit y tokens revocables',
         ]}
         visual={<CodeMockup />}
       />
-      <AIPro />
       <PricingTeaser />
       <FAQTeaser />
       <CTASection />
@@ -106,11 +136,13 @@ function Hero() {
   const [ref, visible] = useReveal(0);
   return (
     <section className="relative px-5 sm:px-8 pt-12 sm:pt-20 pb-24 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-primary/10 blur-[160px] rounded-full animate-[glowPulse_6s_ease-in-out_infinite]" />
-        <div className="absolute top-1/3 left-10 w-[400px] h-[400px] bg-accent/8 blur-[140px] rounded-full animate-[glowPulse_8s_ease-in-out_infinite_2s]" />
-        <div className="absolute top-1/4 right-10 w-[300px] h-[300px] bg-primary/8 blur-[120px] rounded-full animate-[glowPulse_7s_ease-in-out_infinite_1s]" />
-      </div>
+      <div className="absolute inset-0 pointer-events-none" style={{
+        transform: 'translateZ(0)',
+        backgroundImage:
+          'radial-gradient(48rem 30rem at 50% 0%, rgba(59,130,246,0.12), transparent 60%),'
+          + 'radial-gradient(26rem 26rem at 12% 35%, rgba(139,92,246,0.08), transparent 60%),'
+          + 'radial-gradient(20rem 20rem at 88% 25%, rgba(59,130,246,0.08), transparent 60%)',
+      }} />
 
       {/* Decorative orbits */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
@@ -121,7 +153,7 @@ function Hero() {
 
       <div className="relative max-w-5xl mx-auto text-center" ref={ref}>
         <h1 className={`text-7xl sm:text-8xl lg:text-[8.5rem] font-bold font-display tracking-tight leading-none text-text-1 transition-all duration-700 delay-100 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <span className="bg-gradient-to-br from-text-1 via-primary-light to-accent-light bg-clip-text text-transparent animate-[shimmer_8s_linear_infinite]" style={{ backgroundSize: '200% 100%' }}>
+          <span className="bg-gradient-to-br from-text-1 via-primary-light to-accent-light bg-clip-text text-transparent animate-[shimmer_8s_linear_infinite]" style={{ backgroundSize: '200% 100%', animationDirection: 'reverse' }}>
             GESTEK
           </span>
         </h1>
@@ -130,10 +162,17 @@ function Hero() {
           Manage · Automate · Scale
         </p>
 
+        <div className={`mt-6 flex justify-center transition-all duration-700 delay-250 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/40
+                           bg-accent/10 text-accent-light text-xs sm:text-sm font-semibold">
+Primera plataforma de gestión de eventos con IA integrada para automatizarlos
+          </span>
+        </div>
+
         <p className={`mt-8 text-lg sm:text-2xl text-text-2 max-w-3xl mx-auto leading-relaxed transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           La plataforma de gestión de eventos que reemplaza tu stack actual.
-          Creación, ventas, asistencia, pagos y comunidad — todo lo esencial
-          gratis, para siempre.
+          Creación, ventas, asistencia, pagos y comunidad. Empieza gratis y
+          sube a Pro cuando lo necesites — 14 días de prueba.
         </p>
 
         <div className={`mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 transition-all duration-700 delay-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -179,7 +218,7 @@ function Marquee() {
     <div className="relative border-y border-border py-7 overflow-hidden bg-gradient-to-r from-bg via-surface/40 to-bg">
       <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
       <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
-      <div className="flex items-center gap-14 animate-marquee" style={{ width: 'max-content' }}>
+      <div className="flex items-center gap-14 animate-marquee" style={{ width: 'max-content', animationDirection: 'reverse' }}>
         {[...items, ...items].map((t, i) => (
           <div key={i} className="flex items-center gap-14 flex-shrink-0">
             <span className="text-sm font-semibold tracking-[0.25em] text-text-2 whitespace-nowrap hover:text-text-1 transition-colors">
@@ -210,9 +249,9 @@ function Stats() {
     },
     {
       kicker: 'Sin trucos',
-      title: 'Plan gratis',
-      highlight: 'para siempre',
-      desc: 'Todo lo esencial incluido. Sin caducidad, sin tarjeta, sin asteriscos.',
+      title: 'Empieza',
+      highlight: 'gratis',
+      desc: 'Crea y vende sin tarjeta. Pro suma IA, API, white-label y más — con 14 días de prueba.',
     },
     {
       kicker: 'Escala',
@@ -249,12 +288,33 @@ function Stats() {
 }
 
 /* ─────────── PILLARS ─────────── */
+function FreeIntro() {
+  const [ref, visible] = useReveal();
+  return (
+    <section className="px-5 sm:px-8 pt-24 pb-6">
+      <div ref={ref} className={`max-w-3xl mx-auto text-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+        <p className="text-xs uppercase tracking-widest text-primary-light font-bold mb-4">
+          Plan gratuito
+        </p>
+        <h2 className="text-4xl sm:text-5xl font-bold font-display text-text-1 tracking-tight leading-tight mb-5">
+          El plan gratuito incluye lo esencial para operar tus eventos.
+        </h2>
+        <p className="text-base sm:text-lg text-text-2 leading-relaxed">
+          Eventos y asistentes ilimitados, QR de check-in, agenda con vista por día,
+          equipo con roles y chat, programa de fidelidad con puntos y ranking, pagos
+          BRE-B sin comisión y página pública con tu marca. Sin costo.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function Pillars() {
   const [ref, visible] = useReveal();
   const items = [
-    { title: 'Todo en gratis', desc: 'Eventos ilimitados, QR de asistencia, recordatorios por email, gamificación, API completa y página pública. Todo lo esencial sin pagar.' },
-    { title: 'Pagos sin fricción', desc: 'Conecta tu llave o QR de BRE-B y empieza a vender boletas. El dinero va directo a tu cuenta — GESTEK no se queda con nada en el plan gratis.' },
-    { title: 'IA opcional (Pro)', desc: 'Cuando quieras acelerar, el asistente IA crea bloques de evento listos según tu contexto. Solo si lo necesitas, no es un requisito.' },
+    { title: 'Gratis para empezar', desc: 'Eventos y asistentes ilimitados, QR de check-in, agenda, equipo con roles, fidelidad, chat y página pública. Lo esencial sin pagar.' },
+    { title: 'Pagos sin fricción', desc: 'Conecta tu llave o QR de BRE-B y vende boletas. El dinero va directo a tu cuenta — GESTEK no se queda con comisión.' },
+    { title: 'Pro cuando escalas', desc: 'Gestbot (IA que opera el evento), API + Webhooks y auditoría. 14 días de prueba gratis, luego US$ 19.99/mes.' },
   ];
   return (
     <section className="px-5 sm:px-8 py-24 sm:py-28">
@@ -428,6 +488,33 @@ function TeamMockup() {
   );
 }
 
+function BrandMock() {
+  return (
+    <div className="rounded-3xl border border-border-2 overflow-hidden"
+         style={{ background: '#0E1630', fontFamily: "'Space Grotesk', sans-serif" }}>
+      <div className="px-5 py-3 flex items-center gap-2.5 border-b border-white/10">
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FCEFA1] to-[#A6731B]" />
+        <div>
+          <span className="block text-sm font-bold text-white">Tu Empresa</span>
+          <span className="block text-[11px] text-white/60">Experiencias inolvidables</span>
+        </div>
+        <div className="ml-auto flex gap-1.5">
+          <span className="w-7 h-7 rounded-lg border border-white/15" />
+          <span className="w-7 h-7 rounded-lg border border-white/15" />
+        </div>
+      </div>
+      <div className="p-5 space-y-3">
+        <div className="aspect-video rounded-2xl bg-gradient-to-br from-primary/40 to-accent/25" />
+        <p className="text-base font-semibold text-white">Tu evento, con tu marca</p>
+        <p className="text-sm text-white/60">Colores, tipografía y fondo propios — sin “GESTEK”.</p>
+        <span className="inline-flex h-8 px-4 items-center rounded-full text-xs font-semibold text-white bg-primary">
+          Reservar
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function CodeMockup() {
   return (
     <div className="rounded-3xl border border-border-2 bg-bg/80 backdrop-blur overflow-hidden">
@@ -462,44 +549,92 @@ function CodeMockup() {
 /* ─────────── AI Pro callout ─────────── */
 function AIPro() {
   const [ref, visible] = useReveal();
-  return (
-    <section className="px-5 sm:px-8 py-24 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-accent/12 blur-[160px] rounded-full animate-[glowPulse_8s_ease-in-out_infinite]" />
-      </div>
-      <div ref={ref} className={`relative max-w-4xl mx-auto text-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/30 bg-accent/10 text-accent-light text-xs font-semibold uppercase tracking-widest mb-6">
-          Plan Pro · Opcional
-        </span>
-        <h2 className="text-4xl sm:text-5xl font-bold font-display tracking-tight text-text-1 leading-tight mb-5">
-          Un agente IA que arma<br />tu evento por ti
-        </h2>
-        <p className="text-base sm:text-lg text-text-2 max-w-2xl mx-auto mb-10 leading-relaxed">
-          Cuéntale al agente qué evento quieres (formato, fecha, audiencia, tono) y él prepara
-          bloques iniciales: agenda, ficha pública, copy para invitaciones y configuración
-          de tickets. Tú ajustas, él te ahorra horas.
-        </p>
+  const MOODS = ['idle', 'thinking', 'talking', 'happy'];
+  const [mi, setMi] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setMi(i => (i + 1) % MOODS.length), 2600);
+    return () => clearInterval(id);
+  }, []);
 
-        <div className="rounded-3xl border border-accent/25 bg-surface/60 backdrop-blur p-6 sm:p-8 text-left max-w-2xl mx-auto">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="w-9 h-9 rounded-full bg-text-1 flex-shrink-0" />
-            <div className="flex-1 px-4 py-3 rounded-2xl rounded-tl-sm bg-bg/60 border border-border text-sm text-text-1">
-              Organiza un summit de tecnología para 200 personas el 15 de agosto en Ibagué, modalidad híbrida, entrada gratuita.
+  return (
+    <section className="px-5 sm:px-8 py-28 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none" style={{
+        transform: 'translateZ(0)',
+        backgroundImage:
+          'radial-gradient(42rem 30rem at 50% 50%, rgba(139,92,246,0.12), transparent 62%),'
+          + 'radial-gradient(22rem 22rem at 75% 30%, rgba(59,130,246,0.10), transparent 60%)',
+      }} />
+
+      <div ref={ref} className={`relative max-w-6xl mx-auto transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+        {/* Claim de protagonismo */}
+        <div className="text-center mb-12">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/40 bg-accent/10 text-accent-light text-xs font-semibold uppercase tracking-widest mb-6">
+            Asistente de IA integrado
+          </span>
+          <h2 className="text-4xl sm:text-6xl font-bold font-display tracking-tight text-text-1 leading-[1.05] mb-5">
+            <span className="bg-gradient-to-br from-primary-light to-accent-light bg-clip-text text-transparent">Gestbot</span>, el asistente que opera tu evento
+          </h2>
+          <p className="text-base sm:text-xl text-text-2 max-w-2xl mx-auto leading-relaxed">
+            Gestbot no se limita a sugerir: <strong className="text-text-1">ejecuta</strong>. Crea y
+            publica eventos, arma boletas, registra check-ins, envía recordatorios y gestiona el
+            equipo — <strong className="text-text-1">más de 50 acciones reales</strong>. Solicita
+            los datos faltantes mediante formularios y puede analizar un PDF o imágenes para crear
+            el evento.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
+          {/* El robot, protagonista */}
+          <div className="relative flex items-center justify-center">
+            <div className="absolute w-72 h-72 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 blur-2xl" />
+            <div className="relative">
+              <Criatura mood={MOODS[mi]} size={300} />
+            </div>
+            <div className="absolute bottom-2 px-4 py-1.5 rounded-full bg-surface/80 backdrop-blur
+                            border border-border-2 text-xs text-text-2">
+              {MOODS[mi] === 'thinking' ? 'Procesando' : MOODS[mi] === 'happy' ? 'Listo' : 'Disponible'}
             </div>
           </div>
-          <div className="flex items-start gap-3 flex-row-reverse">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">IA</div>
-            <div className="flex-1 px-4 py-3 rounded-2xl rounded-tr-sm bg-accent/10 border border-accent/20 text-sm text-text-1">
-              Listo. Creé <span className="font-semibold">Summit Tech Ibagué 2026</span> con 200 cupos, fecha 15 Ago,
-              agenda base de 6 bloques, página pública y QR de asistencia. ¿Publico ahora?
+
+          {/* Conversación */}
+          <div className="rounded-3xl border border-accent/25 bg-surface/60 backdrop-blur p-6 sm:p-7 text-left space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-text-1/90 flex-shrink-0" />
+              <div className="flex-1 px-4 py-3 rounded-2xl rounded-tl-sm bg-bg/60 border border-border text-sm text-text-1">
+                Crea un summit de tecnología para 200 personas el 15 de agosto en Ibagué, híbrido, entrada gratis.
+              </div>
+            </div>
+            <div className="flex items-start gap-3 flex-row-reverse">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold">G</div>
+              <div className="flex-1 px-4 py-3 rounded-2xl rounded-tr-sm bg-accent/10 border border-accent/20 text-sm text-text-1">
+                Listo. Creé <span className="font-semibold">Summit Tech Ibagué 2026</span> (200 cupos, 15 ago,
+                híbrido), agenda base, página pública y QR. ¿Lo publico?
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-text-1/90 flex-shrink-0" />
+              <div className="flex-1 px-4 py-3 rounded-2xl rounded-tl-sm bg-bg/60 border border-border text-sm text-text-1">
+                Publícalo y crea una boleta VIP a 50.000.
+              </div>
+            </div>
+            <div className="flex items-start gap-3 flex-row-reverse">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold">G</div>
+              <div className="flex-1 px-4 py-3 rounded-2xl rounded-tr-sm bg-accent/10 border border-accent/20 text-sm text-text-1">
+                Hecho. Evento publicado y boleta <span className="font-semibold">VIP · $50.000</span> creada.
+              </div>
             </div>
           </div>
         </div>
 
-        <Link to="/planes" className="inline-flex items-center gap-2 mt-10 text-sm text-accent-light hover:text-accent transition-colors">
-          Ver plan Pro
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-        </Link>
+        <div className="text-center mt-12">
+          <Link to="/register?plan=pro"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-primary to-accent
+                       text-white text-sm font-semibold hover:opacity-90 transition-all shadow-glow-accent">
+            Probar Gestbot 14 días gratis
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+          </Link>
+          <p className="text-xs text-text-3 mt-3">Función Pro · sin tarjeta · cancela cuando quieras</p>
+        </div>
       </div>
     </section>
   );
@@ -517,24 +652,24 @@ function PricingTeaser() {
             Empieza gratis. Sube cuando quieras.
           </h2>
           <p className="text-base sm:text-lg text-text-2 max-w-xl mx-auto">
-            Lo esencial siempre en gratis. Pro existe para comodidad y branding, no para desbloquear lo básico.
+            Empieza gratis con lo esencial. Pro suma IA, API, white-label y soporte — pruébalo 14 días sin tarjeta.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-5">
           <div className="p-7 rounded-3xl border border-border bg-surface/40 hover:bg-surface/60 transition-all">
             <h3 className="text-2xl font-bold font-display text-text-1 mb-2">Free</h3>
-            <p className="text-sm text-text-2 mb-5">Todo lo esencial, sin tarjeta de crédito.</p>
-            <p className="text-4xl font-bold font-display text-text-1 mb-6">Gratis</p>
+            <p className="text-sm text-text-2 mb-5">Lo esencial para empezar, sin tarjeta.</p>
+            <p className="text-4xl font-bold font-display text-text-1 mb-6">$0</p>
             <ul className="space-y-2.5 text-sm text-text-1 mb-7">
               {[
                 'Eventos y asistentes ilimitados',
                 'QR de check-in / check-out',
-                'Recordatorios email + notificaciones',
-                'Gamificación completa',
+                'Agenda (Día/Semana/Mes), speakers y patrocinadores',
+                'Equipo con roles + chat + sugerencias',
+                'Fidelidad: puntos, recompensas y ranking',
                 'Pasarela BRE-B sin comisiones',
-                'Multi-usuario con roles granulares',
-                'Subpath en gestek.io/tu-marca',
+                'White-label básico + página pública',
               ].map(f => (
                 <li key={f} className="flex items-start gap-2"><span className="text-primary-light mt-0.5">✓</span> {f}</li>
               ))}
@@ -547,15 +682,16 @@ function PricingTeaser() {
           <div className="relative p-7 rounded-3xl border border-primary/40 bg-surface/80 shadow-[0_0_60px_rgba(59,130,246,0.12)] hover:shadow-[0_0_80px_rgba(59,130,246,0.2)] transition-all">
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-semibold tracking-widest uppercase bg-primary text-white">Recomendado</span>
             <h3 className="text-2xl font-bold font-display text-text-1 mb-2">Pro</h3>
-            <p className="text-sm text-text-2 mb-5">API, IA, branding y dominio propio.</p>
-            <p className="text-4xl font-bold font-display text-text-1 mb-6">$29 <span className="text-base text-text-3 font-medium">USD/mes</span></p>
+            <p className="text-sm text-text-2 mb-5">IA, API, white-label y soporte. 14 días de prueba gratis.</p>
+            <p className="text-4xl font-bold font-display text-text-1 mb-1">$19.99 <span className="text-base text-text-3 font-medium">USD/mes</span></p>
+            <p className="text-xs text-primary-light mb-5">14 días gratis · sin tarjeta · cancela cuando quieras</p>
             <ul className="space-y-2.5 text-sm text-text-1 mb-7">
               {[
                 'Todo lo del Free',
+                'Gestbot — asistente IA que opera tu evento',
                 'API REST + Webhooks con HMAC',
-                'Agente IA que arma tus eventos',
                 'White-label sin marca GESTEK',
-                'Dominio personalizado propio',
+                'Auditoría de acciones del equipo',
                 'Analytics avanzados',
                 'Soporte prioritario',
               ].map(f => (
@@ -633,7 +769,7 @@ function CTASection() {
           Tu próximo evento empieza hoy
         </h2>
         <p className="relative text-base sm:text-lg text-text-2 max-w-lg mx-auto mb-10">
-          Crea tu cuenta en menos de un minuto. Todo lo esencial es gratis, para siempre.
+          Crea tu cuenta en menos de un minuto. Empieza gratis; Pro con 14 días de prueba.
         </p>
         <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link to="/register" className="w-full sm:w-auto px-8 py-4 rounded-full text-base font-semibold text-bg bg-text-1 hover:bg-white transition-all shadow-[0_0_40px_rgba(241,245,249,0.2)] hover:scale-[1.02]">

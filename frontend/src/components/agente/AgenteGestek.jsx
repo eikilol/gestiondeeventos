@@ -54,7 +54,7 @@ export default function AgenteGestek() {
       setMood(r.mood || 'talking');
       /* Si creó/publicó un evento, ofrecemos navegar */
       const navAccion = (r.acciones || []).find(
-        a => a.ok && ['crear_evento', 'publicar_evento', 'editar_evento'].includes(a.tool)
+        a => a.ok && ['crear_evento', 'publicar_evento', 'editar_evento', 'duplicar_evento'].includes(a.tool)
       );
       if (navAccion) window.dispatchEvent(new CustomEvent('gestek:refrescar-eventos'));
       setTimeout(() => setMood('idle'), 4200);

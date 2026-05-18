@@ -23,19 +23,26 @@ app.use((req, _res, next) => {
 
 /* Rutas */
 app.use('/api/v1',           require('./routes/api.js'));
+/* PÚBLICOS primero: estos routers no requieren auth. Deben ir ANTES de
+   los routers montados en '/' que aplican router.use(verifySupabaseJWT),
+   porque al estar montados en '/' interceptan TODA petición (incluida
+   /eventos/publicos y /categorias) y devolverían 401 sin token. */
+app.use('/categorias',       require('./routes/categorias.js'));
+app.use('/eventos/publicos', require('./routes/eventos.publicos.js'));
 app.use('/me',               require('./routes/me.js'));
 app.use('/me',               require('./routes/integraciones.js'));
+/* Pagos y Push usan auth POR RUTA (no router.use global) y tienen rutas
+   públicas (compra anónima, webhook MP, vapid-key) → van antes del bloque
+   con auth global para que esas rutas públicas no sean interceptadas. */
+app.use('/', authLimiter,    require('./routes/pagos.js'));
+app.use('/',                 require('./routes/push.js'));
+/* Routers con router.use(verifySupabaseJWT) GLOBAL montados en '/':
+   van AL FINAL del grupo '/' para no bloquear lo público de arriba. */
 app.use('/',                 require('./routes/agente.js'));
 app.use('/',                 require('./routes/notificaciones.js'));
 app.use('/',                 require('./routes/solicitudes.js'));
 app.use('/',                 require('./routes/recompensas.js'));
 app.use('/',                 require('./routes/loyalty.js'));
-app.use('/categorias',       require('./routes/categorias.js'));
-app.use('/eventos/publicos', require('./routes/eventos.publicos.js'));
-/* Pagos (MP): define sus propios paths absolutos — /me/mercadopago, /eventos/publicos/.../comprar, /webhooks/mercadopago */
-app.use('/', authLimiter,    require('./routes/pagos.js'));
-/* Push: define rutas absolutas /push/vapid-key, /me/push/*, /eventos/:id/push/broadcast */
-app.use('/',                 require('./routes/push.js'));
 /* Estos dos se montan en /eventos y definen sus paths con :eventoId internamente
    (evita issues con path-to-regexp v6 al usar param en mount path).
    Van ANTES del router general de /eventos para que sus rutas más específicas matcheen primero. */

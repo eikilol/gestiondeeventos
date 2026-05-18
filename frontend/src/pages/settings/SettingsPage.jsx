@@ -12,7 +12,6 @@ import { notificarPlanCambiado } from '../../hooks/usePlan.js';
    propias en el sidebar (páginas dedicadas). */
 const TABS = [
   { key: 'perfil',        label: 'Perfil',        icon: UserIcon  },
-  { key: 'white',         label: 'White-label',   icon: PaintIcon },
   { key: 'logros',        label: 'Logros',        icon: TrophyIcon },
   { key: 'integraciones', label: 'Integraciones', icon: CodeIcon  },
 ];
@@ -166,9 +165,6 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* White-label */}
-      {tab === 'white' && <WhiteLabelTab />}
-
       {/* Logros */}
       {tab === 'logros' && <LogrosTab />}
 
@@ -181,7 +177,7 @@ export default function SettingsPage() {
 }
 
 /* ──────────── White-label Tab ──────────── */
-function WhiteLabelTab() {
+export function WhiteLabelTab() {
   const { usuario } = useAuth();
   const { success, error } = useToast();
   const branding = usuario?.raw?.user_metadata?.branding || {};
@@ -196,6 +192,8 @@ function WhiteLabelTab() {
   const [instagram, setInstagram] = useState(branding.instagram || '');
   const [whatsapp, setWhatsapp] = useState(branding.whatsapp || '');
   const [footer,   setFooter]  = useState(branding.footer || '');
+  const [radius,   setRadius]  = useState(branding.radius || 'lg');
+  const [theme,    setTheme]   = useState(branding.theme || 'oscuro');
   const [saving, setSaving] = useState(false);
 
   const FONT_CSS = {
@@ -209,7 +207,7 @@ function WhiteLabelTab() {
     setSaving(true);
     try {
       const newBranding = {
-        primary, accent, bg, font, plataforma, tagline,
+        primary, accent, bg, font, radius, theme, plataforma, tagline,
         web: web.trim() || null, instagram: instagram.trim() || null,
         whatsapp: whatsapp.trim() || null, footer: footer.trim() || null,
       };
@@ -230,7 +228,7 @@ function WhiteLabelTab() {
       <div className="card">
         <div className="card-header">
           <h3 className="text-base font-semibold text-text-1">Marca de tu empresa</h3>
-          <span className="badge-yellow text-xs">Plan Pro</span>
+          <span className="badge-blue text-xs">Disponible en todos los planes</span>
         </div>
         <div className="card-body grid lg:grid-cols-[1fr_320px] gap-6">
           {/* Form */}
@@ -283,6 +281,28 @@ function WhiteLabelTab() {
               </select>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="field">
+                <label className="label">Radio de bordes</label>
+                <select value={radius} onChange={e => setRadius(e.target.value)}
+                  className="input rounded-2xl py-3">
+                  <option value="none">Cuadrado</option>
+                  <option value="sm">Sutil</option>
+                  <option value="md">Medio</option>
+                  <option value="lg">Redondeado</option>
+                  <option value="xl">Muy redondeado</option>
+                </select>
+              </div>
+              <div className="field">
+                <label className="label">Modo</label>
+                <select value={theme} onChange={e => setTheme(e.target.value)}
+                  className="input rounded-2xl py-3">
+                  <option value="oscuro">Oscuro</option>
+                  <option value="claro">Claro</option>
+                </select>
+              </div>
+            </div>
+
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="field">
                 <label className="label">Sitio web</label>
@@ -321,28 +341,39 @@ function WhiteLabelTab() {
           {/* Preview */}
           <aside>
             <p className="label">Vista previa</p>
-            <div className="rounded-3xl border border-border-2 overflow-hidden"
-                 style={{ background: bg, fontFamily: FONT_CSS[font] }}>
-              {/* Header de marca simulado */}
-              <div className="px-4 py-3 flex items-center gap-2.5 border-b border-white/10">
-                {logo
-                  ? <img src={logo} alt="" className="w-8 h-8 rounded-lg object-cover" />
-                  : <div className="w-8 h-8 rounded-lg" style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }} />}
-                <div>
-                  <span className="block text-sm font-bold text-white">{plataforma || 'Tu plataforma'}</span>
-                  {tagline && <span className="block text-[11px] text-white/60">{tagline}</span>}
+            {(() => {
+              const RAD = { none: '0px', sm: '6px', md: '12px', lg: '18px', xl: '26px' };
+              const r = RAD[radius] ?? '18px';
+              const light = theme === 'claro';
+              const efBg = bg || (light ? '#F4F6FB' : '#070C18');
+              const txt = light ? '#0B1220' : '#FFFFFF';
+              const sub = light ? '#475569' : 'rgba(255,255,255,.6)';
+              return (
+                <div className="border border-border-2 overflow-hidden"
+                     style={{ background: efBg, fontFamily: FONT_CSS[font], borderRadius: r }}>
+                  <div className="px-4 py-3 flex items-center gap-2.5"
+                       style={{ borderBottom: `1px solid ${light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.1)'}` }}>
+                    {logo
+                      ? <img src={logo} alt="" className="w-8 h-8 object-cover" style={{ borderRadius: r }} />
+                      : <div className="w-8 h-8" style={{ borderRadius: r, background: `linear-gradient(135deg, ${primary}, ${accent})` }} />}
+                    <div>
+                      <span className="block text-sm font-bold" style={{ color: txt }}>{plataforma || 'Tu plataforma'}</span>
+                      {tagline && <span className="block text-[11px]" style={{ color: sub }}>{tagline}</span>}
+                    </div>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <div className="aspect-video" style={{ borderRadius: r, background: `linear-gradient(135deg, ${primary}40, ${accent}25)` }} />
+                    <p className="text-base font-semibold" style={{ color: txt }}>Tu evento aquí</p>
+                    <p className="text-sm leading-relaxed" style={{ color: sub }}>Así se ven tus páginas públicas con tu marca.</p>
+                    <button className="px-4 py-2 text-sm font-semibold text-white"
+                            style={{ background: primary, borderRadius: radius === 'none' ? '0px' : '9999px' }}>
+                      Reservar
+                    </button>
+                    {footer && <p className="text-[10px] pt-2" style={{ color: sub }}>{footer}</p>}
+                  </div>
                 </div>
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="aspect-video rounded-xl" style={{ background: `linear-gradient(135deg, ${primary}40, ${accent}25)` }} />
-                <p className="text-base font-semibold text-white">Tu evento aquí</p>
-                <p className="text-sm text-white/60 leading-relaxed">Así se ven tus páginas públicas con tu marca.</p>
-                <button className="px-4 py-2 rounded-full text-sm font-semibold text-white" style={{ background: primary }}>
-                  Reservar
-                </button>
-                {footer && <p className="text-[10px] text-white/40 pt-2">{footer}</p>}
-              </div>
-            </div>
+              );
+            })()}
             <p className="text-xs text-text-3 mt-3 leading-relaxed">
               Con plan Pro esto se aplica de verdad en las páginas públicas de tus eventos
               (colores, fondo, tipografía, header y footer).

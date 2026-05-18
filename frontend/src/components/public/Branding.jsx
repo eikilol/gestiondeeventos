@@ -1,6 +1,6 @@
-/* Aplica el branding del organizador en las páginas públicas:
-   colores (CSS vars), color de fondo, tipografía, header con tagline
-   y redes, y footer personalizable. */
+/* Branding del organizador en páginas públicas (para TODOS los planes):
+   colores, fondo, tipografía, radio de bordes, modo claro/oscuro,
+   header con tagline + redes, y footer. */
 
 const FONTS = {
   sans   : "'Inter', system-ui, sans-serif",
@@ -8,22 +8,53 @@ const FONTS = {
   serif  : "Georgia, 'Times New Roman', serif",
   mono   : "'JetBrains Mono', 'Fira Code', monospace",
 };
+const RADIUS = { none: '0px', sm: '6px', md: '12px', lg: '18px', xl: '26px' };
+
+/* Estilos scoped para que el modo claro afecte de verdad a la página */
+const STYLE_ID = 'gestek-brand-css';
+const CSS = `
+.brand-scope{transition:background .25s}
+.brand-scope[data-bt="claro"] .text-text-1{color:#0B1220!important}
+.brand-scope[data-bt="claro"] .text-text-2{color:#475569!important}
+.brand-scope[data-bt="claro"] .text-text-3{color:#7A8699!important}
+.brand-scope[data-bt="claro"] .bg-surface,
+.brand-scope[data-bt="claro"] .bg-surface\\/40,
+.brand-scope[data-bt="claro"] .bg-surface-2{background-color:rgba(255,255,255,.75)!important}
+.brand-scope[data-bt="claro"] .border-border,
+.brand-scope[data-bt="claro"] .border-border-2{border-color:rgba(0,0,0,.10)!important}
+.brand-scope[style*="--brand-radius"] .rounded-2xl,
+.brand-scope[style*="--brand-radius"] .rounded-3xl,
+.brand-scope[style*="--brand-radius"] .rounded-xl{border-radius:var(--brand-radius)!important}
+.brand-scope[style*="--brand-radius"] .rounded-full{border-radius:9999px!important}
+`;
+function injectCss() {
+  if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return;
+  const el = document.createElement('style');
+  el.id = STYLE_ID; el.textContent = CSS;
+  document.head.appendChild(el);
+}
 
 export function BrandingProvider({ organizador, children }) {
+  injectCss();
   const b = organizador?.branding || {};
+  const theme   = b.theme === 'claro' ? 'claro' : 'oscuro';
   const primary = b.primary || '#3B82F6';
   const accent  = b.accent  || '#8B5CF6';
-  const bg      = b.bg || null;
+  const bg      = b.bg || (theme === 'claro' ? '#F4F6FB' : '#070C18');
   const font    = FONTS[b.font] || null;
+  const radius  = RADIUS[b.radius];
 
   return (
     <div
-      className="min-h-screen"
+      className="brand-scope min-h-screen"
+      data-bt={theme}
       style={{
         '--brand-primary': primary,
         '--brand-accent' : accent,
         '--brand-glow'   : `${primary}30`,
-        ...(bg ? { background: bg } : {}),
+        ...(radius ? { '--brand-radius': radius } : {}),
+        background: bg,
+        color: theme === 'claro' ? '#0B1220' : undefined,
         ...(font ? { fontFamily: font } : {}),
       }}
     >
@@ -88,7 +119,6 @@ export function BrandHeader({ organizador }) {
 export function PoweredBy({ organizador }) {
   const b = organizador?.branding || {};
   const isPro = organizador?.plan === 'pro';
-  /* Pro: footer propio si lo definió, o nada. Free: marca GESTEK. */
   if (isPro) {
     return b.footer
       ? <p className="text-xs text-text-3 mt-6 text-center">{b.footer}</p>
@@ -96,6 +126,7 @@ export function PoweredBy({ organizador }) {
   }
   return (
     <p className="text-xs text-text-3 mt-6 text-center">
+      {b.footer ? <span className="block mb-1">{b.footer}</span> : null}
       Eventos gestionados con <a href="/" className="text-text-2 hover:text-text-1 underline">GESTEK</a>
     </p>
   );

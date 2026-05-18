@@ -39,8 +39,8 @@ export default function LandingHomePage() {
   return (
     <>
       <Hero />
-      <AIPro />
       <Marquee />
+      <AIPro />
       <FreeIntro />
       <Stats />
       <Pillars />
@@ -163,7 +163,7 @@ function Hero() {
         <div className={`mt-6 flex justify-center transition-all duration-700 delay-250 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/40
                            bg-accent/10 text-accent-light text-xs sm:text-sm font-semibold">
-            ✦ La primera plataforma de gestión de eventos con IA que los automatiza
+Primera plataforma de gestión de eventos con IA integrada para automatizarlos
           </span>
         </div>
 
@@ -292,15 +292,15 @@ function FreeIntro() {
     <section className="px-5 sm:px-8 pt-24 pb-6">
       <div ref={ref} className={`max-w-3xl mx-auto text-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
         <p className="text-xs uppercase tracking-widest text-primary-light font-bold mb-4">
-          Y el plan gratuito no se queda atrás
+          Plan gratuito
         </p>
         <h2 className="text-4xl sm:text-5xl font-bold font-display text-text-1 tracking-tight leading-tight mb-5">
-          Gestbot es la guinda. La base ya es enorme — y gratis.
+          El plan gratuito incluye lo esencial para operar tus eventos.
         </h2>
         <p className="text-base sm:text-lg text-text-2 leading-relaxed">
-          Eventos y asistentes ilimitados, QR de check-in, agenda con vista Día,
-          equipo con roles y chat, fidelidad con puntos y ranking, pagos BRE-B sin
-          comisión y página pública con tu marca. Todo sin pagar.
+          Eventos y asistentes ilimitados, QR de check-in, agenda con vista por día,
+          equipo con roles y chat, programa de fidelidad con puntos y ranking, pagos
+          BRE-B sin comisión y página pública con tu marca. Sin costo.
         </p>
       </div>
     </section>
@@ -565,16 +565,17 @@ function AIPro() {
         {/* Claim de protagonismo */}
         <div className="text-center mb-12">
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/40 bg-accent/10 text-accent-light text-xs font-semibold uppercase tracking-widest mb-6">
-            ✦ Primera plataforma de eventos con IA que opera por ti
+            Asistente de IA integrado
           </span>
           <h2 className="text-4xl sm:text-6xl font-bold font-display tracking-tight text-text-1 leading-[1.05] mb-5">
-            Conoce a <span className="bg-gradient-to-br from-primary-light to-accent-light bg-clip-text text-transparent">Gestbot</span>
+            <span className="bg-gradient-to-br from-primary-light to-accent-light bg-clip-text text-transparent">Gestbot</span>, el asistente que opera tu evento
           </h2>
           <p className="text-base sm:text-xl text-text-2 max-w-2xl mx-auto leading-relaxed">
-            No es un chatbot que sugiere: <strong className="text-text-1">ejecuta</strong>. Crea y
-            publica eventos, arma boletas, hace check-ins, manda recordatorios, gestiona tu
-            equipo — <strong className="text-text-1">50+ acciones reales</strong>. Le hablas, te
-            pide lo que falta con formularios y hasta lee un PDF o fotos para armar el evento.
+            Gestbot no se limita a sugerir: <strong className="text-text-1">ejecuta</strong>. Crea y
+            publica eventos, arma boletas, registra check-ins, envía recordatorios y gestiona el
+            equipo — <strong className="text-text-1">más de 50 acciones reales</strong>. Solicita
+            los datos faltantes mediante formularios y puede analizar un PDF o imágenes para crear
+            el evento.
           </p>
         </div>
 
@@ -587,7 +588,7 @@ function AIPro() {
             </div>
             <div className="absolute bottom-2 px-4 py-1.5 rounded-full bg-surface/80 backdrop-blur
                             border border-border-2 text-xs text-text-2">
-              {MOODS[mi] === 'thinking' ? 'trabajando…' : MOODS[mi] === 'happy' ? '¡listo!' : 'en línea'}
+              {MOODS[mi] === 'thinking' ? 'Procesando' : MOODS[mi] === 'happy' ? 'Listo' : 'Disponible'}
             </div>
           </div>
 
@@ -602,7 +603,7 @@ function AIPro() {
             <div className="flex items-start gap-3 flex-row-reverse">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold">G</div>
               <div className="flex-1 px-4 py-3 rounded-2xl rounded-tr-sm bg-accent/10 border border-accent/20 text-sm text-text-1">
-                Listo ✅ Creé <span className="font-semibold">Summit Tech Ibagué 2026</span> (200 cupos, 15 Ago,
+                Listo. Creé <span className="font-semibold">Summit Tech Ibagué 2026</span> (200 cupos, 15 ago,
                 híbrido), agenda base, página pública y QR. ¿Lo publico?
               </div>
             </div>
@@ -615,7 +616,7 @@ function AIPro() {
             <div className="flex items-start gap-3 flex-row-reverse">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold">G</div>
               <div className="flex-1 px-4 py-3 rounded-2xl rounded-tr-sm bg-accent/10 border border-accent/20 text-sm text-text-1">
-                Hecho 🎉 Evento publicado y boleta <span className="font-semibold">VIP · $50.000</span> creada.
+                Hecho. Evento publicado y boleta <span className="font-semibold">VIP · $50.000</span> creada.
               </div>
             </div>
           </div>

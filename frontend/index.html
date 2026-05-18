@@ -6,6 +6,25 @@
     <meta name="theme-color" content="#0D1525" />
     <meta name="color-scheme" content="dark" />
 
+    <!-- Content Security Policy. Permite: la propia app, Supabase (auth/db/storage/realtime),
+         Mercado Pago (checkout), Google Fonts. Bloquea inyección de scripts externos.
+         style 'unsafe-inline' requerido por Tailwind/estilos inline; img/connect amplios
+         para covers de eventos (cualquier host) y APIs. -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' https://www.mercadopago.com https://sdk.mercadopago.com https://challenges.cloudflare.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com data:;
+      img-src 'self' data: blob: https:;
+      media-src 'self' blob: https:;
+      connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.mercadopago.com http://localhost:3000 https://*.trycloudflare.com https://*.ngrok-free.app;
+      frame-src https://www.mercadopago.com https://challenges.cloudflare.com;
+      worker-src 'self';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    " />
+
     <title>GESTEK — Event OS</title>
     <meta name="description" content="Plataforma SaaS de gestión de eventos con marca blanca: editor visual, tickets, QR check-in, chat, agenda, pagos Mercado Pago y recordatorios automáticos." />
 

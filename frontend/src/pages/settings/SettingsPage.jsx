@@ -14,7 +14,7 @@ const TABS = [
   { label: 'White-label',    icon: PaintIcon      },
   { label: 'Logros',         icon: TrophyIcon     },
   { label: 'Recompensas',    icon: GiftIcon       },
-  { label: 'API',            icon: CodeIcon       },
+  { label: 'Integraciones',  icon: CodeIcon       },
 ];
 
 export default function SettingsPage() {
@@ -176,64 +176,8 @@ export default function SettingsPage() {
       {tab === 5 && <RecompensasTab />}
 
       {/* API */}
-      {tab === 6 && (
-        <div className="card">
-          <div className="card-header">
-            <h3 className="text-sm font-semibold text-text-1">Referencia de la API</h3>
-            <div className="flex items-center gap-1.5">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-60" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
-              </span>
-              <span className="text-xs text-success">Operativa</span>
-            </div>
-          </div>
-          <div className="card-body space-y-5">
-            <div className="bg-surface-2 rounded-xl p-4 border border-border space-y-2.5">
-              {[
-                { label: 'Base URL',  value: window.location.origin + '/'  },
-                { label: 'Versión',   value: '2.0.0'                       },
-                { label: 'Auth',      value: 'Bearer JWT (8h)'             },
-                { label: 'Rate limit',value: '100 req/min'                 },
-              ].map(r => (
-                <div key={r.label} className="flex items-center justify-between">
-                  <span className="text-xs text-text-2">{r.label}</span>
-                  <code className="text-xs text-primary-light font-mono bg-primary/10 px-2 py-0.5 rounded">{r.value}</code>
-                </div>
-              ))}
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-text-3 mb-3">Endpoints</p>
-              <div className="space-y-1">
-                {[
-                  ['POST',   '/auth/register',          'Registrar usuario'    ],
-                  ['POST',   '/auth/login',             'Iniciar sesión'       ],
-                  ['GET',    '/auth/me',                'Perfil del usuario'   ],
-                  ['GET',    '/eventos',                'Listar eventos'       ],
-                  ['POST',   '/eventos',                'Crear evento'         ],
-                  ['PATCH',  '/eventos/:id',            'Actualizar evento'    ],
-                  ['DELETE', '/eventos/:id',            'Eliminar evento'      ],
-                  ['POST',   '/eventos/:id/publicar',   'Publicar evento'      ],
-                  ['POST',   '/eventos/:id/inscribirse','Inscribirse'          ],
-                  ['GET',    '/usuarios',               'Listar usuarios'      ],
-                ].map(([method, path, desc]) => (
-                  <div key={path} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-2 transition-colors group">
-                    <span className={`text-[10px] font-mono font-bold w-12 flex-shrink-0 ${
-                      method === 'GET'    ? 'text-success'    :
-                      method === 'POST'   ? 'text-primary'    :
-                      method === 'PATCH'  ? 'text-warning'    :
-                      'text-danger'
-                    }`}>{method}</span>
-                    <code className="text-xs font-mono text-text-2 flex-1">{path}</code>
-                    <span className="text-[10px] text-text-3 hidden group-hover:block">{desc}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Integraciones (API + Webhooks) */}
+      {tab === 6 && <IntegracionesTab />}
     </div>
   );
 }
@@ -353,6 +297,194 @@ function ColorField({ label, value, onChange }) {
           onChange={e => onChange(e.target.value)}
           className="input rounded-xl py-2.5 text-base font-mono tabular-nums"
         />
+      </div>
+    </div>
+  );
+}
+
+/* ──────────── Integraciones (API + Webhooks) ──────────── */
+const WH_TIPOS = [
+  { id: 'ticket.pagado',      label: 'Boleta pagada' },
+  { id: 'checkin.realizado',  label: 'Check-in realizado' },
+  { id: 'evento.publicado',   label: 'Evento publicado' },
+];
+
+function IntegracionesTab() {
+  const { success, error: toastErr } = useToast();
+  const [tokens, setTokens]     = useState([]);
+  const [webhooks, setWebhooks] = useState([]);
+  const [pro, setPro]           = useState(false);
+  const [loading, setLoading]   = useState(true);
+  const [nuevoToken, setNuevoToken] = useState(null); // {valor} mostrado una vez
+  const [tokNombre, setTokNombre]   = useState('');
+  const [whUrl, setWhUrl]           = useState('');
+  const [whEventos, setWhEventos]   = useState([]);
+  const [busy, setBusy]             = useState(false);
+
+  const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:3000');
+
+  const cargar = async () => {
+    setLoading(true);
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      const [t, w] = await Promise.all([integracionesApi.listTokens(), integracionesApi.listWebhooks()]);
+      setTokens(t.tokens || []); setPro(Boolean(t.pro));
+      setWebhooks(w.webhooks || []);
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally     { setLoading(false); }
+  };
+  useEffect(() => { cargar(); /* eslint-disable-next-line */ }, []);
+
+  const crearToken = async () => {
+    if (!tokNombre.trim()) return;
+    setBusy(true);
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      const r = await integracionesApi.crearToken(tokNombre.trim());
+      setNuevoToken(r.token);
+      setTokNombre('');
+      cargar();
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally     { setBusy(false); }
+  };
+  const revocar = async (id) => {
+    if (!window.confirm('¿Revocar este token? Las integraciones que lo usen dejarán de funcionar.')) return;
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      await integracionesApi.revocarToken(id); success('Token revocado.'); cargar();
+    } catch (e) { toastErr(e.message); }
+  };
+  const crearWebhook = async () => {
+    if (!/^https?:\/\//.test(whUrl) || whEventos.length === 0) { toastErr('URL https + al menos un evento.'); return; }
+    setBusy(true);
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      await integracionesApi.crearWebhook(whUrl, whEventos);
+      success('Webhook creado.'); setWhUrl(''); setWhEventos([]); cargar();
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally     { setBusy(false); }
+  };
+  const borrarWebhook = async (id) => {
+    if (!window.confirm('¿Borrar webhook?')) return;
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      await integracionesApi.borrarWebhook(id); success('Borrado.'); cargar();
+    } catch (e) { toastErr(e.message); }
+  };
+
+  if (loading) return <div className="card p-6"><Spinner size="md" /></div>;
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl bg-accent/5 border border-accent/20 px-4 py-3 text-sm text-text-2 leading-relaxed flex items-center justify-between gap-3">
+        <span>API REST + Webhooks para conectar GESTEK con tus sistemas (CRM, automatizaciones, facturación).</span>
+        <span className="badge badge-purple text-[10px] flex-shrink-0">Pro</span>
+      </div>
+
+      {!pro && (
+        <div className="rounded-2xl bg-warning/10 border border-warning/25 px-4 py-3 text-sm text-text-2">
+          Necesitás plan Pro para crear tokens y webhooks. Activalo en la pestaña <strong className="text-text-1">Pagos</strong>.
+        </div>
+      )}
+
+      {/* API Tokens */}
+      <div className="card">
+        <div className="card-header"><h3 className="text-base font-semibold text-text-1">API Tokens</h3></div>
+        <div className="card-body space-y-4">
+          {nuevoToken && (
+            <div className="rounded-2xl border border-success/30 bg-success/10 p-4">
+              <p className="text-sm font-semibold text-success-light mb-1">Token creado — copialo ahora, no se vuelve a mostrar</p>
+              <code className="block text-xs font-mono text-text-1 bg-bg/50 rounded-lg px-3 py-2 break-all">{nuevoToken.valor}</code>
+              <button onClick={() => { navigator.clipboard?.writeText(nuevoToken.valor); success('Copiado.'); }}
+                className="btn-secondary btn-sm mt-2">Copiar</button>
+            </div>
+          )}
+          {pro && (
+            <div className="flex items-end gap-2">
+              <div className="field flex-1">
+                <label className="label">Nombre del token</label>
+                <input className="input rounded-2xl py-2.5" value={tokNombre}
+                  onChange={e => setTokNombre(e.target.value)} placeholder="ej. Integración CRM" />
+              </div>
+              <button onClick={crearToken} disabled={busy || !tokNombre.trim()} className="btn-gradient">Generar</button>
+            </div>
+          )}
+          {tokens.length === 0 ? (
+            <p className="text-sm text-text-3 text-center py-3">Sin tokens.</p>
+          ) : (
+            <div className="space-y-2">
+              {tokens.map(t => (
+                <div key={t.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-surface-2/40 border border-border ${t.revoked ? 'opacity-50' : ''}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-text-1">{t.nombre}</p>
+                    <p className="text-xs text-text-3 font-mono">{t.prefix} · {t.last_used_at ? `usado ${new Date(t.last_used_at).toLocaleDateString('es-CO')}` : 'sin uso'}</p>
+                  </div>
+                  {t.revoked
+                    ? <span className="text-[10px] uppercase tracking-widest text-text-3">revocado</span>
+                    : <button onClick={() => revocar(t.id)} className="btn-ghost btn-sm text-danger/80 hover:text-danger">Revocar</button>}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="rounded-xl bg-surface-2/40 border border-border p-3 text-xs text-text-3 font-mono leading-relaxed">
+            curl -H "Authorization: Bearer gtk_live_..." {apiBase}/api/v1/eventos
+          </div>
+        </div>
+      </div>
+
+      {/* Webhooks */}
+      <div className="card">
+        <div className="card-header"><h3 className="text-base font-semibold text-text-1">Webhooks</h3></div>
+        <div className="card-body space-y-4">
+          {pro && (
+            <div className="space-y-3">
+              <div className="field">
+                <label className="label">URL de destino</label>
+                <input className="input rounded-2xl py-2.5 font-mono" value={whUrl}
+                  onChange={e => setWhUrl(e.target.value)} placeholder="https://tu-sistema.com/webhook" />
+              </div>
+              <div>
+                <label className="label">Eventos</label>
+                <div className="flex flex-wrap gap-2">
+                  {WH_TIPOS.map(t => {
+                    const on = whEventos.includes(t.id);
+                    return (
+                      <button key={t.id} type="button"
+                        onClick={() => setWhEventos(s => on ? s.filter(x => x !== t.id) : [...s, t.id])}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${on ? 'border-primary/40 bg-primary/15 text-primary-light' : 'border-border text-text-3 hover:text-text-2'}`}>
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button onClick={crearWebhook} disabled={busy} className="btn-gradient">Crear webhook</button>
+              </div>
+            </div>
+          )}
+          {webhooks.length === 0 ? (
+            <p className="text-sm text-text-3 text-center py-3">Sin webhooks.</p>
+          ) : (
+            <div className="space-y-2">
+              {webhooks.map(w => (
+                <div key={w.id} className={`px-3 py-3 rounded-xl bg-surface-2/40 border border-border ${w.activo ? '' : 'opacity-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-mono text-text-1 truncate">{w.url}</p>
+                      <p className="text-xs text-text-3">{w.eventos.join(' · ')}</p>
+                    </div>
+                    <button onClick={() => borrarWebhook(w.id)} aria-label="Borrar"
+                      className="w-8 h-8 rounded-lg text-text-3 hover:text-danger hover:bg-danger/10 flex items-center justify-center">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-text-3 mt-2">Secret HMAC: <code className="font-mono">{w.secret}</code> — verificá el header <code className="font-mono">x-gestek-signature</code>.</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

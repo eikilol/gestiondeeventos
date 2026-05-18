@@ -3,6 +3,7 @@ const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { verifyTicketQR, signTicketQR } = require('../lib/qr.js');
 const { otorgarPuntos, otorgarBadge } = require('../lib/gamificacion.js');
+const { dispatch } = require('../lib/webhooks.js');
 
 function generarCodigo() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -264,6 +265,14 @@ router.post('/:eventoId/checkin', async (req, res) => {
           eventoId, accion: 'checkin_operado',
         });
       }
+    }
+
+    if (organizadorId) {
+      dispatch(organizadorId, 'checkin.realizado', {
+        ticket_id: updated.id, evento_id: eventoId, codigo: updated.codigo,
+        nombre: updated.guest_nombre, email: updated.guest_email,
+        checked_in_at: updated.checked_in_at,
+      });
     }
 
     res.json({ ok: true, ticket: updated, advertencia, sound: 'ok' });

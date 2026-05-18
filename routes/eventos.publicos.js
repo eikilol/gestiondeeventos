@@ -4,6 +4,11 @@ const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWTOptional } = require('../middleware/auth.js');
 const { signTicketQR } = require('../lib/qr.js');
 const { notificar } = require('../lib/notificar.js');
+const { verifyTurnstile } = require('../lib/turnstile.js');
+
+function clientIp(req) {
+  return (req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || '').trim();
+}
 
 function visitorHash(req) {
   const ip = (req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '').trim();
@@ -98,6 +103,9 @@ router.post('/slug/:slug/reservar', async (req, res) => {
   if (!email?.includes('@')) return res.status(400).json({ error: 'Email válido requerido.' });
   if (!nombre?.trim())  return res.status(400).json({ error: 'Tu nombre es requerido.' });
 
+  const cap = await verifyTurnstile(req.body.captcha_token, clientIp(req));
+  if (!cap.ok) return res.status(400).json({ error: 'Verificación anti-bot fallida. Recargá e intentá de nuevo.' });
+
   /* Trae el evento + el tipo de ticket que quieren reservar */
   const { data: evento, error: e1 } = await supabase
     .from('eventos')
@@ -106,6 +114,17 @@ router.post('/slug/:slug/reservar', async (req, res) => {
   if (e1) return res.status(500).json({ error: e1.message });
   if (!evento || evento.deleted_at || evento.estado !== 'publicado')
     return res.status(404).json({ error: 'Evento no disponible.' });
+
+  /* Anti-abuso: límite de boletas por email en un mismo evento */
+  const MAX_POR_EMAIL = Number(process.env.MAX_TICKETS_POR_EMAIL || 5);
+  const { count: yaTiene } = await supabase
+    .from('tickets')
+    .select('id', { count: 'exact', head: true })
+    .eq('evento_id', evento.id)
+    .eq('guest_email', email.toLowerCase().trim());
+  if ((yaTiene || 0) >= MAX_POR_EMAIL) {
+    return res.status(429).json({ error: `Alcanzaste el máximo de ${MAX_POR_EMAIL} boletas con este email para este evento.` });
+  }
 
   const { data: tipo, error: e2 } = await supabase
     .from('ticket_types')
@@ -197,6 +216,9 @@ router.post('/slug/:slug/waitlist', async (req, res) => {
   if (!ticket_type_id)       return res.status(400).json({ error: 'Selecciona un tipo de boleta.' });
   if (!email?.includes('@')) return res.status(400).json({ error: 'Email válido requerido.' });
   if (!nombre?.trim())       return res.status(400).json({ error: 'Tu nombre es requerido.' });
+
+  const capWl = await verifyTurnstile(req.body.captcha_token, clientIp(req));
+  if (!capWl.ok) return res.status(400).json({ error: 'Verificación anti-bot fallida. Recargá e intentá de nuevo.' });
 
   const { data: evento, error: e1 } = await supabase
     .from('eventos')

@@ -49,7 +49,95 @@ export default function EquipoTab({ evento }) {
       />
 
       <RankingEquipoSection eventoId={evento.id} />
+
+      <AuditoriaSection eventoId={evento.id} />
     </div>
+  );
+}
+
+/* ─────────── AUDITORÍA (plan Pro) ─────────── */
+const ACCION_LABEL = {
+  'evento.crear'  : 'Creó el evento',
+  'evento.editar' : 'Editó el evento',
+  'evento.estado' : 'Cambió el estado',
+  'evento.borrar' : 'Eliminó el evento',
+  'equipo.invitar': 'Invitó a alguien',
+  'equipo.rol'    : 'Cambió un rol',
+  'equipo.quitar' : 'Quitó a un miembro',
+  'rol.crear'     : 'Creó un rol',
+  'rol.editar'    : 'Editó un rol',
+  'rol.borrar'    : 'Borró un rol',
+  'ticket.crear'  : 'Creó un tipo de boleta',
+  'ticket.editar' : 'Editó un tipo de boleta',
+  'ticket.borrar' : 'Borró un tipo de boleta',
+};
+
+function AuditoriaSection({ eventoId }) {
+  const [log, setLog]       = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pro, setPro]       = useState(true);
+
+  useEffect(() => {
+    let activo = true;
+    import('../../../api/auditoria.js')
+      .then(m => m.auditoriaApi.list(eventoId))
+      .then(d => { if (activo) setLog(d.auditoria || []); })
+      .catch(e => {
+        if (e.response?.status === 402) { if (activo) setPro(false); }
+      })
+      .finally(() => { if (activo) setLoading(false); });
+    return () => { activo = false; };
+  }, [eventoId]);
+
+  const fmt = (iso) => new Date(iso).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <section>
+      <div className="mb-3 flex items-center gap-2">
+        <h3 className="text-lg font-bold font-display text-text-1 tracking-tight">Auditoría</h3>
+        <span className="badge badge-purple text-[10px]">Pro</span>
+      </div>
+
+      {loading ? (
+        <div className="rounded-3xl border border-border bg-surface/40 p-6"><Spinner size="md" /></div>
+      ) : !pro ? (
+        <div className="rounded-3xl border border-accent/30 bg-accent/5 px-6 py-10 text-center">
+          <p className="text-base font-semibold text-text-1 mb-1">Disponible en el plan Pro</p>
+          <p className="text-sm text-text-2 max-w-sm mx-auto leading-relaxed">
+            Registrá quién hizo qué en tu evento (cambios de roles, ediciones, tickets, equipo). Activá Pro desde Configuración → Pagos.
+          </p>
+        </div>
+      ) : log.length === 0 ? (
+        <div className="rounded-3xl border border-border bg-surface/40 px-6 py-10 text-center">
+          <p className="text-sm text-text-3">Sin acciones registradas todavía.</p>
+        </div>
+      ) : (
+        <div className="rounded-3xl border border-border bg-surface/40 overflow-hidden">
+          {log.map(a => (
+            <div key={a.id} className="flex items-center gap-3 px-5 py-3 border-b border-border last:border-0 hover:bg-surface-2/30 transition-colors">
+              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                {a.actor?.avatar_url
+                  ? <img src={a.actor.avatar_url} alt="" className="w-full h-full object-cover" />
+                  : (a.actor?.nombre?.[0] || a.actor_email?.[0] || '?').toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-text-1">
+                  <span className="font-medium">{a.actor?.nombre || a.actor_email || 'Alguien'}</span>
+                  {' · '}
+                  <span className="text-text-2">{ACCION_LABEL[a.accion] || a.accion}</span>
+                </p>
+                {a.detalle && Object.keys(a.detalle).length > 0 && (
+                  <p className="text-xs text-text-3 truncate">
+                    {Object.entries(a.detalle).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' · ')}
+                  </p>
+                )}
+              </div>
+              <span className="text-[11px] text-text-3 tabular-nums whitespace-nowrap">{fmt(a.created_at)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

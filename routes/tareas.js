@@ -3,21 +3,53 @@ const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { notificar, notificarVarios } = require('../lib/notificar.js');
 const { otorgarPuntos, otorgarBadge } = require('../lib/gamificacion.js');
+const { sendMail, plantillaTarea } = require('../lib/email.js');
 
-/* Notifica al asignado de una tarea (usuario directo o todos los del rol). */
+const FRONT = process.env.FRONTEND_URL?.split(',')[0] || 'http://localhost:5173';
+
+/* Manda email de tarea a una lista de user_ids (resuelve nombre+email de profiles). */
+async function emailTarea(userIds, tarea, eventoTitulo, eventoId) {
+  const ids = [...new Set((userIds || []).filter(Boolean))];
+  if (ids.length === 0) return;
+  try {
+    const { data: perfiles } = await supabase
+      .from('profiles').select('nombre, email').in('id', ids);
+    for (const p of perfiles || []) {
+      if (!p.email) continue;
+      sendMail({
+        to: p.email,
+        subject: `Nueva tarea: ${tarea.titulo}`,
+        html: plantillaTarea({
+          nombre: p.nombre,
+          tareaTitulo: tarea.titulo,
+          eventoTitulo,
+          prioridad: tarea.prioridad,
+          venceAt: tarea.vence_at,
+          link: `${FRONT}/eventos/${eventoId}`,
+        }),
+      });
+    }
+  } catch (e) {
+    console.warn('[emailTarea] error:', e.message);
+  }
+}
+
+/* Notifica al asignado de una tarea (in-app + email): usuario directo o rol. */
 async function notificarAsignacion(tarea, eventoId) {
   try {
     const { data: ev } = await supabase
       .from('eventos').select('titulo').eq('id', eventoId).maybeSingle();
+    const eventoTitulo = ev?.titulo || 'un evento';
     const base = {
       tipo: 'tarea',
       titulo: 'Nueva tarea asignada',
-      cuerpo: `"${tarea.titulo}" en ${ev?.titulo || 'un evento'}.`,
+      cuerpo: `"${tarea.titulo}" en ${eventoTitulo}.`,
       link: `/eventos/${eventoId}`,
       eventoId,
     };
     if (tarea.asignado_user_id) {
       await notificar({ ...base, userId: tarea.asignado_user_id });
+      emailTarea([tarea.asignado_user_id], tarea, eventoTitulo, eventoId);
     } else if (tarea.asignado_rol_id) {
       const { data: miembros } = await supabase
         .from('event_members')
@@ -25,7 +57,9 @@ async function notificarAsignacion(tarea, eventoId) {
         .eq('evento_id', eventoId)
         .eq('rol_id', tarea.asignado_rol_id)
         .eq('status', 'active');
-      await notificarVarios((miembros || []).map(m => m.user_id), base);
+      const ids = (miembros || []).map(m => m.user_id);
+      await notificarVarios(ids, base);
+      emailTarea(ids, tarea, eventoTitulo, eventoId);
     }
   } catch (e) {
     console.warn('[notificarAsignacion] error:', e.message);

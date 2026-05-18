@@ -3,6 +3,9 @@ const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { slugify, uniqueEventoSlug } = require('../lib/slug.js');
 const { otorgarBadge } = require('../lib/gamificacion.js');
+const { auditar } = require('../lib/auditar.js');
+const { esUrlImagenSegura } = require('../lib/urls.js');
+const { dispatch } = require('../lib/webhooks.js');
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
@@ -85,6 +88,7 @@ router.post('/', async (req, res) => {
       if ((count || 0) >= 5) otorgarBadge(req.user.id, 'organizador_pro');
     });
 
+  auditar(req, data.id, 'evento.crear', { entidad: 'evento', entidadId: data.id, detalle: { titulo: data.titulo } });
   res.status(201).json({ evento: data });
 });
 
@@ -115,6 +119,13 @@ router.patch('/:id', async (req, res) => {
     return res.status(400).json({ error: 'Sin cambios.' });
   }
 
+  /* Seguridad: URLs de imagen provistas a mano deben ser seguras */
+  for (const campo of ['cover_url', 'pago_qr_url']) {
+    if (campo in updates && !esUrlImagenSegura(updates[campo])) {
+      return res.status(400).json({ error: `URL inválida en ${campo}.` });
+    }
+  }
+
   const { data, error } = await supabase
     .from('eventos')
     .update(updates)
@@ -122,6 +133,7 @@ router.patch('/:id', async (req, res) => {
     .select('*, categoria:categorias(slug, nombre)')
     .single();
   if (error) return res.status(500).json({ error: error.message });
+  auditar(req, data.id, 'evento.editar', { entidad: 'evento', entidadId: data.id, detalle: { campos: Object.keys(updates) } });
   res.json({ evento: data });
 });
 
@@ -137,6 +149,7 @@ router.delete('/:id', async (req, res) => {
     .update({ deleted_at: new Date().toISOString(), estado: 'cancelado' })
     .eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
+  auditar(req, req.params.id, 'evento.borrar', { entidad: 'evento', entidadId: req.params.id });
   res.json({ ok: true });
 });
 
@@ -160,6 +173,10 @@ router.post('/:id/estado', async (req, res) => {
     .select('*, categoria:categorias(slug, nombre)').single();
   if (error) return res.status(500).json({ error: error.message });
 
+  auditar(req, req.params.id, 'evento.estado', { entidad: 'evento', entidadId: req.params.id, detalle: { estado } });
+  if (estado === 'publicado') {
+    dispatch(req.user.id, 'evento.publicado', { evento_id: data.id, titulo: data.titulo, slug: data.slug });
+  }
   res.json({ evento: data });
 });
 

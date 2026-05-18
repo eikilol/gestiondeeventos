@@ -11,6 +11,8 @@ const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT, verifySupabaseJWTOptional } = require('../middleware/auth.js');
 const { signTicketQR } = require('../lib/qr.js');
 const mp = require('../lib/mercadopago.js');
+const { dispatch } = require('../lib/webhooks.js');
+const { verifyTurnstile } = require('../lib/turnstile.js');
 
 const MP_WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET || null;
 
@@ -254,6 +256,9 @@ router.post('/eventos/publicos/slug/:slug/comprar', verifySupabaseJWTOptional, a
   if (!email?.includes('@')) return res.status(400).json({ error: 'Email válido requerido.' });
   if (!nombre?.trim()) return res.status(400).json({ error: 'Tu nombre es requerido.' });
 
+  const capC = await verifyTurnstile(req.body.captcha_token, (req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || '').trim());
+  if (!capC.ok) return res.status(400).json({ error: 'Verificación anti-bot fallida. Recargá e intentá de nuevo.' });
+
   /* Evento + owner para leer su access token */
   const { data: evento, error: e1 } = await supabase
     .from('eventos')
@@ -262,6 +267,17 @@ router.post('/eventos/publicos/slug/:slug/comprar', verifySupabaseJWTOptional, a
   if (e1) return res.status(500).json({ error: e1.message });
   if (!evento || evento.deleted_at || evento.estado !== 'publicado')
     return res.status(404).json({ error: 'Evento no disponible.' });
+
+  /* Anti-abuso: límite de boletas por email en este evento */
+  const MAX_POR_EMAIL = Number(process.env.MAX_TICKETS_POR_EMAIL || 5);
+  const { count: yaTiene } = await supabase
+    .from('tickets')
+    .select('id', { count: 'exact', head: true })
+    .eq('evento_id', evento.id)
+    .eq('guest_email', email.toLowerCase().trim());
+  if ((yaTiene || 0) >= MAX_POR_EMAIL) {
+    return res.status(429).json({ error: `Alcanzaste el máximo de ${MAX_POR_EMAIL} boletas con este email para este evento.` });
+  }
 
   const { data: owner, error: eOwner } = await supabase
     .from('profiles').select('mp_access_token').eq('id', evento.owner_id).single();
@@ -499,6 +515,19 @@ async function procesarPago(pago) {
       precio_pagado: monto,
       pagado_at    : new Date().toISOString(),
     }).eq('id', ticketId);
+
+    /* Webhook ticket.pagado al organizador */
+    const { data: evWh } = await supabase
+      .from('eventos').select('owner_id').eq('id', ticket.evento_id).single();
+    if (evWh?.owner_id) {
+      const { data: tFull } = await supabase
+        .from('tickets').select('codigo, guest_nombre, guest_email').eq('id', ticketId).single();
+      dispatch(evWh.owner_id, 'ticket.pagado', {
+        ticket_id: ticketId, evento_id: ticket.evento_id,
+        codigo: tFull?.codigo, nombre: tFull?.guest_nombre, email: tFull?.guest_email,
+        monto, via: 'mercadopago',
+      });
+    }
 
     /* Bump de contadores */
     const { data: ev } = await supabase

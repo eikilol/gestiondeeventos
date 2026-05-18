@@ -2,6 +2,7 @@ const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { notificar } = require('../lib/notificar.js');
+const { auditar } = require('../lib/auditar.js');
 
 /* Se monta en /eventos. Los paths internos incluyen :eventoId.
    Esto evita issues con path-to-regexp v6 al usar param en mount path. */
@@ -103,6 +104,7 @@ router.post('/:eventoId/equipo', async (req, res) => {
       });
     }
 
+    auditar(req, eventoId, 'equipo.invitar', { entidad: 'miembro', entidadId: data.id, detalle: { email: email.toLowerCase(), rol: rol.nombre } });
     res.status(201).json({ miembro: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
@@ -130,6 +132,7 @@ router.patch('/:eventoId/equipo/:miembroId', async (req, res) => {
       .single();
 
     if (error) return res.status(500).json({ error: error.message });
+    auditar(req, eventoId, 'equipo.rol', { entidad: 'miembro', entidadId: miembroId, detalle: { rol: rol.nombre } });
     res.json({ miembro: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
@@ -147,6 +150,7 @@ router.delete('/:eventoId/equipo/:miembroId', async (req, res) => {
       .eq('id', miembroId)
       .eq('evento_id', eventoId);
     if (error) return res.status(500).json({ error: error.message });
+    auditar(req, eventoId, 'equipo.quitar', { entidad: 'miembro', entidadId: miembroId });
     res.json({ ok: true });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });

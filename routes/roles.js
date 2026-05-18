@@ -1,6 +1,7 @@
 const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
+const { auditar } = require('../lib/auditar.js');
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
@@ -65,6 +66,7 @@ router.post('/:eventoId/roles', async (req, res) => {
       if (error.code === '23505') return res.status(409).json({ error: 'Ya existe un rol con ese nombre.' });
       return res.status(500).json({ error: error.message });
     }
+    auditar(req, eventoId, 'rol.crear', { entidad: 'rol', entidadId: data.id, detalle: { nombre: data.nombre } });
     res.status(201).json({ rol: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
@@ -90,6 +92,7 @@ router.patch('/:eventoId/roles/:rolId', async (req, res) => {
       .select()
       .single();
     if (error) return res.status(500).json({ error: error.message });
+    auditar(req, eventoId, 'rol.editar', { entidad: 'rol', entidadId: rolId, detalle: { campos: Object.keys(updates) } });
     res.json({ rol: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
@@ -117,6 +120,7 @@ router.delete('/:eventoId/roles/:rolId', async (req, res) => {
       .eq('id', rolId)
       .eq('evento_id', eventoId);
     if (error) return res.status(500).json({ error: error.message });
+    auditar(req, eventoId, 'rol.borrar', { entidad: 'rol', entidadId: rolId });
     res.json({ ok: true });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });

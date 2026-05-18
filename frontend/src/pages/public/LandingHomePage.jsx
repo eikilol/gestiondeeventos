@@ -70,26 +70,54 @@ export default function LandingHomePage() {
       <FeatureSplit
         side="left"
         kicker="Equipo y comunicación · Gratis"
-        title="Trabaja en equipo y mantén a todos al tanto"
-        desc="Invita a tu equipo con roles granulares y deja que cada quien se encargue de lo suyo. Las notificaciones automáticas mantienen informados a asistentes y organizadores."
+        title="Tu equipo, con roles, tareas y voz propia"
+        desc="Define roles con permisos granulares por evento. Cada miembro entra a su vista 'Mi trabajo', ve sus tareas, chatea por canales y te envía sugerencias o solicitudes que tú gestionas."
         bullets={[
-          'Multi-usuario con roles granulares (admin, editor, lector)',
-          'Notificaciones de eventos por email y dentro de la app',
-          'Subpaths personalizadas (gestek.io/tu-empresa)',
-          'Recordatorios automáticos pre-evento (T-7d, T-1d, T-1h)',
+          'Roles con permisos por evento (tickets, check-in, clientes…)',
+          'Vista de empleado "Mi trabajo": sus eventos y tareas',
+          'Chat del equipo por canales (general / staff)',
+          'Sugerencias, solicitudes y reportes del equipo → al organizador',
+          'Tareas tipo Kanban + recordatorios in-app (T-7d, T-1d, T-1h)',
         ]}
         visual={<TeamMockup />}
       />
       <FeatureSplit
         side="right"
+        kicker="Agenda, fidelidad y analítica · Gratis"
+        title="Programa el evento y premia a tu gente"
+        desc="Arma la agenda con vistas Lista, Día (timeline por horas), Semana y Mes, con speakers y patrocinadores. Suma un programa de puntos y recompensas, ranking del equipo y analítica real."
+        bullets={[
+          'Agenda con vista Día (timeline), Semana y Mes',
+          'Speakers, patrocinadores y bloques de sesión',
+          'Fidelidad: puntos, recompensas y canjes (clientes y staff)',
+          'Ranking del equipo por evento',
+          'Analítica: visitas, conversión, ingresos por tipo',
+        ]}
+        visual={<QRMockup />}
+      />
+      <FeatureSplit
+        side="left"
+        kicker="White-label · Todos los planes"
+        title="Tu marca, no la nuestra"
+        desc="Personaliza el panel y las páginas públicas: logo, nombre, colores, fondo, tipografía, radio de bordes, tagline y redes. En Pro, además quitas la marca GESTEK y pones tu footer."
+        bullets={[
+          'Logo, colores, fondo y tipografía propios',
+          'Se aplica en el panel y en las páginas públicas del evento',
+          'Tagline + enlaces (web, Instagram, WhatsApp)',
+          'En Pro: sin "Powered by GESTEK" y footer propio',
+        ]}
+        visual={<BrandMock />}
+      />
+      <FeatureSplit
+        side="right"
         kicker="API + Webhooks · Plan Pro"
         title="Conecta GESTEK con todo tu stack"
-        desc="Plan Pro incluye API REST documentada con API key y webhooks que disparan en cada inscripción, pago o check-in. Para cuando ya tienes CRM, ERP o flujos automatizados."
+        desc="El plan Pro incluye API REST con API key (HMAC), webhooks que disparan en cada inscripción, pago o check-in, y auditoría de todas las acciones del equipo."
         bullets={[
-          'API key por organización con HMAC',
-          'Webhooks: registro, pago, check-in, cancelación',
-          'OpenAPI / Postman + reintentos automáticos',
-          'Rate limit 600 req/min',
+          'API key por organización con firma HMAC',
+          'Webhooks: registro, pago, check-in, cancelación + reintentos',
+          'Auditoría de acciones del equipo (quién hizo qué y cuándo)',
+          'Rate limit y tokens revocables',
         ]}
         visual={<CodeMockup />}
       />
@@ -252,9 +280,9 @@ function Stats() {
 function Pillars() {
   const [ref, visible] = useReveal();
   const items = [
-    { title: 'Todo en gratis', desc: 'Eventos ilimitados, QR de asistencia, recordatorios por email, gamificación, API completa y página pública. Todo lo esencial sin pagar.' },
-    { title: 'Pagos sin fricción', desc: 'Conecta tu llave o QR de BRE-B y empieza a vender boletas. El dinero va directo a tu cuenta — GESTEK no se queda con nada en el plan gratis.' },
-    { title: 'IA opcional (Pro)', desc: 'Cuando quieras acelerar, el asistente IA crea bloques de evento listos según tu contexto. Solo si lo necesitas, no es un requisito.' },
+    { title: 'Gratis para empezar', desc: 'Eventos y asistentes ilimitados, QR de check-in, agenda, equipo con roles, fidelidad, chat y página pública. Lo esencial sin pagar.' },
+    { title: 'Pagos sin fricción', desc: 'Conecta tu llave o QR de BRE-B y vende boletas. El dinero va directo a tu cuenta — GESTEK no se queda con comisión.' },
+    { title: 'Pro cuando escalas', desc: 'Gestbot (IA que opera el evento), API + Webhooks y auditoría. 14 días de prueba gratis, luego US$ 19.99/mes.' },
   ];
   return (
     <section className="px-5 sm:px-8 py-24 sm:py-28">
@@ -428,6 +456,33 @@ function TeamMockup() {
   );
 }
 
+function BrandMock() {
+  return (
+    <div className="rounded-3xl border border-border-2 overflow-hidden"
+         style={{ background: '#0E1630', fontFamily: "'Space Grotesk', sans-serif" }}>
+      <div className="px-5 py-3 flex items-center gap-2.5 border-b border-white/10">
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FCEFA1] to-[#A6731B]" />
+        <div>
+          <span className="block text-sm font-bold text-white">Tu Empresa</span>
+          <span className="block text-[11px] text-white/60">Experiencias inolvidables</span>
+        </div>
+        <div className="ml-auto flex gap-1.5">
+          <span className="w-7 h-7 rounded-lg border border-white/15" />
+          <span className="w-7 h-7 rounded-lg border border-white/15" />
+        </div>
+      </div>
+      <div className="p-5 space-y-3">
+        <div className="aspect-video rounded-2xl bg-gradient-to-br from-primary/40 to-accent/25" />
+        <p className="text-base font-semibold text-white">Tu evento, con tu marca</p>
+        <p className="text-sm text-white/60">Colores, tipografía y fondo propios — sin “GESTEK”.</p>
+        <span className="inline-flex h-8 px-4 items-center rounded-full text-xs font-semibold text-white bg-primary">
+          Reservar
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function CodeMockup() {
   return (
     <div className="rounded-3xl border border-border-2 bg-bg/80 backdrop-blur overflow-hidden">
@@ -472,12 +527,13 @@ function AIPro() {
           Plan Pro · Opcional
         </span>
         <h2 className="text-4xl sm:text-5xl font-bold font-display tracking-tight text-text-1 leading-tight mb-5">
-          Un agente IA que arma<br />tu evento por ti
+          Gestbot — tu asistente IA<br />que opera el evento por ti
         </h2>
         <p className="text-base sm:text-lg text-text-2 max-w-2xl mx-auto mb-10 leading-relaxed">
-          Cuéntale al agente qué evento quieres (formato, fecha, audiencia, tono) y él prepara
-          bloques iniciales: agenda, ficha pública, copy para invitaciones y configuración
-          de tickets. Tú ajustas, él te ahorra horas.
+          Háblale en lenguaje natural y ejecuta de verdad: crea y publica eventos, arma
+          boletas, registra check-ins, manda recordatorios, gestiona equipo y más — más de
+          50 acciones reales. Te pide los datos con formularios y hasta lee un PDF o fotos
+          para armar el evento.
         </p>
 
         <div className="rounded-3xl border border-accent/25 bg-surface/60 backdrop-blur p-6 sm:p-8 text-left max-w-2xl mx-auto">
@@ -530,11 +586,11 @@ function PricingTeaser() {
               {[
                 'Eventos y asistentes ilimitados',
                 'QR de check-in / check-out',
-                'Recordatorios email + notificaciones',
-                'Gamificación completa',
+                'Agenda (Día/Semana/Mes), speakers y patrocinadores',
+                'Equipo con roles + chat + sugerencias',
+                'Fidelidad: puntos, recompensas y ranking',
                 'Pasarela BRE-B sin comisiones',
-                'Multi-usuario con roles granulares',
-                'Subpath en gestek.io/tu-marca',
+                'White-label básico + página pública',
               ].map(f => (
                 <li key={f} className="flex items-start gap-2"><span className="text-primary-light mt-0.5">✓</span> {f}</li>
               ))}

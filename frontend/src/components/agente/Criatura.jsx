@@ -1,31 +1,29 @@
 /* Gestbot — robot asistente (blanco/azul, sin morados).
-   Diseño limpio inspirado en un robot mascota flotante:
-   cabeza redondeada con visor, ojos brillantes + sonrisa, antena con
-   luz, brazos redondeados coherentes (uno saluda), cuerpo flotante.
+   Brazos con pivote correcto (transform-box: view-box) → siempre
+   pegados al hombro y CON manos visibles en todos los estados.
 
    Estados: idle | thinking | talking | happy | error
-   - idle    : flota suave, parpadea y saluda con la mano
-   - thinking: baja los brazos a un portátil y "trabaja" (teclea)
+   - idle    : flota, parpadea y saluda con la mano derecha
+   - thinking: baja ambos brazos a un portátil y teclea ("trabajando")
    - talking : boca animada + leve bob
    - happy   : ojos felices, saludo rápido + rebote
-   - error   : visor rojizo, ojos en X, se sacude
-   Animaciones por CSS keyframes inyectadas una sola vez. */
+   - error   : visor rojizo, ojos en X, se sacude */
 
 import { useEffect } from 'react';
 
-const STYLE_ID = 'gestbot-anim-v2';
+const STYLE_ID = 'gestbot-anim-v3';
 const CSS = `
-@keyframes gb-float  {0%,100%{transform:translateY(0)}50%{transform:translateY(-5.5%)}}
-@keyframes gb-bob    {0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2.5%) rotate(1.2deg)}}
+@keyframes gb-float  {0%,100%{transform:translateY(0)}50%{transform:translateY(-5%)}}
+@keyframes gb-bob    {0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2.4%) rotate(1deg)}}
 @keyframes gb-bounce {0%,100%{transform:translateY(0) scale(1,1)}28%{transform:translateY(-9%) scale(.98,1.03)}58%{transform:translateY(0) scale(1.03,.97)}}
 @keyframes gb-shake  {0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-4%) rotate(-2deg)}40%{transform:translateX(4%) rotate(2deg)}60%{transform:translateX(-3%) rotate(-1deg)}80%{transform:translateX(3%) rotate(1deg)}}
 @keyframes gb-blink  {0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
-@keyframes gb-wave   {0%,100%{transform:rotate(6deg)}50%{transform:rotate(-26deg)}}
-@keyframes gb-wavef  {0%,100%{transform:rotate(8deg)}50%{transform:rotate(-34deg)}}
-@keyframes gb-sway   {0%,100%{transform:rotate(-3deg)}50%{transform:rotate(4deg)}}
-@keyframes gb-type   {0%,100%{transform:translateY(0)}50%{transform:translateY(7%)}}
-@keyframes gb-typeb  {0%,100%{transform:translateY(7%)}50%{transform:translateY(0)}}
-@keyframes gb-scan   {0%{opacity:.25;width:14px}50%{opacity:1}100%{opacity:.25;width:14px}}
+@keyframes gb-wave   {0%,100%{transform:rotate(8deg)}50%{transform:rotate(-24deg)}}
+@keyframes gb-wavef  {0%,100%{transform:rotate(10deg)}50%{transform:rotate(-32deg)}}
+@keyframes gb-sway   {0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
+@keyframes gb-typeA  {0%,100%{transform:translateY(0)}50%{transform:translateY(6%)}}
+@keyframes gb-typeB  {0%,100%{transform:translateY(6%)}50%{transform:translateY(0)}}
+@keyframes gb-scan   {0%{opacity:.25}50%{opacity:1}100%{opacity:.25}}
 @keyframes gb-ping   {0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
 @keyframes gb-aura   {0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.7;transform:scale(1.06)}}
 .gb-wrap{will-change:transform}
@@ -35,14 +33,15 @@ const CSS = `
 .gb-error   .gb-body{animation:gb-shake .5s ease-in-out infinite}
 .gb-thinking .gb-body{animation:gb-bob 2.2s ease-in-out infinite}
 .gb-eyelid{transform-box:fill-box;transform-origin:center;animation:gb-blink 5s ease-in-out infinite}
-.gb-armR{transform-box:fill-box;transform-origin:36px 6px}
-.gb-armL{transform-box:fill-box;transform-origin:-36px 6px}
+.gb-armR{transform-box:view-box;transform-origin:96px 96px}
+.gb-armL{transform-box:view-box;transform-origin:44px 98px}
 .gb-idle    .gb-armR{animation:gb-wave 2.4s ease-in-out infinite}
-.gb-talking .gb-armR{animation:gb-wave 3.2s ease-in-out infinite}
+.gb-talking .gb-armR{animation:gb-wave 3s ease-in-out infinite}
 .gb-happy   .gb-armR{animation:gb-wavef .5s ease-in-out infinite}
 .gb-idle    .gb-armL{animation:gb-sway 4s ease-in-out infinite}
-.gb-handA{transform-box:fill-box;transform-origin:center;animation:gb-type .42s ease-in-out infinite}
-.gb-handB{transform-box:fill-box;transform-origin:center;animation:gb-typeb .42s ease-in-out infinite}
+.gb-talking .gb-armL{animation:gb-sway 5s ease-in-out infinite}
+.gb-handA{transform-box:fill-box;transform-origin:center;animation:gb-typeA .42s ease-in-out infinite}
+.gb-handB{transform-box:fill-box;transform-origin:center;animation:gb-typeB .42s ease-in-out infinite}
 .gb-scanl{animation:gb-scan 1.1s ease-in-out infinite}
 .gb-scanl2{animation-delay:.22s}
 .gb-scanl3{animation-delay:.44s}
@@ -103,34 +102,41 @@ export default function Criatura({ mood = 'idle', size = 96 }) {
           <path d="M70 24 Q72 16 69 11" stroke="#9FB2C9" strokeWidth="3" fill="none" strokeLinecap="round" />
           <circle className="gb-ping" cx="68" cy="9" r="5" fill={aura} />
 
-          {/* ── Brazo izquierdo ── */}
+          {/* ── Brazo izquierdo (pivote hombro 44,98) ── */}
           {working ? (
             <g>
-              <path d="M30 92 Q20 104 30 116" stroke="url(#gb-shell)" strokeWidth="13" fill="none" strokeLinecap="round" />
-              <circle className="gb-handA" cx="50" cy="120" r="9" fill="url(#gb-shell)" stroke="#C7D3E3" />
+              <path d="M48 100 Q40 112 56 120" stroke="url(#gb-shell)" strokeWidth="13"
+                    fill="none" strokeLinecap="round" />
+              <circle className="gb-handA" cx="58" cy="121" r="9"
+                      fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
             </g>
           ) : (
-            <g className="gb-armL" transform="translate(36 84)">
-              <rect x="-43" y="0" width="13" height="34" rx="6.5" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
-              <circle cx="-36.5" cy="36" r="8.5" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
+            <g className="gb-armL">
+              <path d="M46 99 Q36 112 39 124" stroke="url(#gb-shell)" strokeWidth="13"
+                    fill="none" strokeLinecap="round" />
+              <circle cx="40" cy="126" r="8.5" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
             </g>
           )}
 
-          {/* ── Brazo derecho (saluda / teclea) ── */}
+          {/* ── Brazo derecho (pivote hombro 96,96) ── */}
           {working ? (
             <g>
-              <path d="M110 92 Q120 104 110 116" stroke="url(#gb-shell)" strokeWidth="13" fill="none" strokeLinecap="round" />
-              <circle className="gb-handB" cx="90" cy="120" r="9" fill="url(#gb-shell)" stroke="#C7D3E3" />
+              <path d="M92 100 Q100 112 84 120" stroke="url(#gb-shell)" strokeWidth="13"
+                    fill="none" strokeLinecap="round" />
+              <circle className="gb-handB" cx="82" cy="121" r="9"
+                      fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
             </g>
           ) : (
-            <g className="gb-armR" transform="translate(104 70)">
-              <rect x="-6" y="-2" width="13" height="34" rx="6.5" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
-              <circle cx="0.5" cy="-7" r="9" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
+            <g className="gb-armR">
+              <path d="M94 96 Q108 80 110 60" stroke="url(#gb-shell)" strokeWidth="13"
+                    fill="none" strokeLinecap="round" />
+              <circle cx="110" cy="54" r="9" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
             </g>
           )}
 
-          {/* cuerpo */}
-          <path d="M44 96 Q44 132 70 132 Q96 132 96 96 Z" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
+          {/* cuerpo (cubre los hombros → brazos pegados) */}
+          <path d="M44 96 Q44 132 70 132 Q96 132 96 96 Z"
+                fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
           <ellipse cx="70" cy="112" rx="11" ry="7" fill="url(#gb-accent)" opacity="0.85" />
           <circle cx="70" cy="112" r="3" fill={aura} />
 
@@ -138,7 +144,8 @@ export default function Criatura({ mood = 'idle', size = 96 }) {
           <rect x="62" y="86" width="16" height="12" rx="4" fill="#D7E0EC" />
 
           {/* cabeza */}
-          <rect x="30" y="26" width="80" height="66" rx="26" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.4" />
+          <rect x="30" y="26" width="80" height="66" rx="26"
+                fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.4" />
           {/* orejas */}
           <rect x="22" y="48" width="11" height="22" rx="5.5" fill="url(#gb-accent)" />
           <rect x="107" y="48" width="11" height="22" rx="5.5" fill="url(#gb-accent)" />
@@ -146,7 +153,6 @@ export default function Criatura({ mood = 'idle', size = 96 }) {
           {/* visor */}
           <rect x="40" y="36" width="60" height="46" rx="20" fill="url(#gb-visor)" />
           <rect x="40" y="36" width="60" height="46" rx="20" fill="none" stroke="#0A1424" strokeWidth="2" />
-          {/* reflejo */}
           <ellipse cx="56" cy="48" rx="11" ry="6" fill="#FFFFFF" opacity="0.10" />
 
           {/* ojos */}

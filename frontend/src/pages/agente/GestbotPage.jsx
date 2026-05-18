@@ -1,6 +1,7 @@
-/* Gestbot — sección dedicada del asistente.
-   Robot grande que interactúa (gestos, saluda, y "saca su PC" cuando
-   está trabajando) + chat conversacional con formularios estructurados. */
+/* Gestbot — sección dedicada.
+   Arriba: el robot grande (mismo tamaño que el área de abajo) con fases
+   de trabajo. Abajo: chat ancho a la izquierda + vista previa del evento
+   que se está creando a la derecha. */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Criatura from '../../components/agente/Criatura.jsx';
@@ -18,13 +19,15 @@ const SALUDO = {
   content: '¡Hola! Soy Gestbot 🤖 Tu asistente de eventos. Puedo crear y publicar eventos, armar boletas, ver ventas, gestionar tu equipo y mucho más. ¿En qué trabajamos?',
 };
 
-const ESTADO_TXT = {
-  idle: 'listo para ayudarte',
-  thinking: 'trabajando en eso…',
-  talking: 'respondiendo',
-  happy: '¡hecho!',
-  error: 'ups, algo pasó',
-};
+/* Fases que muestra el robot mientras "trabaja" */
+const FASES = [
+  'Interpretando la información…',
+  'Desarrollando el modelo…',
+  'Programándolo…',
+  'Afinando los detalles…',
+];
+
+const TOOLS_EVENTO = ['crear_evento', 'editar_evento', 'duplicar_evento', 'cambiar_estado_evento', 'publicar_evento'];
 
 export default function GestbotPage() {
   const [disponible, setDisp]   = useState(null);
@@ -34,6 +37,8 @@ export default function GestbotPage() {
   const [cargando, setCargando] = useState(false);
   const [mood, setMood]         = useState('idle');
   const [formActivo, setForm]   = useState(null);
+  const [faseIdx, setFaseIdx]   = useState(0);
+  const [evPrev, setEvPrev]     = useState(null);   // vista previa del evento
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -45,6 +50,13 @@ export default function GestbotPage() {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [mensajes, cargando]);
+
+  /* Cicla las fases mientras está cargando */
+  useEffect(() => {
+    if (!cargando) { setFaseIdx(0); return; }
+    const id = setInterval(() => setFaseIdx(i => (i + 1) % FASES.length), 1500);
+    return () => clearInterval(id);
+  }, [cargando]);
 
   const enviar = useCallback(async (texto) => {
     const msg = (texto ?? input).trim();
@@ -63,10 +75,16 @@ export default function GestbotPage() {
       setMood(r.mood || 'talking');
       setForm(r.formulario && Array.isArray(r.formulario.campos) && r.formulario.campos.length
         ? r.formulario : null);
-      const navAccion = (r.acciones || []).find(
-        a => a.ok && ['crear_evento', 'publicar_evento', 'editar_evento', 'duplicar_evento', 'cambiar_estado_evento'].includes(a.tool)
-      );
-      if (navAccion) window.dispatchEvent(new CustomEvent('gestek:refrescar-eventos'));
+
+      /* Vista previa: tomamos el input del último tool de evento */
+      const evAccion = [...(r.acciones || [])].reverse()
+        .find(a => TOOLS_EVENTO.includes(a.tool) && a.input);
+      if (evAccion) {
+        setEvPrev(prev => ({ ...(prev || {}), ...evAccion.input, _ok: evAccion.ok, _tool: evAccion.tool }));
+      }
+      if ((r.acciones || []).some(a => a.ok && ['crear_evento', 'publicar_evento', 'editar_evento', 'duplicar_evento', 'cambiar_estado_evento'].includes(a.tool))) {
+        window.dispatchEvent(new CustomEvent('gestek:refrescar-eventos'));
+      }
       setTimeout(() => setMood('idle'), 4500);
     } catch (e) {
       setMensajes(m => [...m, { role: 'assistant', content: e.message || 'Ups, algo falló. Intenta de nuevo.' }]);
@@ -89,14 +107,20 @@ export default function GestbotPage() {
   }, [formActivo, enviar]);
 
   const moodActual = cargando ? 'thinking' : mood;
+  const estadoTxt = cargando
+    ? FASES[faseIdx]
+    : mood === 'happy' ? '¡Listo! Resultado correcto ✓'
+    : mood === 'error' ? 'Hubo un problema con la solicitud'
+    : mood === 'talking' ? 'Respondiendo…'
+    : 'Listo para ayudarte';
 
   if (disponible === false) {
     return (
       <div className="max-w-xl mx-auto mt-10 text-center space-y-4">
-        <Criatura mood="error" size={140} />
+        <div className="flex justify-center"><Criatura mood="error" size={150} /></div>
         <h1 className="text-2xl font-display font-bold text-text-1">Gestbot no está activo</h1>
         <p className="text-text-2">
-          Falta configurar una API key de IA en el servidor (Groq o Gemini son gratis).
+          Falta una API key de IA en el servidor (Groq o Gemini son gratis).
           Define <code className="text-primary">GROQ_API_KEY</code> en el <code>.env</code> y reinicia el backend.
         </p>
       </div>
@@ -104,32 +128,51 @@ export default function GestbotPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-7rem)]">
+    <div className="max-w-6xl mx-auto flex flex-col gap-5 h-[calc(100vh-7rem)]">
 
-        {/* ── Escena del robot ── */}
-        <div className="lg:w-[320px] flex-shrink-0 rounded-3xl border border-border-2
-                        bg-gradient-to-b from-surface-2 to-surface flex flex-col items-center
-                        justify-center p-6 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-pattern opacity-30" />
-          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-56 h-56 rounded-full
-                          bg-primary/15 blur-3xl" />
-          <div className="relative">
-            <Criatura mood={moodActual} size={220} />
+      {/* ── ARRIBA: el robot ── */}
+      <div className="flex-1 min-h-[240px] rounded-3xl border border-border-2
+                      bg-gradient-to-b from-surface-2 to-surface relative overflow-hidden
+                      flex flex-col items-center justify-center text-center">
+        <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[28rem] h-[28rem]
+                        rounded-full bg-primary/15 blur-[100px]" />
+        <div className="relative flex items-center gap-6">
+          <Criatura mood={moodActual} size={210} />
+          <div className="hidden sm:block text-left max-w-xs">
+            <h2 className="text-3xl font-display font-bold text-text-1">Gestbot</h2>
+            <p className={`mt-1 text-sm font-medium transition-colors ${
+              cargando ? 'text-primary-light'
+              : mood === 'error' ? 'text-danger'
+              : mood === 'happy' ? 'text-success' : 'text-text-2'}`}>
+              {estadoTxt}
+            </p>
+            {cargando && (
+              <div className="mt-3 space-y-1.5">
+                {FASES.map((f, i) => (
+                  <div key={i} className={`flex items-center gap-2 text-xs transition-opacity
+                    ${i <= faseIdx ? 'opacity-100' : 'opacity-35'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${i <= faseIdx ? 'bg-primary' : 'bg-text-3'}`} />
+                    <span className={i === faseIdx ? 'text-text-1' : 'text-text-3'}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {provider && !cargando && (
+              <span className="inline-block mt-3 text-[10px] uppercase tracking-widest text-text-3
+                               border border-border rounded-full px-2.5 py-1">
+                motor: {provider}
+              </span>
+            )}
           </div>
-          <h2 className="relative mt-4 text-2xl font-display font-bold text-text-1">Gestbot</h2>
-          <p className="relative text-sm text-text-2 mt-1">
-            {ESTADO_TXT[moodActual] || 'tu asistente de eventos'}
-          </p>
-          {provider && (
-            <span className="relative mt-3 text-[10px] uppercase tracking-widest text-text-3
-                             border border-border rounded-full px-2.5 py-1">
-              motor: {provider}
-            </span>
-          )}
         </div>
+        <p className="sm:hidden relative mt-2 text-sm text-text-2">{estadoTxt}</p>
+      </div>
 
-        {/* ── Chat ── */}
+      {/* ── ABAJO: chat + vista previa ── */}
+      <div className="flex-1 min-h-[260px] flex gap-5">
+
+        {/* Chat (ancho) */}
         <div className="flex-1 flex flex-col rounded-3xl border border-border-2 bg-surface/70 overflow-hidden">
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-3">
             {mensajes.map((m, i) => (
@@ -211,7 +254,72 @@ export default function GestbotPage() {
             </button>
           </form>
         </div>
+
+        {/* Vista previa del evento (al lado del chat) */}
+        <div className="hidden lg:flex w-[300px] flex-shrink-0 flex-col rounded-3xl
+                        border border-border-2 bg-surface/70 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <p className="font-display font-semibold text-text-1 text-sm">Vista previa del evento</p>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {evPrev ? <EventoPreview ev={evPrev} /> : (
+              <div className="h-full flex flex-col items-center justify-center text-center text-text-3 gap-2">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" strokeLinecap="round" />
+                </svg>
+                <p className="text-sm">Cuando crees o edites un evento con Gestbot, aquí verás la vista previa.</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function EventoPreview({ ev }) {
+  const fecha = ev.fecha_inicio || ev.nueva_fecha_inicio;
+  const fechaTxt = fecha ? new Date(fecha).toLocaleString('es', {
+    dateStyle: 'medium', timeStyle: 'short',
+  }) : null;
+  const titulo = ev.titulo || ev.nuevo_titulo || '(sin título)';
+  const okColor = ev._ok ? 'border-success/40 text-success' : 'border-warning/40 text-warning';
+
+  return (
+    <div className="space-y-3 animate-fade-in">
+      <div className="h-28 rounded-xl bg-gradient-to-br from-primary/30 to-accent/20
+                      border border-border flex items-center justify-center">
+        <span className="text-3xl font-display font-bold text-white/80">
+          {titulo.slice(0, 1).toUpperCase()}
+        </span>
+      </div>
+      <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full border ${okColor}`}>
+        {ev._ok ? 'creado/actualizado ✓' : 'en proceso'}
+      </span>
+      <h3 className="text-lg font-display font-bold text-text-1 leading-tight">{titulo}</h3>
+      {ev.descripcion && <p className="text-sm text-text-2 line-clamp-4">{ev.descripcion}</p>}
+      <dl className="text-sm space-y-1.5">
+        {fechaTxt && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-text-3">Inicio</dt><dd className="text-text-1 text-right">{fechaTxt}</dd>
+          </div>
+        )}
+        {ev.modalidad && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-text-3">Modalidad</dt><dd className="text-text-1 capitalize">{ev.modalidad}</dd>
+          </div>
+        )}
+        {ev.location_nombre && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-text-3">Lugar</dt><dd className="text-text-1 text-right">{ev.location_nombre}</dd>
+          </div>
+        )}
+        {ev.estado && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-text-3">Estado</dt><dd className="text-text-1 capitalize">{ev.estado}</dd>
+          </div>
+        )}
+      </dl>
     </div>
   );
 }

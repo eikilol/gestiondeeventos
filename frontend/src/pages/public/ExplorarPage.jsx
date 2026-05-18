@@ -9,7 +9,7 @@ export default function ExplorarPage() {
 
   useEffect(() => {
     setLoading(true);
-    eventosApi.publicos({ limit: 24 })
+    eventosApi.publicos({ limit: 60 })
       .then(d => setEventos(d.eventos || []))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));

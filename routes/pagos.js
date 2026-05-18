@@ -62,6 +62,7 @@ const PLAN_PRO_PRICE = Number(process.env.PLAN_PRO_PRICE || 79900);
 const PLAN_PRO_CURRENCY = process.env.PLAN_PRO_CURRENCY || 'COP';
 const PLAN_PRO_PRICE_USD = Number(process.env.PLAN_PRO_PRICE_USD || 19.99);
 const PLAN_PRO_DURATION_DAYS = Number(process.env.PLAN_PRO_DURATION_DAYS || 30);
+const PLAN_PRO_TRIAL_DAYS = Number(process.env.PLAN_PRO_TRIAL_DAYS || 14);
 
 function publicBaseUrl() {
   return process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -135,10 +136,12 @@ router.delete('/me/mercadopago', verifySupabaseJWT, async (req, res) => {
 router.get('/me/plan', verifySupabaseJWT, async (req, res) => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('plan, plan_expires_at, plan_updated_at')
+    .select('plan, plan_expires_at, plan_updated_at, plan_payment_id')
     .eq('id', req.user.id).single();
   if (error) return res.status(500).json({ error: error.message });
   const activo = data?.plan === 'pro' && (!data.plan_expires_at || new Date(data.plan_expires_at) > new Date());
+  const enTrial = activo && String(data?.plan_payment_id || '').startsWith('trial_');
+  const trialUsado = String(data?.plan_payment_id || '').startsWith('trial_');
   res.json({
     plan: activo ? 'pro' : 'free',
     expires_at: data?.plan_expires_at,
@@ -146,8 +149,46 @@ router.get('/me/plan', verifySupabaseJWT, async (req, res) => {
     precio: PLAN_PRO_PRICE,
     currency: PLAN_PRO_CURRENCY,
     precio_usd: PLAN_PRO_PRICE_USD,
+    duracion_dias: PLAN_PRO_DURATION_DAYS,
+    trial_dias: PLAN_PRO_TRIAL_DAYS,
+    en_trial: enTrial,
+    trial_disponible: !activo && !trialUsado,
     dev_activation: process.env.ALLOW_DEV_PRO_ACTIVATION === 'true',
   });
+});
+
+/* POST /me/plan/pro/trial — prueba gratis de 14 días (una sola vez). */
+router.post('/me/plan/pro/trial', verifySupabaseJWT, async (req, res) => {
+  const { data: prof, error: e1 } = await supabase
+    .from('profiles').select('plan, plan_expires_at, plan_payment_id').eq('id', req.user.id).single();
+  if (e1) return res.status(500).json({ error: e1.message });
+
+  const activo = prof?.plan === 'pro' && (!prof.plan_expires_at || new Date(prof.plan_expires_at) > new Date());
+  if (activo) return res.status(400).json({ error: 'Ya tienes Pro activo.' });
+  if (String(prof?.plan_payment_id || '').startsWith('trial_')) {
+    return res.status(400).json({ error: 'Ya usaste tu prueba gratuita.' });
+  }
+
+  const venc = new Date(Date.now() + PLAN_PRO_TRIAL_DAYS * 24 * 3600 * 1000);
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({
+      plan: 'pro',
+      plan_expires_at: venc.toISOString(),
+      plan_payment_id: `trial_${Date.now()}`,
+      plan_updated_at: new Date().toISOString(),
+    })
+    .eq('id', req.user.id)
+    .select('plan, plan_expires_at').single();
+  if (error) return res.status(500).json({ error: error.message });
+
+  await supabase.from('payment_transactions').insert({
+    user_id: req.user.id, kind: 'plan', status: 'approved',
+    monto: 0, currency: 'TRIAL',
+    raw: { trial: true, dias: PLAN_PRO_TRIAL_DAYS, at: new Date().toISOString() },
+  });
+
+  res.json({ ok: true, profile: data, trial_dias: PLAN_PRO_TRIAL_DAYS });
 });
 
 /* DEV ONLY: activa Pro sin pasar por MP. Habilitado solo si ALLOW_DEV_PRO_ACTIVATION=true. */

@@ -804,19 +804,21 @@ function PlanProCard() {
           <h3 className="text-base font-semibold text-text-1">Plan {esPro ? 'Pro' : 'Free'}</h3>
           <p className="text-xs text-text-3 mt-0.5">
             {esPro
-              ? `Activo hasta ${plan.expires_at ? new Date(plan.expires_at).toLocaleDateString() : '—'}`
-              : `Subí a Pro por ${formatPrecio(plan)} y desbloqueá white-label, dominio propio y la API.`}
+              ? `${plan.en_trial ? 'Prueba Pro · ' : ''}Activo hasta ${plan.expires_at ? new Date(plan.expires_at).toLocaleDateString() : '—'}`
+              : `Pro: white-label, API, webhooks, auditoría y Gestbot. ${plan?.trial_dias || 14} días de prueba gratis, luego US$ ${plan?.precio_usd ?? 19.99}/mes.`}
           </p>
         </div>
         {esPro
-          ? <span className="badge badge-green">Pro</span>
+          ? <span className="badge badge-green">{plan.en_trial ? 'Prueba' : 'Pro'}</span>
           : <span className="badge badge-gray">Free</span>}
       </div>
       <div className="card-body flex items-center justify-between flex-wrap gap-3">
         <div className="text-sm text-text-2 max-w-md">
           {esPro
-            ? 'Renovás manualmente cuando se acerque la fecha. Sin cobros automáticos.'
-            : 'Pago único de 30 días vía Mercado Pago. Sin renovación automática, sin atarte a nada.'}
+            ? (plan.en_trial
+                ? 'Estás en tu prueba gratuita. Cuando termine, paga para seguir con Pro.'
+                : 'Renovás manualmente cuando se acerque la fecha. Sin cobros automáticos.')
+            : `Empieza con ${plan?.trial_dias || 14} días de Pro gratis (sin tarjeta). Después, US$ ${plan?.precio_usd ?? 19.99}/mes — sin renovación automática.`}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {plan?.dev_activation && (
@@ -829,8 +831,21 @@ function PlanProCard() {
               <DevIcon /> Activar dev
             </button>
           )}
+          {plan?.trial_disponible && (
+            <button onClick={async () => {
+              setWorking(true);
+              try {
+                const r = await pagosApi.trial();
+                success(`¡Prueba activada! Tienes ${r.trial_dias} días de Pro gratis.`);
+                await cargar(); notificarPlanCambiado();
+              } catch (e) { error(e.response?.data?.error || e.message); }
+              finally { setWorking(false); }
+            }} disabled={working} className="btn-secondary btn-sm">
+              Probar 14 días gratis
+            </button>
+          )}
           <button onClick={comprar} disabled={working} className="btn-gradient">
-            {working ? <><Spinner size="sm" /> Redirigiendo...</> : (esPro ? 'Renovar Pro 30 días más' : 'Pagar y activar Pro')}
+            {working ? <><Spinner size="sm" /> Redirigiendo...</> : (esPro ? 'Renovar Pro' : 'Pagar y activar Pro')}
           </button>
         </div>
       </div>

@@ -132,8 +132,8 @@ function Hero() {
 
         <p className={`mt-8 text-lg sm:text-2xl text-text-2 max-w-3xl mx-auto leading-relaxed transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           La plataforma de gestión de eventos que reemplaza tu stack actual.
-          Creación, ventas, asistencia, pagos y comunidad — todo lo esencial
-          gratis, para siempre.
+          Creación, ventas, asistencia, pagos y comunidad. Empieza gratis y
+          sube a Pro cuando lo necesites — 14 días de prueba.
         </p>
 
         <div className={`mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 transition-all duration-700 delay-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -210,9 +210,9 @@ function Stats() {
     },
     {
       kicker: 'Sin trucos',
-      title: 'Plan gratis',
-      highlight: 'para siempre',
-      desc: 'Todo lo esencial incluido. Sin caducidad, sin tarjeta, sin asteriscos.',
+      title: 'Empieza',
+      highlight: 'gratis',
+      desc: 'Crea y vende sin tarjeta. Pro suma IA, API, white-label y más — con 14 días de prueba.',
     },
     {
       kicker: 'Escala',
@@ -517,15 +517,15 @@ function PricingTeaser() {
             Empieza gratis. Sube cuando quieras.
           </h2>
           <p className="text-base sm:text-lg text-text-2 max-w-xl mx-auto">
-            Lo esencial siempre en gratis. Pro existe para comodidad y branding, no para desbloquear lo básico.
+            Empieza gratis con lo esencial. Pro suma IA, API, white-label y soporte — pruébalo 14 días sin tarjeta.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-5">
           <div className="p-7 rounded-3xl border border-border bg-surface/40 hover:bg-surface/60 transition-all">
             <h3 className="text-2xl font-bold font-display text-text-1 mb-2">Free</h3>
-            <p className="text-sm text-text-2 mb-5">Todo lo esencial, sin tarjeta de crédito.</p>
-            <p className="text-4xl font-bold font-display text-text-1 mb-6">Gratis</p>
+            <p className="text-sm text-text-2 mb-5">Lo esencial para empezar, sin tarjeta.</p>
+            <p className="text-4xl font-bold font-display text-text-1 mb-6">$0</p>
             <ul className="space-y-2.5 text-sm text-text-1 mb-7">
               {[
                 'Eventos y asistentes ilimitados',
@@ -547,15 +547,16 @@ function PricingTeaser() {
           <div className="relative p-7 rounded-3xl border border-primary/40 bg-surface/80 shadow-[0_0_60px_rgba(59,130,246,0.12)] hover:shadow-[0_0_80px_rgba(59,130,246,0.2)] transition-all">
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-semibold tracking-widest uppercase bg-primary text-white">Recomendado</span>
             <h3 className="text-2xl font-bold font-display text-text-1 mb-2">Pro</h3>
-            <p className="text-sm text-text-2 mb-5">API, IA, branding y dominio propio.</p>
-            <p className="text-4xl font-bold font-display text-text-1 mb-6">$29 <span className="text-base text-text-3 font-medium">USD/mes</span></p>
+            <p className="text-sm text-text-2 mb-5">IA, API, white-label y soporte. 14 días de prueba gratis.</p>
+            <p className="text-4xl font-bold font-display text-text-1 mb-1">$19.99 <span className="text-base text-text-3 font-medium">USD/mes</span></p>
+            <p className="text-xs text-primary-light mb-5">14 días gratis · sin tarjeta · cancela cuando quieras</p>
             <ul className="space-y-2.5 text-sm text-text-1 mb-7">
               {[
                 'Todo lo del Free',
+                'Gestbot — asistente IA que opera tu evento',
                 'API REST + Webhooks con HMAC',
-                'Agente IA que arma tus eventos',
                 'White-label sin marca GESTEK',
-                'Dominio personalizado propio',
+                'Auditoría de acciones del equipo',
                 'Analytics avanzados',
                 'Soporte prioritario',
               ].map(f => (
@@ -633,7 +634,7 @@ function CTASection() {
           Tu próximo evento empieza hoy
         </h2>
         <p className="relative text-base sm:text-lg text-text-2 max-w-lg mx-auto mb-10">
-          Crea tu cuenta en menos de un minuto. Todo lo esencial es gratis, para siempre.
+          Crea tu cuenta en menos de un minuto. Empieza gratis; Pro con 14 días de prueba.
         </p>
         <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link to="/register" className="w-full sm:w-auto px-8 py-4 rounded-full text-base font-semibold text-bg bg-text-1 hover:bg-white transition-all shadow-[0_0_40px_rgba(241,245,249,0.2)] hover:scale-[1.02]">

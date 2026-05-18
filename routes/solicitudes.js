@@ -76,6 +76,27 @@ router.get('/me/equipo/eventos', async (req, res) => {
   });
 });
 
+/* ── GET /me/solicitudes — agregado de TODOS mis eventos (dashboard) ── */
+router.get('/me/solicitudes', async (req, res) => {
+  const { data: evs } = await supabase
+    .from('eventos').select('id, titulo')
+    .eq('owner_id', req.user.id).is('deleted_at', null);
+  const ids = (evs || []).map(e => e.id);
+  if (ids.length === 0) return res.json({ solicitudes: [] });
+  const tit = Object.fromEntries((evs || []).map(e => [e.id, e.titulo]));
+
+  const { data, error } = await supabase
+    .from('event_requests')
+    .select('*, autor:profiles!autor_id(nombre, avatar_url)')
+    .in('evento_id', ids)
+    .order('created_at', { ascending: false })
+    .limit(40);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({
+    solicitudes: (data || []).map(r => ({ ...r, evento_titulo: tit[r.evento_id] || '—' })),
+  });
+});
+
 /* ── GET /eventos/:eventoId/solicitudes ───────────────────── */
 router.get('/eventos/:eventoId/solicitudes', async (req, res) => {
   try {

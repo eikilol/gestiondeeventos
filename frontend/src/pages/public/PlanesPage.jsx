@@ -28,7 +28,7 @@ const PLANS = [
   },
   {
     name: 'Pro',
-    tagline: 'API, agente IA, white-label y dominio propio. Para equipos que quieren escalar y mantener su marca.',
+    tagline: 'Gestbot IA, API, white-label y soporte. Para equipos que quieren escalar y mantener su marca.',
     price: { monthly: 19.99, annual: 19.99 },
     highlight: true,
     badge: 'Recomendado',
@@ -36,9 +36,9 @@ const PLANS = [
     features: [
       'Todo lo del plan Free',
       'API REST + Webhooks con HMAC y reintentos',
-      'Agente IA que crea eventos según contexto',
+      'Gestbot — asistente IA que opera tu evento',
       'White-label: sin marca GESTEK',
-      'Dominio personalizado (tueventos.tudominio.com)',
+      'Auditoría de acciones del equipo',
       'Personalización completa (colores, tipografía, logo)',
       'Analytics avanzados (cohortes, fuente, retención)',
       'Web push notifications',
@@ -102,8 +102,8 @@ const COMPARE = [
     ['Rate limit',                     '—', '600 req/min'],
     ['OpenAPI / Postman',              false, true],
   ]},
-  { section: 'Branding y dominio', rows: [
-    ['Página pública',                 'gestek.io/tu-marca', 'tudominio.com'],
+  { section: 'Branding', rows: [
+    ['Página pública',                 'gestek.io/tu-marca', 'gestek.io/tu-marca'],
     ['Logo GESTEK visible',            'Sí (siempre)', 'Removible'],
     ['Subir tu propio logo',           false, true],
     ['Colores personalizados',         false, true],

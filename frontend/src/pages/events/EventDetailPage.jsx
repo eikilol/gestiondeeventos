@@ -28,21 +28,20 @@ const GRUPOS = [
     { id: 'resumen', label: 'Resumen' },
     { id: 'publica', label: 'Página pública' },
   ] },
-  { label: 'Asistentes', items: [
-    { id: 'tickets',  label: 'Tickets' },
-    { id: 'gente',    label: 'Clientes' },
-    { id: 'checkin',  label: 'Check-in' },
-    { id: 'waitlist', label: 'Lista de espera' },
-  ] },
   { label: 'Organización', items: [
     { id: 'equipo',  label: 'Equipo y roles' },
-    { id: 'agenda',  label: 'Agenda' },
     { id: 'tareas',  label: 'Tareas' },
-    { id: 'chat',    label: 'Chat' },
+    { id: 'agenda',  label: 'Agenda' },
   ] },
   { label: 'Facturación', items: [
     { id: 'pagos',     label: 'Pagos' },
     { id: 'analytics', label: 'Analytics' },
+  ] },
+  { label: 'Asistentes', items: [
+    { id: 'tickets',  label: 'Tickets' },
+    { id: 'checkin',  label: 'Check-in' },
+    { id: 'gente',    label: 'Clientes' },
+    { id: 'waitlist', label: 'Lista de espera' },
   ] },
 ];
 const TAB_GRUPO = Object.fromEntries(
@@ -129,13 +128,14 @@ export default function EventDetailPage() {
         onBroadcast={() => setBroadcastOpen(true)}
       />
 
-      {/* NAV agrupada: grupos arriba, sub-tabs del grupo activo abajo */}
+      {/* NAV agrupada: grupos + Chat aparte; sub-tabs del grupo activo */}
       {(() => {
-        const grupoActivo = TAB_GRUPO[tab] || GRUPOS[0].label;
-        const items = (GRUPOS.find(g => g.label === grupoActivo) || GRUPOS[0]).items;
+        const esChat = tab === 'chat';
+        const grupoActivo = esChat ? null : (TAB_GRUPO[tab] || GRUPOS[0].label);
+        const grupo = GRUPOS.find(g => g.label === grupoActivo);
         return (
           <div className="space-y-3">
-            <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
               {GRUPOS.map(g => {
                 const act = g.label === grupoActivo;
                 return (
@@ -151,23 +151,39 @@ export default function EventDetailPage() {
                   </button>
                 );
               })}
+              <span className="w-px h-6 bg-border mx-1 flex-shrink-0" />
+              <button
+                onClick={() => setTab('chat')}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
+                  whitespace-nowrap transition-all
+                  ${esChat
+                    ? 'bg-gradient-primary text-white shadow-glow-sm'
+                    : 'bg-surface-2 text-text-3 hover:text-text-1 border border-border'}`}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Chat
+              </button>
             </div>
-            <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-border
-                            -mx-4 px-4 sm:mx-0 sm:px-0">
-              {items.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  className={`relative px-4 py-3 text-[15px] font-medium whitespace-nowrap transition-colors
-                    ${tab === t.id ? 'text-text-1' : 'text-text-3 hover:text-text-2'}`}
-                >
-                  {t.label}
-                  {tab === t.id && (
-                    <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary animate-[fadeIn_0.2s_ease_both]" />
-                  )}
-                </button>
-              ))}
-            </div>
+            {grupo && (
+              <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-border
+                              -mx-4 px-4 sm:mx-0 sm:px-0">
+                {grupo.items.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                    className={`relative px-4 py-3 text-[15px] font-medium whitespace-nowrap transition-colors
+                      ${tab === t.id ? 'text-text-1' : 'text-text-3 hover:text-text-2'}`}
+                  >
+                    {t.label}
+                    {tab === t.id && (
+                      <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary animate-[fadeIn_0.2s_ease_both]" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         );
       })()}

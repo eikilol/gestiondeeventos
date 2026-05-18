@@ -15,26 +15,7 @@ const RADIUS = { none: '0px', sm: '6px', md: '12px', lg: '18px', xl: '26px' };
 /* Estilos scoped para que el modo claro afecte de verdad a la página */
 const STYLE_ID = 'gestek-brand-css';
 const CSS = `
-.brand-scope{transition:background .25s,color .25s}
-.brand-scope[data-bt="claro"] .text-text-1{color:#0B1220!important}
-.brand-scope[data-bt="claro"] .text-text-2{color:#475569!important}
-.brand-scope[data-bt="claro"] .text-text-3{color:#7A8699!important}
-.brand-scope[data-bt="claro"] .bg-surface,
-.brand-scope[data-bt="claro"] .bg-surface\\/40,
-.brand-scope[data-bt="claro"] .bg-surface\\/60,
-.brand-scope[data-bt="claro"] .bg-surface\\/70,
-.brand-scope[data-bt="claro"] .bg-surface-2,
-.brand-scope[data-bt="claro"] .bg-surface-3{background-color:rgba(255,255,255,.78)!important}
-.brand-scope[data-bt="claro"] .border-border,
-.brand-scope[data-bt="claro"] .border-border-2,
-.brand-scope[data-bt="claro"] .divide-border > *{border-color:rgba(0,0,0,.10)!important}
-/* Pill activa "bg-text-1 text-bg" → invertir para que se lea en claro */
-.brand-scope[data-bt="claro"] .bg-text-1{background-color:#0B1220!important}
-.brand-scope[data-bt="claro"] .text-bg{color:#FFFFFF!important}
-.brand-scope[data-bt="claro"] input::placeholder,
-.brand-scope[data-bt="claro"] textarea::placeholder{color:#94A3B8!important}
-.brand-scope[data-bt="claro"] .shadow-card,
-.brand-scope[data-bt="claro"] .shadow-card-hover{box-shadow:0 1px 3px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.06)!important}
+.brand-scope{transition:background .25s}
 .brand-scope[style*="--brand-radius"] .rounded-2xl,
 .brand-scope[style*="--brand-radius"] .rounded-3xl,
 .brand-scope[style*="--brand-radius"] .rounded-xl,
@@ -51,24 +32,21 @@ function injectCss() {
 export function BrandingProvider({ organizador, children }) {
   injectCss();
   const b = organizador?.branding || {};
-  const theme   = b.theme === 'claro' ? 'claro' : 'oscuro';
   const primary = b.primary || '#3B82F6';
   const accent  = b.accent  || '#8B5CF6';
-  const bg      = b.bg || (theme === 'claro' ? '#F4F6FB' : '#070C18');
+  const bg      = b.bg || '#070C18';
   const font    = FONTS[b.font] || null;
   const radius  = RADIUS[b.radius];
 
   return (
     <div
       className="brand-scope min-h-screen"
-      data-bt={theme}
       style={{
         '--brand-primary': primary,
         '--brand-accent' : accent,
         '--brand-glow'   : `${primary}30`,
         ...(radius ? { '--brand-radius': radius } : {}),
         background: bg,
-        color: theme === 'claro' ? '#0B1220' : undefined,
         ...(font ? { fontFamily: font } : {}),
       }}
     >

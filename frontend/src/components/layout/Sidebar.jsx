@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { usePlan } from '../../hooks/usePlan.js';
-import logoG from '../../assets/logo-g.svg';
+import GestekMark from './GestekMark.jsx';
 
 const NAV_SECTIONS = [
   {
@@ -58,20 +58,27 @@ export default function Sidebar({ mobile = false, onClose }) {
       {/* Logo */}
       <div className="px-4 py-5 border-b border-border flex items-center justify-between gap-2">
         <NavLink to="/dashboard" className="flex items-center gap-3 group flex-1 min-w-0">
-          <img
-            src={logoG}
-            alt="GESTEK"
-            className={`w-10 h-10 flex-shrink-0 transition-transform group-hover:scale-110 animate-[wheelSpin_0.9s_cubic-bezier(0.6,-0.05,0.2,1.05)_both,float_5s_ease-in-out_0.9s_infinite] ${
-              esPro ? 'drop-shadow-[0_0_14px_rgba(139,92,246,0.55)]' : 'drop-shadow-[0_0_10px_rgba(59,130,246,0.35)]'
-            }`}
-          />
+          <div className="flex-shrink-0 transition-transform group-hover:scale-110
+                          animate-[float_5s_ease-in-out_infinite]">
+            <GestekMark size={42} glow={esPro} />
+          </div>
           <div className="min-w-0">
             <span className="font-display font-bold text-text-1 text-base tracking-tight block leading-tight">GESTEK</span>
-            <p className={`text-[11px] leading-none mt-0.5 font-semibold uppercase tracking-widest ${
-              esPro ? 'text-accent-light' : 'text-text-3'
-            }`}>
-              {esPro ? 'Pro' : 'Free'}
-            </p>
+            {esPro ? (
+              <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full
+                               text-[10px] font-bold uppercase tracking-widest text-[#3a2a08]
+                               bg-gradient-to-r from-[#FCEFA1] via-[#E9B23C] to-[#C8881F]
+                               shadow-[0_0_12px_rgba(233,178,60,0.5)]">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" />
+                </svg>
+                Pro
+              </span>
+            ) : (
+              <p className="text-[11px] leading-none mt-0.5 font-semibold uppercase tracking-widest text-text-3">
+                Free
+              </p>
+            )}
           </div>
         </NavLink>
         {mobile && (

@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useBranding } from '../../hooks/useBranding.js';
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const { usuario } = useAuth();
+  const b = useBranding(usuario?.raw?.user_metadata?.branding);
+  const bPrimary = b?.primary || '#3B82F6';
+  const bAccent  = b?.accent  || '#8B5CF6';
+  const bBg      = b?.bg || null;
 
   /* Cerrar drawer al navegar */
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -17,7 +24,8 @@ export default function AppLayout() {
   }, [open]);
 
   return (
-    <div className="flex h-screen bg-bg overflow-hidden">
+    <div className="flex h-screen bg-bg overflow-hidden"
+         style={bBg ? { background: bBg } : undefined}>
       {/* Sidebar desktop */}
       <div className="hidden lg:flex">
         <Sidebar />
@@ -37,17 +45,17 @@ export default function AppLayout() {
           {/* Fondo decorativo (no interactivo) */}
           <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.4]" />
-            <div className="absolute inset-0 bg-gradient-glow" />
             <div className="absolute -top-32 -right-24 w-[34rem] h-[34rem] rounded-full
-                            bg-primary/10 blur-[110px] animate-float" />
+                            blur-[110px] animate-float"
+                 style={{ background: `${bPrimary}1f` }} />
             <div className="absolute top-1/3 -left-32 w-[30rem] h-[30rem] rounded-full
-                            bg-primary-light/10 blur-[120px] animate-float"
-                 style={{ animationDuration: '7s', animationDelay: '1s' }} />
+                            blur-[120px] animate-float"
+                 style={{ background: `${bPrimary}17`, animationDuration: '7s', animationDelay: '1s' }} />
             <div className="absolute -bottom-40 right-1/4 w-[28rem] h-[28rem] rounded-full
-                            bg-accent/10 blur-[120px] animate-float"
-                 style={{ animationDuration: '9s', animationDelay: '2s' }} />
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r
-                            from-transparent via-primary/40 to-transparent" />
+                            blur-[120px] animate-float"
+                 style={{ background: `${bAccent}1c`, animationDuration: '9s', animationDelay: '2s' }} />
+            <div className="absolute inset-x-0 top-0 h-px"
+                 style={{ background: `linear-gradient(90deg, transparent, ${bPrimary}66, transparent)` }} />
           </div>
 
           <div className="relative z-10 p-4 sm:p-6">

@@ -2,6 +2,8 @@
    colores, fondo, tipografía, radio de bordes, modo claro/oscuro,
    header con tagline + redes, y footer. */
 
+import { t } from '../../lib/i18n.js';
+
 const FONTS = {
   sans   : "'Inter', system-ui, sans-serif",
   display: "'Space Grotesk', 'Inter', sans-serif",
@@ -13,18 +15,30 @@ const RADIUS = { none: '0px', sm: '6px', md: '12px', lg: '18px', xl: '26px' };
 /* Estilos scoped para que el modo claro afecte de verdad a la página */
 const STYLE_ID = 'gestek-brand-css';
 const CSS = `
-.brand-scope{transition:background .25s}
+.brand-scope{transition:background .25s,color .25s}
 .brand-scope[data-bt="claro"] .text-text-1{color:#0B1220!important}
 .brand-scope[data-bt="claro"] .text-text-2{color:#475569!important}
 .brand-scope[data-bt="claro"] .text-text-3{color:#7A8699!important}
 .brand-scope[data-bt="claro"] .bg-surface,
 .brand-scope[data-bt="claro"] .bg-surface\\/40,
-.brand-scope[data-bt="claro"] .bg-surface-2{background-color:rgba(255,255,255,.75)!important}
+.brand-scope[data-bt="claro"] .bg-surface\\/60,
+.brand-scope[data-bt="claro"] .bg-surface\\/70,
+.brand-scope[data-bt="claro"] .bg-surface-2,
+.brand-scope[data-bt="claro"] .bg-surface-3{background-color:rgba(255,255,255,.78)!important}
 .brand-scope[data-bt="claro"] .border-border,
-.brand-scope[data-bt="claro"] .border-border-2{border-color:rgba(0,0,0,.10)!important}
+.brand-scope[data-bt="claro"] .border-border-2,
+.brand-scope[data-bt="claro"] .divide-border > *{border-color:rgba(0,0,0,.10)!important}
+/* Pill activa "bg-text-1 text-bg" → invertir para que se lea en claro */
+.brand-scope[data-bt="claro"] .bg-text-1{background-color:#0B1220!important}
+.brand-scope[data-bt="claro"] .text-bg{color:#FFFFFF!important}
+.brand-scope[data-bt="claro"] input::placeholder,
+.brand-scope[data-bt="claro"] textarea::placeholder{color:#94A3B8!important}
+.brand-scope[data-bt="claro"] .shadow-card,
+.brand-scope[data-bt="claro"] .shadow-card-hover{box-shadow:0 1px 3px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.06)!important}
 .brand-scope[style*="--brand-radius"] .rounded-2xl,
 .brand-scope[style*="--brand-radius"] .rounded-3xl,
-.brand-scope[style*="--brand-radius"] .rounded-xl{border-radius:var(--brand-radius)!important}
+.brand-scope[style*="--brand-radius"] .rounded-xl,
+.brand-scope[style*="--brand-radius"] .rounded-lg{border-radius:var(--brand-radius)!important}
 .brand-scope[style*="--brand-radius"] .rounded-full{border-radius:9999px!important}
 `;
 function injectCss() {
@@ -106,7 +120,7 @@ export function BrandHeader({ organizador }) {
         )}
       {plataforma && (
         <div className="mr-1">
-          <p className="text-[10px] uppercase tracking-widest text-text-3 font-semibold leading-none">Presenta</p>
+          <p className="text-[10px] uppercase tracking-widest text-text-3 font-semibold leading-none">{t('brand.presenta')}</p>
           <p className="text-base font-bold text-text-1 leading-tight mt-0.5">{plataforma}</p>
           {tagline && <p className="text-xs text-text-2 leading-tight mt-0.5">{tagline}</p>}
         </div>

@@ -8,7 +8,8 @@
     "dev": "node --watch index.js",
     "dev:frontend": "npm run dev --prefix ./frontend",
     "dev:full": "concurrently --names \"API,FRONTEND\" --prefix-colors \"cyan,magenta\" \"node --watch index.js\" \"npm run dev --prefix ./frontend\"",
-    "install:all": "npm install && npm install --prefix ./frontend"
+    "install:all": "npm install && npm install --prefix ./frontend",
+    "test": "node --test \"test/**/*.test.js\""
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

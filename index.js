@@ -27,6 +27,7 @@ app.use('/me',               require('./routes/me.js'));
 app.use('/me',               require('./routes/integraciones.js'));
 app.use('/',                 require('./routes/agente.js'));
 app.use('/',                 require('./routes/notificaciones.js'));
+app.use('/',                 require('./routes/solicitudes.js'));
 app.use('/',                 require('./routes/recompensas.js'));
 app.use('/',                 require('./routes/loyalty.js'));
 app.use('/categorias',       require('./routes/categorias.js'));

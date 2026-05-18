@@ -37,6 +37,7 @@ const PagosPage          = lazy(() => import('./pages/settings/PagosPage.jsx'));
 const NotificacionesPage = lazy(() => import('./pages/settings/NotificacionesPage.jsx'));
 const RecompensasPage    = lazy(() => import('./pages/settings/RecompensasPage.jsx'));
 const WhiteLabelPage     = lazy(() => import('./pages/settings/WhiteLabelPage.jsx'));
+const MiTrabajoPage      = lazy(() => import('./pages/equipo/MiTrabajoPage.jsx'));
 
 function AuthLoader() {
   return (
@@ -112,6 +113,7 @@ export default function App() {
               <Route path="/notificaciones"   element={<NotificacionesPage />} />
               <Route path="/recompensas"      element={<RecompensasPage />} />
               <Route path="/white-label"      element={<WhiteLabelPage />} />
+              <Route path="/mi-trabajo"       element={<MiTrabajoPage />} />
               <Route path="/usuarios"         element={<UsersPage />} />
               <Route path="/configuracion"    element={<SettingsPage />} />
             </Route>

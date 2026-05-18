@@ -7,8 +7,9 @@ const NAV_SECTIONS = [
   {
     label: 'Principal',
     items: [
-      { to: '/dashboard', icon: HomeIcon,     label: 'Dashboard' },
-      { to: '/eventos',   icon: CalendarIcon, label: 'Eventos'   },
+      { to: '/dashboard',  icon: HomeIcon,     label: 'Dashboard' },
+      { to: '/eventos',    icon: CalendarIcon, label: 'Eventos'   },
+      { to: '/mi-trabajo', icon: BriefcaseIcon, label: 'Mi trabajo' },
     ],
   },
   {
@@ -148,6 +149,9 @@ function WalletIcon({ className }) {
 }
 function BellIcon({ className }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>;
+}
+function BriefcaseIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 6V5a2 2 0 012-2h2a2 2 0 012 2v1m4 0H5a2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2zM3 13v5a2 2 0 002 2h14a2 2 0 002-2v-5M12 12v2" /></svg>;
 }
 function PaintIcon({ className }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2h-7a2 2 0 00-2 2v2a4 4 0 01-4 4z" /></svg>;

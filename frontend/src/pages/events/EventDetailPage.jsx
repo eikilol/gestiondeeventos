@@ -16,6 +16,7 @@ import CheckinTab        from './tabs/CheckinTab.jsx';
 import ChatTab           from './tabs/ChatTab.jsx';
 import AgendaTab         from './tabs/AgendaTab.jsx';
 import TareasTab         from './tabs/TareasTab.jsx';
+import SolicitudesTab    from './tabs/SolicitudesTab.jsx';
 import AnalyticsTab      from './tabs/AnalyticsTab.jsx';
 import BroadcastModal    from './BroadcastModal.jsx';
 import PlaceholderTab    from './tabs/PlaceholderTab.jsx';
@@ -31,6 +32,7 @@ const GRUPOS = [
   { label: 'Organización', items: [
     { id: 'equipo',  label: 'Equipo y roles' },
     { id: 'tareas',  label: 'Tareas' },
+    { id: 'solicitudes', label: 'Sugerencias' },
     { id: 'agenda',  label: 'Agenda' },
   ] },
   { label: 'Facturación', items: [
@@ -198,6 +200,7 @@ export default function EventDetailPage() {
         {tab === 'checkin'   && <CheckinTab evento={evento} />}
         {tab === 'agenda'      && <AgendaTab evento={evento} />}
         {tab === 'tareas'      && <TareasTab evento={evento} />}
+        {tab === 'solicitudes' && <SolicitudesTab evento={evento} />}
         {tab === 'pagos'     && <PlaceholderTab title="Pagos" desc="Configura tu llave BRE-B, recibe transacciones, emite reembolsos." icon="wallet" />}
         {tab === 'chat'      && <ChatTab evento={evento} />}
         {tab === 'analytics' && <AnalyticsTab evento={evento} />}

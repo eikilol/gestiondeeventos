@@ -8,20 +8,19 @@ import { pagosApi } from '../../api/pagos.js';
 import { usePush } from '../../hooks/usePush.js';
 import { notificarPlanCambiado } from '../../hooks/usePlan.js';
 
+/* Pagos, Notificaciones y Recompensas viven ahora como secciones
+   propias en el sidebar (páginas dedicadas). */
 const TABS = [
-  { label: 'Perfil',         icon: UserIcon       },
-  { label: 'Pagos',          icon: WalletIcon     },
-  { label: 'Notificaciones', icon: BellIcon       },
-  { label: 'White-label',    icon: PaintIcon      },
-  { label: 'Logros',         icon: TrophyIcon     },
-  { label: 'Recompensas',    icon: GiftIcon       },
-  { label: 'Integraciones',  icon: CodeIcon       },
+  { key: 'perfil',        label: 'Perfil',        icon: UserIcon  },
+  { key: 'white',         label: 'White-label',   icon: PaintIcon },
+  { key: 'logros',        label: 'Logros',        icon: TrophyIcon },
+  { key: 'integraciones', label: 'Integraciones', icon: CodeIcon  },
 ];
 
 export default function SettingsPage() {
   const { usuario, updateProfile, updatePassword } = useAuth();
   const { success, error, warning } = useToast();
-  const [tab,     setTab]     = useState(0);
+  const [tab,     setTab]     = useState('perfil');
   const [loading, setLoading] = useState(false);
 
   const [perfil, setPerfil] = useState({
@@ -72,15 +71,15 @@ export default function SettingsPage() {
         {/* Nav lateral de secciones */}
         <nav className="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar
                         lg:bg-surface/60 lg:border lg:border-border-2 lg:rounded-2xl lg:p-2 lg:sticky lg:top-2">
-          {TABS.map((t, i) => {
+          {TABS.map((t) => {
             const Icon = t.icon;
             return (
               <button
-                key={i}
-                onClick={() => setTab(i)}
+                key={t.key}
+                onClick={() => setTab(t.key)}
                 className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium
                   whitespace-nowrap transition-all flex-shrink-0
-                  ${tab === i
+                  ${tab === t.key
                     ? 'bg-gradient-primary text-white shadow-glow-sm'
                     : 'text-text-2 hover:text-text-1 hover:bg-surface-2'}`}
               >
@@ -95,7 +94,7 @@ export default function SettingsPage() {
         <div className="min-w-0 space-y-6">
 
       {/* Perfil */}
-      {tab === 0 && (
+      {tab === 'perfil' && (
         <div className="space-y-5">
           {/* Avatar + datos */}
           <div className="card p-5">
@@ -167,24 +166,14 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Pagos */}
-      {tab === 1 && <PagosTab />}
-
-      {/* Notificaciones */}
-      {tab === 2 && <NotificacionesTab />}
-
       {/* White-label */}
-      {tab === 3 && <WhiteLabelTab />}
+      {tab === 'white' && <WhiteLabelTab />}
 
       {/* Logros */}
-      {tab === 4 && <LogrosTab />}
+      {tab === 'logros' && <LogrosTab />}
 
-      {/* Recompensas (organizador) */}
-      {tab === 5 && <RecompensasTab />}
-
-      {/* API */}
       {/* Integraciones (API + Webhooks) */}
-      {tab === 6 && <IntegracionesTab />}
+      {tab === 'integraciones' && <IntegracionesTab />}
         </div>
       </div>
     </div>
@@ -500,7 +489,7 @@ function IntegracionesTab() {
 }
 
 /* ──────────── Pagos Tab (Mercado Pago) ──────────── */
-function PagosTab() {
+export function PagosTab() {
   const { usuario } = useAuth();
   const { success, error } = useToast();
 
@@ -967,7 +956,7 @@ function EmptyMini({ titulo, desc }) {
 }
 
 /* ──────────── Recompensas Tab (organizador define cliente + empleado) ──────────── */
-function RecompensasTab() {
+export function RecompensasTab() {
   const { success, error: toastErr } = useToast();
   const [aud, setAud] = useState('cliente'); // cliente | empleado
   const [items, setItems] = useState([]);
@@ -1105,7 +1094,7 @@ function RecompensasTab() {
 }
 
 /* ──────────── Notificaciones Tab ──────────── */
-function NotificacionesTab() {
+export function NotificacionesTab() {
   const { success, error: toastErr } = useToast();
   const { supported, permission, subscribed, working, subscribe, unsubscribe, test } = usePush();
 

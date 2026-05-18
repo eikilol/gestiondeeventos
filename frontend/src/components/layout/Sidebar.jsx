@@ -12,17 +12,25 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: 'Asistente & Comunicación',
+    label: 'Asistente',
     items: [
       { to: '/gestbot',   icon: RobotIcon, label: 'Gestbot', pro: true },
       { to: '/chat',      icon: ChatIcon,  label: 'Chat'  },
     ],
   },
   {
-    label: 'Administración',
+    label: 'Cuenta',
     items: [
-      { to: '/usuarios',      icon: UsersIcon,   label: 'Usuarios',      permiso: 'usuarios:ver' },
-      { to: '/configuracion', icon: SettingsIcon, label: 'Configuración' },
+      { to: '/pagos',          icon: WalletIcon, label: 'Pagos' },
+      { to: '/notificaciones', icon: BellIcon,   label: 'Notificaciones' },
+      { to: '/recompensas',    icon: GiftIcon,   label: 'Recompensas' },
+    ],
+  },
+  {
+    label: 'Admin',
+    items: [
+      { to: '/usuarios',      icon: UsersIcon,    label: 'Usuarios', permiso: 'usuarios:ver' },
+      { to: '/configuracion', icon: SettingsIcon, label: 'Ajustes' },
     ],
   },
 ];
@@ -133,6 +141,15 @@ function RobotIcon({ className }) {
 }
 function ChatIcon({ className }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>;
+}
+function WalletIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h.01M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /></svg>;
+}
+function BellIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>;
+}
+function GiftIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v13m0-13a4 4 0 10-4-4 4 4 0 004 4zm0 0a4 4 0 114-4 4 4 0 01-4 4zM5 8h14a1 1 0 011 1v3H4V9a1 1 0 011-1zm0 4h14v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8z" /></svg>;
 }
 function UsersIcon({ className }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;

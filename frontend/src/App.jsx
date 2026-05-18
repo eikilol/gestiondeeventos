@@ -33,6 +33,9 @@ const UsersPage          = lazy(() => import('./pages/users/UsersPage.jsx'));
 const SettingsPage       = lazy(() => import('./pages/settings/SettingsPage.jsx'));
 const GestbotPage        = lazy(() => import('./pages/agente/GestbotPage.jsx'));
 const ChatHubPage        = lazy(() => import('./pages/chat/ChatHubPage.jsx'));
+const PagosPage          = lazy(() => import('./pages/settings/PagosPage.jsx'));
+const NotificacionesPage = lazy(() => import('./pages/settings/NotificacionesPage.jsx'));
+const RecompensasPage    = lazy(() => import('./pages/settings/RecompensasPage.jsx'));
 
 function AuthLoader() {
   return (
@@ -104,6 +107,9 @@ export default function App() {
               <Route path="/eventos/:id/editar" element={<EventEditPage />} />
               <Route path="/gestbot"          element={<GestbotPage />} />
               <Route path="/chat"             element={<ChatHubPage />} />
+              <Route path="/pagos"            element={<PagosPage />} />
+              <Route path="/notificaciones"   element={<NotificacionesPage />} />
+              <Route path="/recompensas"      element={<RecompensasPage />} />
               <Route path="/usuarios"         element={<UsersPage />} />
               <Route path="/configuracion"    element={<SettingsPage />} />
             </Route>

@@ -60,7 +60,7 @@ export default function Sidebar({ mobile = false, onClose }) {
         <NavLink to="/dashboard" className="flex items-center gap-3 group flex-1 min-w-0">
           <div className="flex-shrink-0 transition-transform group-hover:scale-110
                           animate-[float_5s_ease-in-out_infinite]">
-            <GestekMark size={42} glow={esPro} />
+            <GestekMark size={42} pro={esPro} />
           </div>
           <div className="min-w-0">
             <span className="font-display font-bold text-text-1 text-base tracking-tight block leading-tight">GESTEK</span>

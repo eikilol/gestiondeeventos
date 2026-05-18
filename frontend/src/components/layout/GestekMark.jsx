@@ -1,47 +1,43 @@
-/* Marca GESTEK — criatura dorada (topo/gema). Reemplaza el logo plano.
-   `glow` resalta más cuando el plan es Pro. */
+/* Marca GESTEK — lettermark "G".
+   - Free: gradiente de marca (azul→violeta).
+   - Pro : gradiente DORADO + glow (destacable). */
 
-export default function GestekMark({ size = 40, glow = false }) {
+export default function GestekMark({ size = 42, pro = false }) {
+  const grad = pro ? 'gk-g-gold' : 'gk-g-brand';
   return (
     <svg
       width={size} height={size} viewBox="0 0 64 64" aria-label="GESTEK"
-      style={glow ? { filter: 'drop-shadow(0 0 10px rgba(245,200,90,0.55))' } : undefined}
+      style={pro ? { filter: 'drop-shadow(0 0 11px rgba(233,178,60,0.55))' } : undefined}
     >
       <defs>
-        <linearGradient id="gk-gold" x1="0" y1="0" x2="0.4" y2="1">
+        <linearGradient id="gk-g-brand" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"  stopColor="#60A5FA" />
+          <stop offset="55%" stopColor="#3B82F6" />
+          <stop offset="100%" stopColor="#8B5CF6" />
+        </linearGradient>
+        <linearGradient id="gk-g-gold" x1="0" y1="0" x2="0.4" y2="1">
           <stop offset="0%"  stopColor="#FCEFA1" />
           <stop offset="45%" stopColor="#E9B23C" />
           <stop offset="100%" stopColor="#A6731B" />
         </linearGradient>
-        <radialGradient id="gk-gold-sheen" cx="35%" cy="28%" r="70%">
-          <stop offset="0%"  stopColor="#FFF6D6" stopOpacity="0.9" />
-          <stop offset="60%" stopColor="#FFF6D6" stopOpacity="0" />
+        <radialGradient id="gk-sheen" cx="32%" cy="26%" r="72%">
+          <stop offset="0%"  stopColor="#FFFFFF" stopOpacity="0.55" />
+          <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
         </radialGradient>
       </defs>
 
-      {/* cuerpo redondeado de la criatura */}
-      <path d="M32 6
-               C 46 6 56 17 56 32
-               C 56 47 47 58 32 58
-               C 17 58 8 47 8 32
-               C 8 17 18 6 32 6 Z"
-            fill="url(#gk-gold)" stroke="#7A5212" strokeWidth="1.5" />
-      <path d="M32 6 C 46 6 56 17 56 32 C 56 47 47 58 32 58 C 17 58 8 47 8 32 C 8 17 18 6 32 6 Z"
-            fill="url(#gk-gold-sheen)" />
+      {/* tile redondeado con gradiente */}
+      <rect x="4" y="4" width="56" height="56" rx="16"
+            fill={`url(#${grad})`}
+            stroke={pro ? '#7A5212' : '#1E3A8A'} strokeOpacity="0.35" strokeWidth="1.5" />
+      <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#gk-sheen)" />
 
-      {/* hocico / nariz del topo */}
-      <ellipse cx="32" cy="40" rx="9" ry="7" fill="#5C3D0E" opacity="0.85" />
-      <circle cx="32" cy="38" r="3.4" fill="#2E1F07" />
-
-      {/* ojitos */}
-      <circle cx="24" cy="29" r="3.2" fill="#2E1F07" />
-      <circle cx="40" cy="29" r="3.2" fill="#2E1F07" />
-      <circle cx="25.1" cy="27.9" r="1" fill="#FFF6D6" />
-      <circle cx="41.1" cy="27.9" r="1" fill="#FFF6D6" />
-
-      {/* garritas (toque "topo") */}
-      <path d="M19 49 l3 -6 M24 51 l2 -6 M40 51 l2 -6 M45 49 l3 -6"
-            stroke="#7A5212" strokeWidth="2" strokeLinecap="round" />
+      {/* "G" geométrica */}
+      <path d="M44 23
+               A 14 14 0 1 0 44 41
+               L 44 33 L 33 33"
+            fill="none" stroke="#FFFFFF" strokeWidth="6"
+            strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

@@ -1,45 +1,54 @@
 /* Gestbot — robot asistente (blanco/azul, sin morados).
-   Estados de ánimo: idle | thinking | talking | happy | error.
-   - idle: flota suave, parpadea y saluda con la mano de vez en cuando
-   - thinking: saca un portátil y "trabaja" (teclea, pantalla con líneas)
-   - talking: boca animada + leve bob
-   - happy: ojos felices, saluda rápido y rebota
-   - error: visor rojizo, ojos en X, se sacude
+   Diseño limpio inspirado en un robot mascota flotante:
+   cabeza redondeada con visor, ojos brillantes + sonrisa, antena con
+   luz, brazos redondeados coherentes (uno saluda), cuerpo flotante.
+
+   Estados: idle | thinking | talking | happy | error
+   - idle    : flota suave, parpadea y saluda con la mano
+   - thinking: baja los brazos a un portátil y "trabaja" (teclea)
+   - talking : boca animada + leve bob
+   - happy   : ojos felices, saludo rápido + rebote
+   - error   : visor rojizo, ojos en X, se sacude
    Animaciones por CSS keyframes inyectadas una sola vez. */
 
 import { useEffect } from 'react';
 
-const STYLE_ID = 'gestbot-anim';
+const STYLE_ID = 'gestbot-anim-v2';
 const CSS = `
-@keyframes gb-float  {0%,100%{transform:translateY(0)}50%{transform:translateY(-6%)}}
-@keyframes gb-bob    {0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3%) rotate(1.5deg)}}
-@keyframes gb-bounce {0%,100%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-10%) scale(.97,1.04)}60%{transform:translateY(0) scale(1.03,.96)}}
-@keyframes gb-shake  {0%,100%{transform:translateX(0)}20%{transform:translateX(-5%)}40%{transform:translateX(5%)}60%{transform:translateX(-3%)}80%{transform:translateX(3%)}}
-@keyframes gb-blink  {0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.12)}}
-@keyframes gb-wave   {0%,100%{transform:rotate(8deg)}50%{transform:rotate(-22deg)}}
-@keyframes gb-wavefast{0%,100%{transform:rotate(10deg)}50%{transform:rotate(-32deg)}}
-@keyframes gb-type   {0%,100%{transform:translateY(0)}50%{transform:translateY(8%)}}
-@keyframes gb-scan   {0%{opacity:.3}50%{opacity:1}100%{opacity:.3}}
-@keyframes gb-ping   {0%,100%{opacity:.45;transform:scale(1)}50%{opacity:1;transform:scale(1.25)}}
-@keyframes gb-aura   {0%,100%{opacity:.4}50%{opacity:.8}}
+@keyframes gb-float  {0%,100%{transform:translateY(0)}50%{transform:translateY(-5.5%)}}
+@keyframes gb-bob    {0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2.5%) rotate(1.2deg)}}
+@keyframes gb-bounce {0%,100%{transform:translateY(0) scale(1,1)}28%{transform:translateY(-9%) scale(.98,1.03)}58%{transform:translateY(0) scale(1.03,.97)}}
+@keyframes gb-shake  {0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-4%) rotate(-2deg)}40%{transform:translateX(4%) rotate(2deg)}60%{transform:translateX(-3%) rotate(-1deg)}80%{transform:translateX(3%) rotate(1deg)}}
+@keyframes gb-blink  {0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes gb-wave   {0%,100%{transform:rotate(6deg)}50%{transform:rotate(-26deg)}}
+@keyframes gb-wavef  {0%,100%{transform:rotate(8deg)}50%{transform:rotate(-34deg)}}
+@keyframes gb-sway   {0%,100%{transform:rotate(-3deg)}50%{transform:rotate(4deg)}}
+@keyframes gb-type   {0%,100%{transform:translateY(0)}50%{transform:translateY(7%)}}
+@keyframes gb-typeb  {0%,100%{transform:translateY(7%)}50%{transform:translateY(0)}}
+@keyframes gb-scan   {0%{opacity:.25;width:14px}50%{opacity:1}100%{opacity:.25;width:14px}}
+@keyframes gb-ping   {0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+@keyframes gb-aura   {0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.7;transform:scale(1.06)}}
 .gb-wrap{will-change:transform}
-.gb-idle .gb-body{animation:gb-float 3.4s ease-in-out infinite}
+.gb-idle    .gb-body{animation:gb-float 3.6s ease-in-out infinite}
 .gb-talking .gb-body{animation:gb-bob 1s ease-in-out infinite}
-.gb-happy .gb-body{animation:gb-bounce .7s ease-in-out infinite}
-.gb-error .gb-body{animation:gb-shake .5s ease-in-out infinite}
-.gb-thinking .gb-body{animation:gb-bob 2s ease-in-out infinite}
+.gb-happy   .gb-body{animation:gb-bounce .7s ease-in-out infinite}
+.gb-error   .gb-body{animation:gb-shake .5s ease-in-out infinite}
+.gb-thinking .gb-body{animation:gb-bob 2.2s ease-in-out infinite}
 .gb-eyelid{transform-box:fill-box;transform-origin:center;animation:gb-blink 5s ease-in-out infinite}
-.gb-thinking .gb-eyelid{animation:none}
-.gb-armR{transform-box:fill-box;transform-origin:78px 92px}
-.gb-idle .gb-armR{animation:gb-wave 2.6s ease-in-out infinite}
-.gb-happy .gb-armR{animation:gb-wavefast .5s ease-in-out infinite}
-.gb-type{transform-box:fill-box;transform-origin:center;animation:gb-type .5s ease-in-out infinite}
-.gb-scan{animation:gb-scan 1.1s ease-in-out infinite}
-.gb-scan2{animation-delay:.25s}
-.gb-scan3{animation-delay:.5s}
-.gb-ping{transform-box:fill-box;transform-origin:center;animation:gb-ping 1.8s ease-in-out infinite}
-.gb-aura{animation:gb-aura 3s ease-in-out infinite}
-@media (prefers-reduced-motion:reduce){.gb-body,.gb-eyelid,.gb-armR,.gb-type,.gb-scan,.gb-ping,.gb-aura{animation:none!important}}
+.gb-armR{transform-box:fill-box;transform-origin:36px 6px}
+.gb-armL{transform-box:fill-box;transform-origin:-36px 6px}
+.gb-idle    .gb-armR{animation:gb-wave 2.4s ease-in-out infinite}
+.gb-talking .gb-armR{animation:gb-wave 3.2s ease-in-out infinite}
+.gb-happy   .gb-armR{animation:gb-wavef .5s ease-in-out infinite}
+.gb-idle    .gb-armL{animation:gb-sway 4s ease-in-out infinite}
+.gb-handA{transform-box:fill-box;transform-origin:center;animation:gb-type .42s ease-in-out infinite}
+.gb-handB{transform-box:fill-box;transform-origin:center;animation:gb-typeb .42s ease-in-out infinite}
+.gb-scanl{animation:gb-scan 1.1s ease-in-out infinite}
+.gb-scanl2{animation-delay:.22s}
+.gb-scanl3{animation-delay:.44s}
+.gb-ping{transform-box:fill-box;transform-origin:center;animation:gb-ping 1.7s ease-in-out infinite}
+.gb-aura{animation:gb-aura 3.2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.gb-wrap *{animation:none!important}}
 `;
 
 function useInjectCss() {
@@ -54,116 +63,140 @@ function useInjectCss() {
 
 const AURA = {
   idle: '#60A5FA', thinking: '#3B82F6', talking: '#60A5FA',
-  happy: '#34D399', error: '#EF4444',
+  happy: '#34D399', error: '#F87171',
 };
 
 export default function Criatura({ mood = 'idle', size = 96 }) {
   useInjectCss();
   const m = AURA[mood] ? mood : 'idle';
   const aura = AURA[m];
-  const visor = m === 'error' ? '#7F1D1D' : '#0B1220';
+  const working = m === 'thinking';
   const eye = m === 'error' ? '#FCA5A5' : '#7DD3FC';
+  const eyeY = working ? 56 : 53;
 
   return (
     <div className={`gb-wrap gb-${m}`} style={{ width: size, height: size }}>
-      <svg viewBox="0 0 120 130" width={size} height={size * (130 / 120)} aria-hidden="true">
+      <svg viewBox="0 0 140 150" width={size} height={size * (150 / 140)} aria-hidden="true">
         <defs>
-          <linearGradient id="gb-metal" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="gb-shell" x1="0" y1="0" x2="0.35" y2="1">
             <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="60%" stopColor="#E8EEF6" />
-            <stop offset="100%" stopColor="#CBD5E1" />
+            <stop offset="55%" stopColor="#EAF0F8" />
+            <stop offset="100%" stopColor="#C7D3E3" />
           </linearGradient>
-          <radialGradient id="gb-screen" cx="50%" cy="40%" r="70%">
-            <stop offset="0%" stopColor={m === 'error' ? '#991B1B' : '#16335C'} />
-            <stop offset="100%" stopColor={visor} />
+          <linearGradient id="gb-accent" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#5BA8F5" />
+            <stop offset="100%" stopColor="#2F6FD0" />
+          </linearGradient>
+          <radialGradient id="gb-visor" cx="50%" cy="38%" r="75%">
+            <stop offset="0%" stopColor={m === 'error' ? '#7F1D1D' : '#1E3A66'} />
+            <stop offset="70%" stopColor={m === 'error' ? '#3F1212' : '#0C1A30'} />
+            <stop offset="100%" stopColor="#070E1C" />
           </radialGradient>
         </defs>
 
-        {/* aura */}
-        <ellipse className="gb-aura" cx="60" cy="60" rx="46" ry="46" fill={aura} opacity="0.4" />
-        {/* sombra */}
-        <ellipse cx="60" cy="123" rx="30" ry="6" fill="#000" opacity="0.28" />
+        {/* aura + sombra */}
+        <ellipse className="gb-aura" cx="70" cy="68" rx="52" ry="52" fill={aura} opacity="0.4" />
+        <ellipse cx="70" cy="142" rx="30" ry="6.5" fill="#000" opacity="0.25" />
 
         <g className="gb-body">
           {/* antena */}
-          <line x1="60" y1="20" x2="60" y2="9" stroke="#94A3B8" strokeWidth="3" strokeLinecap="round" />
-          <circle className="gb-ping" cx="60" cy="7" r="5" fill={aura} />
+          <path d="M70 24 Q72 16 69 11" stroke="#9FB2C9" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <circle className="gb-ping" cx="68" cy="9" r="5" fill={aura} />
 
-          {/* brazo izquierdo */}
-          <rect x="14" y="74" width="12" height="30" rx="6" fill="url(#gb-metal)" stroke="#CBD5E1" />
-          {/* brazo derecho (saluda) */}
-          <g className="gb-armR">
-            <rect x="94" y="62" width="12" height="32" rx="6" fill="url(#gb-metal)" stroke="#CBD5E1" />
-            <circle cx="100" cy="60" r="7" fill="#FFFFFF" stroke="#CBD5E1" />
-          </g>
+          {/* ── Brazo izquierdo ── */}
+          {working ? (
+            <g>
+              <path d="M30 92 Q20 104 30 116" stroke="url(#gb-shell)" strokeWidth="13" fill="none" strokeLinecap="round" />
+              <circle className="gb-handA" cx="50" cy="120" r="9" fill="url(#gb-shell)" stroke="#C7D3E3" />
+            </g>
+          ) : (
+            <g className="gb-armL" transform="translate(36 84)">
+              <rect x="-43" y="0" width="13" height="34" rx="6.5" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
+              <circle cx="-36.5" cy="36" r="8.5" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
+            </g>
+          )}
 
-          {/* torso */}
-          <rect x="34" y="84" width="52" height="34" rx="14" fill="url(#gb-metal)" stroke="#CBD5E1" />
-          <circle cx="60" cy="101" r="6" fill={aura} opacity="0.85" />
+          {/* ── Brazo derecho (saluda / teclea) ── */}
+          {working ? (
+            <g>
+              <path d="M110 92 Q120 104 110 116" stroke="url(#gb-shell)" strokeWidth="13" fill="none" strokeLinecap="round" />
+              <circle className="gb-handB" cx="90" cy="120" r="9" fill="url(#gb-shell)" stroke="#C7D3E3" />
+            </g>
+          ) : (
+            <g className="gb-armR" transform="translate(104 70)">
+              <rect x="-6" y="-2" width="13" height="34" rx="6.5" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
+              <circle cx="0.5" cy="-7" r="9" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
+            </g>
+          )}
+
+          {/* cuerpo */}
+          <path d="M44 96 Q44 132 70 132 Q96 132 96 96 Z" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.2" />
+          <ellipse cx="70" cy="112" rx="11" ry="7" fill="url(#gb-accent)" opacity="0.85" />
+          <circle cx="70" cy="112" r="3" fill={aura} />
+
+          {/* cuello */}
+          <rect x="62" y="86" width="16" height="12" rx="4" fill="#D7E0EC" />
 
           {/* cabeza */}
-          <rect x="26" y="22" width="68" height="58" rx="20" fill="url(#gb-metal)" stroke="#CBD5E1" strokeWidth="1.5" />
+          <rect x="30" y="26" width="80" height="66" rx="26" fill="url(#gb-shell)" stroke="#C7D3E3" strokeWidth="1.4" />
           {/* orejas */}
-          <rect x="20" y="42" width="8" height="18" rx="4" fill="#CBD5E1" />
-          <rect x="92" y="42" width="8" height="18" rx="4" fill="#CBD5E1" />
+          <rect x="22" y="48" width="11" height="22" rx="5.5" fill="url(#gb-accent)" />
+          <rect x="107" y="48" width="11" height="22" rx="5.5" fill="url(#gb-accent)" />
 
           {/* visor */}
-          <rect x="34" y="32" width="52" height="38" rx="15" fill="url(#gb-screen)" />
+          <rect x="40" y="36" width="60" height="46" rx="20" fill="url(#gb-visor)" />
+          <rect x="40" y="36" width="60" height="46" rx="20" fill="none" stroke="#0A1424" strokeWidth="2" />
+          {/* reflejo */}
+          <ellipse cx="56" cy="48" rx="11" ry="6" fill="#FFFFFF" opacity="0.10" />
 
           {/* ojos */}
           {m === 'happy' ? (
             <>
-              <path d="M44 50 q5 -7 10 0" stroke={eye} strokeWidth="4" fill="none" strokeLinecap="round" />
-              <path d="M66 50 q5 -7 10 0" stroke={eye} strokeWidth="4" fill="none" strokeLinecap="round" />
+              <path d="M52 58 q6 -8 12 0" stroke={eye} strokeWidth="4.5" fill="none" strokeLinecap="round" />
+              <path d="M76 58 q6 -8 12 0" stroke={eye} strokeWidth="4.5" fill="none" strokeLinecap="round" />
             </>
           ) : m === 'error' ? (
             <>
-              <line x1="44" y1="46" x2="54" y2="56" stroke={eye} strokeWidth="4" strokeLinecap="round" />
-              <line x1="54" y1="46" x2="44" y2="56" stroke={eye} strokeWidth="4" strokeLinecap="round" />
-              <line x1="66" y1="46" x2="76" y2="56" stroke={eye} strokeWidth="4" strokeLinecap="round" />
-              <line x1="76" y1="46" x2="66" y2="56" stroke={eye} strokeWidth="4" strokeLinecap="round" />
+              <line x1="52" y1="52" x2="62" y2="62" stroke={eye} strokeWidth="4.5" strokeLinecap="round" />
+              <line x1="62" y1="52" x2="52" y2="62" stroke={eye} strokeWidth="4.5" strokeLinecap="round" />
+              <line x1="78" y1="52" x2="88" y2="62" stroke={eye} strokeWidth="4.5" strokeLinecap="round" />
+              <line x1="88" y1="52" x2="78" y2="62" stroke={eye} strokeWidth="4.5" strokeLinecap="round" />
             </>
           ) : (
             <>
               <g>
-                <ellipse className="gb-eyelid" cx="49" cy={m === 'thinking' ? 53 : 50} rx="5.5" ry="7" fill={eye} />
-                <circle cx="49" cy={m === 'thinking' ? 53 : 50} r="2.4" fill="#0B1220" opacity="0.35" />
+                <ellipse className="gb-eyelid" cx="58" cy={eyeY} rx="6" ry="8" fill={eye} />
+                <circle cx="60" cy={eyeY - 2} r="2" fill="#fff" opacity="0.9" />
               </g>
               <g>
-                <ellipse className="gb-eyelid" cx="71" cy={m === 'thinking' ? 53 : 50} rx="5.5" ry="7" fill={eye} />
-                <circle cx="71" cy={m === 'thinking' ? 53 : 50} r="2.4" fill="#0B1220" opacity="0.35" />
+                <ellipse className="gb-eyelid" cx="82" cy={eyeY} rx="6" ry="8" fill={eye} />
+                <circle cx="84" cy={eyeY - 2} r="2" fill="#fff" opacity="0.9" />
               </g>
             </>
           )}
 
           {/* boca */}
           {m === 'talking' ? (
-            <rect x="52" y="60" width="16" height="6" rx="3" fill={eye}>
-              <animate attributeName="height" values="3;7;3" dur="0.3s" repeatCount="indefinite" />
-              <animate attributeName="y" values="61;59;61" dur="0.3s" repeatCount="indefinite" />
+            <rect x="62" y="68" width="16" height="6" rx="3" fill={eye}>
+              <animate attributeName="height" values="3;8;3" dur="0.3s" repeatCount="indefinite" />
+              <animate attributeName="y" values="69;66;69" dur="0.3s" repeatCount="indefinite" />
             </rect>
-          ) : m === 'happy' ? (
-            <path d="M50 60 q10 8 20 0" stroke={eye} strokeWidth="3.5" fill="none" strokeLinecap="round" />
+          ) : m === 'error' ? (
+            <path d="M60 74 q10 -7 20 0" stroke={eye} strokeWidth="3.5" fill="none" strokeLinecap="round" />
           ) : (
-            <rect x="53" y="61" width="14" height="3.5" rx="1.75" fill={eye} opacity="0.8" />
+            <path d={m === 'happy' ? 'M58 68 q12 11 24 0' : 'M60 69 q10 7 20 0'}
+              stroke={eye} strokeWidth="3.5" fill="none" strokeLinecap="round" />
           )}
         </g>
 
-        {/* MODO TRABAJANDO: portátil al frente + manos tecleando */}
-        {m === 'thinking' && (
+        {/* MODO TRABAJANDO: portátil */}
+        {working && (
           <g>
-            {/* base del portátil */}
-            <path d="M30 118 L90 118 L96 128 L24 128 Z" fill="#CBD5E1" stroke="#94A3B8" />
-            {/* pantalla */}
-            <rect x="38" y="92" width="44" height="28" rx="3" fill="#0B1220" stroke="#94A3B8" />
-            <rect className="gb-scan"  x="43" y="98"  width="30" height="3" rx="1.5" fill="#34D399" />
-            <rect className="gb-scan gb-scan2" x="43" y="104" width="22" height="3" rx="1.5" fill="#60A5FA" />
-            <rect className="gb-scan gb-scan3" x="43" y="110" width="26" height="3" rx="1.5" fill="#60A5FA" />
-            {/* manos tecleando */}
-            <g className="gb-type">
-              <circle cx="44" cy="120" r="6" fill="#FFFFFF" stroke="#CBD5E1" />
-              <circle cx="76" cy="120" r="6" fill="#FFFFFF" stroke="#CBD5E1" />
-            </g>
+            <path d="M40 132 L100 132 L108 144 L32 144 Z" fill="#D7E0EC" stroke="#9FB2C9" strokeWidth="1.2" />
+            <rect x="46" y="104" width="48" height="30" rx="4" fill="#0C1A30" stroke="#9FB2C9" strokeWidth="1.2" />
+            <rect className="gb-scanl"  x="52" y="110" width="22" height="3.5" rx="1.75" fill="#34D399" />
+            <rect className="gb-scanl gb-scanl2" x="52" y="117" width="30" height="3.5" rx="1.75" fill="#60A5FA" />
+            <rect className="gb-scanl gb-scanl3" x="52" y="124" width="26" height="3.5" rx="1.75" fill="#60A5FA" />
           </g>
         )}
       </svg>

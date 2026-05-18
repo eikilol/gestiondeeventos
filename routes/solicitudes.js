@@ -33,16 +33,32 @@ async function assertAccess(eventoId, userId) {
 
 /* ── GET /me/equipo/eventos ───────────────────────────────── */
 router.get('/me/equipo/eventos', async (req, res) => {
+  /* Eventos donde soy miembro activo */
   const { data: miembros, error } = await supabase
     .from('event_members')
-    .select('rol, evento:eventos!evento_id(id, titulo, slug, estado, fecha_inicio, owner_id)')
+    .select('rol, evento:eventos!evento_id(id, titulo, slug, estado, fecha_inicio, owner_id, deleted_at)')
     .eq('user_id', req.user.id)
     .eq('status', 'active');
   if (error) return res.status(500).json({ error: error.message });
 
-  const lista = (miembros || [])
-    .filter(m => m.evento)
-    .map(m => ({ ...m.evento, mi_rol: m.rol }));
+  const mapa = new Map();
+  for (const m of miembros || []) {
+    if (m.evento && !m.evento.deleted_at) {
+      mapa.set(m.evento.id, { ...m.evento, mi_rol: m.rol });
+    }
+  }
+
+  /* + eventos que YO organizo (el owner también tiene "su trabajo") */
+  const { data: propios } = await supabase
+    .from('eventos')
+    .select('id, titulo, slug, estado, fecha_inicio, owner_id')
+    .eq('owner_id', req.user.id)
+    .is('deleted_at', null);
+  for (const ev of propios || []) {
+    if (!mapa.has(ev.id)) mapa.set(ev.id, { ...ev, mi_rol: 'Organizador' });
+  }
+
+  const lista = [...mapa.values()];
 
   /* Tareas pendientes asignadas a mí, por evento (best-effort) */
   const ids = lista.map(e => e.id);

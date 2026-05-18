@@ -16,6 +16,19 @@ router.get('/', async (req, res) => {
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
+
+  /* Backfill avatar: si el perfil no tiene avatar_url pero el usuario
+     sí tiene foto en la metadata de Auth (ej. Google), lo sincronizamos
+     una vez. Así equipo/chat/ranking muestran la foto. */
+  if (data && !data.avatar_url) {
+    const md = req.user.user_metadata || {};
+    const foto = md.foto || md.avatar_url || md.picture || null;
+    if (foto && esUrlImagenSegura(foto)) {
+      data.avatar_url = foto;
+      supabase.from('profiles').update({ avatar_url: foto })
+        .eq('id', req.user.id).then(() => {}, () => {});
+    }
+  }
   res.json({ profile: data });
 });
 

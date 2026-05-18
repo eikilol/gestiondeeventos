@@ -6,6 +6,8 @@ import { pagosApi }   from '../../api/pagos.js';
 import { BLOCKS } from '../events/editor/blocks.jsx';
 import { BrandingProvider, BrandHeader, PoweredBy } from '../../components/public/Branding.jsx';
 import Turnstile, { turnstileActivo } from '../../components/public/Turnstile.jsx';
+import LangSwitch from '../../components/public/LangSwitch.jsx';
+import { useT } from '../../lib/i18n.js';
 
 /* Página pública de un evento.
    Renderiza los bloques de page_json.pages[N].blocks dinámicamente.
@@ -13,6 +15,7 @@ import Turnstile, { turnstileActivo } from '../../components/public/Turnstile.js
 
 export default function EventoPublicoPage() {
   const { slug } = useParams();
+  const { t } = useT();
   const [params, setParams] = useSearchParams();
   const [evento,  setEvento]  = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,10 +56,10 @@ export default function EventoPublicoPage() {
     <section className="px-5 sm:px-8 py-20 max-w-3xl mx-auto text-center">
       <p className="text-xs uppercase tracking-widest text-danger mb-3">Evento no encontrado</p>
       <h1 className="text-3xl font-bold font-display tracking-tight text-text-1 mb-4">
-        Este evento no existe o no está publicado.
+        {t('evento.no_encontrado_titulo')}
       </h1>
       <Link to="/explorar" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border-2 text-sm hover:bg-surface">
-        ← Volver a explorar
+        {t('evento.volver_explorar')}
       </Link>
     </section>
   );
@@ -64,6 +67,7 @@ export default function EventoPublicoPage() {
   return (
     <BrandingProvider organizador={evento.organizador}>
     <section className="px-5 sm:px-8 py-12 max-w-3xl mx-auto">
+      <div className="flex justify-end mb-3"><LangSwitch /></div>
       {/* Brand header del organizador (si configuró logo o nombre de plataforma) */}
       <div className="mb-8 flex justify-center">
         <BrandHeader organizador={evento.organizador} />

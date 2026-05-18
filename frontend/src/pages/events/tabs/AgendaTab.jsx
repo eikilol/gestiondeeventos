@@ -11,6 +11,7 @@ import Spinner from '../../../components/ui/Spinner.jsx';
 
 const DOW_SHORT = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
 const MES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIA_SEMANA = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 
 export default function AgendaTab({ evento }) {
   const { usuario } = useAuth();
@@ -56,11 +57,15 @@ export default function AgendaTab({ evento }) {
 
   const nudge = (delta) => {
     const d = new Date(cursor);
-    if (subView === 'mes') d.setMonth(d.getMonth() + delta);
-    else d.setDate(d.getDate() + delta * 7);
-    setCursor(subView === 'mes' ? startOfMonth(d) : startOfWeek(d));
+    if (subView === 'mes') { d.setMonth(d.getMonth() + delta); setCursor(startOfMonth(d)); }
+    else if (subView === 'dia') { d.setDate(d.getDate() + delta); setCursor(startOfDay(d)); }
+    else { d.setDate(d.getDate() + delta * 7); setCursor(startOfWeek(d)); }
   };
-  const goHoy = () => setCursor(subView === 'mes' ? startOfMonth(new Date()) : startOfWeek(new Date()));
+  const goHoy = () => setCursor(
+    subView === 'mes' ? startOfMonth(new Date())
+    : subView === 'dia' ? startOfDay(new Date())
+    : startOfWeek(new Date())
+  );
 
   const openCreate = (date = null) => {
     setPrefillDate(date);
@@ -97,9 +102,14 @@ export default function AgendaTab({ evento }) {
       {view === 'sessions' && (
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-1 bg-surface-2 border border-border rounded-xl p-1">
-            {[['lista', 'Lista'], ['semana', 'Semana'], ['mes', 'Mes']].map(([k, l]) => (
+            {[['lista', 'Lista'], ['dia', 'Día'], ['semana', 'Semana'], ['mes', 'Mes']].map(([k, l]) => (
               <button key={k}
-                onClick={() => { setSubView(k); if (k !== 'lista') setCursor(k === 'mes' ? startOfMonth(cursor) : startOfWeek(cursor)); }}
+                onClick={() => {
+                  setSubView(k);
+                  if (k === 'mes') setCursor(startOfMonth(cursor));
+                  else if (k === 'semana') setCursor(startOfWeek(cursor));
+                  else if (k === 'dia') setCursor(startOfDay(new Date()));
+                }}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${subView === k ? 'bg-surface-3 text-text-1' : 'text-text-3 hover:text-text-2'}`}>
                 {l}
               </button>
@@ -115,6 +125,8 @@ export default function AgendaTab({ evento }) {
               <h3 className="text-base font-bold font-display tracking-tight text-text-1 min-w-[180px] text-center" key={cursor.toISOString()}>
                 {subView === 'mes'
                   ? `${MES_LARGO[cursor.getMonth()]} ${cursor.getFullYear()}`
+                  : subView === 'dia'
+                  ? `${DIA_SEMANA[(cursor.getDay()+6)%7]} ${cursor.getDate()} ${MES_LARGO[cursor.getMonth()].toLowerCase()}`
                   : `${dmy(cursor)} — ${dmy(addDays(cursor, 6))}`}
               </h3>
               <button onClick={() => nudge(1)} aria-label="Siguiente"
@@ -181,6 +193,20 @@ export default function AgendaTab({ evento }) {
                 catch (e) { toastErr(e.message); }
               }}
             />
+      )}
+
+      {view === 'sessions' && subView === 'dia' && (
+        <DiaTimeline
+          cursor={cursor}
+          sesiones={sessionsByDay[ymd(cursor)] || []}
+          onCrearAt={(date) => openCreate(date)}
+          onEditar={(s) => { setSubView('lista'); setEditing(s.id); }}
+          onDelete={async (s) => {
+            if (!window.confirm(`¿Borrar "${s.titulo}"?`)) return;
+            try { await agendaApi.borrarSession(evento.id, s.id); success('Sesión borrada.'); reload(); }
+            catch (e) { toastErr(e.message); }
+          }}
+        />
       )}
 
       {view === 'sessions' && subView === 'semana' && (
@@ -358,6 +384,114 @@ function SemanaGrid({ cursor, sessionsByDay, onPickDay }) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+/* Vista DÍA — timeline por horas para planear el desarrollo del evento. */
+function DiaTimeline({ cursor, sesiones, onCrearAt, onEditar, onDelete }) {
+  const horas = sesiones
+    .map(s => new Date(s.inicio).getHours())
+    .filter(h => Number.isFinite(h));
+  const minH = Math.min(8, ...(horas.length ? horas : [8]));
+  const maxFin = sesiones
+    .map(s => new Date(s.fin || s.inicio).getHours() + (s.fin ? 1 : 1))
+    .filter(h => Number.isFinite(h));
+  const maxH = Math.max(20, ...(maxFin.length ? maxFin : [20]));
+  const rango = [];
+  for (let h = minH; h <= Math.min(23, maxH); h++) rango.push(h);
+
+  const porHora = {};
+  for (const s of sesiones) {
+    const h = new Date(s.inicio).getHours();
+    (porHora[h] = porHora[h] || []).push(s);
+  }
+  const ahora = new Date();
+  const esHoy = ymd(ahora) === ymd(cursor);
+
+  return (
+    <div className="rounded-3xl border border-border bg-surface/40 overflow-hidden">
+      <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+        <p className="text-sm font-semibold text-text-1">
+          {DIA_SEMANA[(cursor.getDay()+6)%7]} {cursor.getDate()} de {MES_LARGO[cursor.getMonth()].toLowerCase()}
+        </p>
+        <span className="text-xs text-text-3">
+          {sesiones.length} {sesiones.length === 1 ? 'sesión' : 'sesiones'}
+        </span>
+      </div>
+
+      <div className="divide-y divide-border">
+        {rango.map(h => {
+          const items = (porHora[h] || []).sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
+          const esHoraActual = esHoy && ahora.getHours() === h;
+          return (
+            <div key={h} className="flex group/h">
+              <div className={`w-16 flex-shrink-0 px-3 py-3 text-right text-xs font-mono tabular-nums
+                ${esHoraActual ? 'text-primary-light font-bold' : 'text-text-3'}`}>
+                {pad(h)}:00
+              </div>
+              <div className="flex-1 border-l border-border px-3 py-2 min-h-[3.25rem] relative">
+                {esHoraActual && (
+                  <span className="absolute -left-px top-0 bottom-0 w-0.5 bg-primary" />
+                )}
+                {items.length === 0 ? (
+                  <button
+                    onClick={() => onCrearAt(withDefaultTime(cursor, h, 0))}
+                    className="opacity-0 group-hover/h:opacity-100 transition-opacity
+                               text-xs text-text-3 hover:text-primary-light flex items-center gap-1 py-1.5"
+                  >
+                    <PlusIcon className="w-3 h-3" /> Agregar a las {pad(h)}:00
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    {items.map(s => {
+                      const ini = new Date(s.inicio);
+                      const fin = s.fin ? new Date(s.fin) : null;
+                      const rango2 = ini.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+                        + (fin ? ` – ${fin.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : '');
+                      return (
+                        <div key={s.id}
+                          className="group/s rounded-xl border border-primary/25 bg-primary/10
+                                     px-3.5 py-2.5 flex items-start gap-3 hover:border-primary/45 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[11px] font-mono tabular-nums text-primary-light">{rango2}</span>
+                              {s.track && s.track !== 'principal' && (
+                                <span className="text-[10px] uppercase tracking-wide text-text-3
+                                                 bg-surface-2 border border-border rounded px-1.5 py-0.5">
+                                  {s.track}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm font-semibold text-text-1 mt-0.5 truncate">{s.titulo}</p>
+                            {(s.speaker?.nombre || s.ubicacion) && (
+                              <p className="text-xs text-text-3 mt-0.5 truncate">
+                                {s.speaker?.nombre}{s.speaker?.nombre && s.ubicacion ? ' · ' : ''}{s.ubicacion}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover/s:opacity-100 transition-opacity">
+                            <button onClick={() => onEditar(s)} aria-label="Editar"
+                              className="w-7 h-7 rounded-lg text-text-3 hover:text-text-1 hover:bg-surface-2
+                                         flex items-center justify-center">
+                              <EditIcon className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => onDelete(s)} aria-label="Borrar"
+                              className="w-7 h-7 rounded-lg text-text-3 hover:text-danger hover:bg-danger/10
+                                         flex items-center justify-center">
+                              <TrashIcon className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -559,6 +693,7 @@ function withDefaultTime(date, h, m) {
   d.setHours(h, m, 0, 0);
   return d;
 }
+function startOfDay(d)   { const x = new Date(d); x.setHours(0,0,0,0); return x; }
 function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
 function startOfWeek(d)  { const x = new Date(d); const off = (x.getDay()+6)%7; x.setDate(x.getDate()-off); x.setHours(0,0,0,0); return x; }
 function addDays(d, n)   { const x = new Date(d); x.setDate(x.getDate()+n); return x; }

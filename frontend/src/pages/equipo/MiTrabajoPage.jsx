@@ -5,7 +5,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { solicitudesApi } from '../../api/solicitudes.js';
+import { tareasApi } from '../../api/tareas.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import GLoader from '../../components/ui/GLoader.jsx';
 
 const TIPOS = [
@@ -78,16 +80,30 @@ export default function MiTrabajoPage() {
 
 function EventoTrabajo({ ev }) {
   const [mias, setMias] = useState([]);
+  const [tareas, setTareas] = useState([]);
   const [tipo, setTipo] = useState('sugerencia');
   const [titulo, setTitulo] = useState('');
   const [contenido, setContenido] = useState('');
   const [enviando, setEnviando] = useState(false);
   const { success, error: toastErr } = useToast();
+  const { usuario } = useAuth();
 
-  const reload = () => solicitudesApi.list(ev.id)
-    .then(d => setMias(d.solicitudes || []))
-    .catch(() => {});
+  const reload = () => {
+    solicitudesApi.list(ev.id).then(d => setMias(d.solicitudes || [])).catch(() => {});
+    tareasApi.list(ev.id).then(d => {
+      const mine = (d.tareas || []).filter(t =>
+        ['pendiente', 'en_curso'].includes(t.estado) &&
+        (t.asignado_user_id === usuario?.id || ev.mi_rol === 'Organizador'));
+      mine.sort((a, b) => (a.vence_at || '9999').localeCompare(b.vence_at || '9999'));
+      setTareas(mine);
+    }).catch(() => setTareas([]));
+  };
   useEffect(() => { reload(); setTitulo(''); setContenido(''); /* eslint-disable-next-line */ }, [ev.id]);
+
+  const marcarHecha = async (t) => {
+    try { await tareasApi.editar(ev.id, t.id, { estado: 'hecho' }); success('Tarea completada.'); reload(); }
+    catch (e) { toastErr(e.message); }
+  };
 
   const enviar = async (e) => {
     e.preventDefault();
@@ -111,6 +127,32 @@ function EventoTrabajo({ ev }) {
           {' · '}
           <Link to={`/eventos/${ev.id}`} className="text-primary hover:underline">Abrir evento</Link>
         </p>
+      </div>
+
+      {/* Tus tareas pendientes */}
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-text-2">
+          Tus tareas pendientes {tareas.length > 0 && <span className="text-warning">({tareas.length})</span>}
+        </p>
+        {tareas.length === 0 ? (
+          <p className="text-sm text-text-3">No tienes tareas pendientes en este evento. 🎉</p>
+        ) : tareas.map(t => (
+          <div key={t.id} className="rounded-xl border border-border bg-surface/40 p-3 flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-text-1 truncate">{t.titulo}</p>
+              <p className="text-[11px] text-text-3 mt-0.5">
+                {t.prioridad && <span className="uppercase tracking-wide">{t.prioridad}</span>}
+                {t.vence_at && <> · vence {new Date(t.vence_at).toLocaleDateString('es')}</>}
+                {' · '}{t.estado}
+              </p>
+            </div>
+            <button onClick={() => marcarHecha(t)}
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-success/40 text-success
+                         hover:bg-success/10 transition flex-shrink-0">
+              Marcar hecha
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* Enviar al organizador */}

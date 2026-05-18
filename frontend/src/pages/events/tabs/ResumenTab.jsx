@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { eventosApi } from '../../../api/eventos.js';
+import { tareasApi } from '../../../api/tareas.js';
 import { useToast } from '../../../context/ToastContext.jsx';
 
 /* Tab Resumen — info general + equipo + recordatorios. */
@@ -83,11 +84,7 @@ export default function ResumenTab({ evento }) {
 
         <RecordatoriosCard evento={evento} />
 
-        <Card title="Próximas tareas" muted>
-          <p className="text-xs text-text-3 leading-relaxed">
-            Cuando el módulo de equipo esté listo, aquí verás las tareas asignadas a ti y vencimientos.
-          </p>
-        </Card>
+        <ProximasTareasCard eventoId={evento.id} />
       </aside>
     </div>
   );
@@ -123,6 +120,48 @@ function RecordatoriosCard({ evento }) {
           <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform mt-0.5 ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
         </button>
       </div>
+    </Card>
+  );
+}
+
+function ProximasTareasCard({ eventoId }) {
+  const [tareas, setTareas] = useState(null);
+  useEffect(() => {
+    tareasApi.list(eventoId)
+      .then(d => {
+        const p = (d.tareas || [])
+          .filter(t => ['pendiente', 'en_curso'].includes(t.estado))
+          .sort((a, b) => (a.vence_at || '9999').localeCompare(b.vence_at || '9999'))
+          .slice(0, 5);
+        setTareas(p);
+      })
+      .catch(() => setTareas([]));
+  }, [eventoId]);
+
+  return (
+    <Card title="Próximas tareas">
+      {tareas === null ? (
+        <p className="text-xs text-text-3">Cargando…</p>
+      ) : tareas.length === 0 ? (
+        <p className="text-xs text-text-3 leading-relaxed">
+          No hay tareas pendientes. Crea tareas en la pestaña <span className="text-text-2 font-medium">Tareas</span>.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {tareas.map(t => (
+            <li key={t.id} className="flex items-center gap-2 text-sm">
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                t.prioridad === 'urgente' || t.prioridad === 'alta' ? 'bg-danger' : 'bg-primary'}`} />
+              <span className="flex-1 min-w-0 truncate text-text-1">{t.titulo}</span>
+              {t.vence_at && (
+                <span className="text-[11px] text-text-3 flex-shrink-0">
+                  {new Date(t.vence_at).toLocaleDateString('es', { day: '2-digit', month: 'short' })}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

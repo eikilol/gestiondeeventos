@@ -39,7 +39,9 @@ export default function LandingHomePage() {
   return (
     <>
       <Hero />
+      <AIPro />
       <Marquee />
+      <FreeIntro />
       <Stats />
       <Pillars />
       <FeatureSplit
@@ -122,7 +124,6 @@ export default function LandingHomePage() {
         ]}
         visual={<CodeMockup />}
       />
-      <AIPro />
       <PricingTeaser />
       <FAQTeaser />
       <CTASection />
@@ -285,6 +286,27 @@ function Stats() {
 }
 
 /* ─────────── PILLARS ─────────── */
+function FreeIntro() {
+  const [ref, visible] = useReveal();
+  return (
+    <section className="px-5 sm:px-8 pt-24 pb-6">
+      <div ref={ref} className={`max-w-3xl mx-auto text-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+        <p className="text-xs uppercase tracking-widest text-primary-light font-bold mb-4">
+          Y el plan gratuito no se queda atrás
+        </p>
+        <h2 className="text-4xl sm:text-5xl font-bold font-display text-text-1 tracking-tight leading-tight mb-5">
+          Gestbot es la guinda. La base ya es enorme — y gratis.
+        </h2>
+        <p className="text-base sm:text-lg text-text-2 leading-relaxed">
+          Eventos y asistentes ilimitados, QR de check-in, agenda con vista Día,
+          equipo con roles y chat, fidelidad con puntos y ranking, pagos BRE-B sin
+          comisión y página pública con tu marca. Todo sin pagar.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function Pillars() {
   const [ref, visible] = useReveal();
   const items = [

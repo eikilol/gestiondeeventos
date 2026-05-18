@@ -9,6 +9,7 @@ const NAV_SECTIONS = [
       { to: '/dashboard', icon: HomeIcon,     label: 'Dashboard' },
       { to: '/eventos',   icon: CalendarIcon, label: 'Eventos'   },
       { to: '/gestbot',   icon: RobotIcon,    label: 'Gestbot'   },
+      { to: '/chat',      icon: ChatIcon,     label: 'Chat'      },
     ],
   },
   {
@@ -118,6 +119,9 @@ function CalendarIcon({ className }) {
 }
 function RobotIcon({ className }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v3m-5 3h10a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6a2 2 0 012-2zm2 5h.01M14 14h.01M9 17h6M4 12H3m18 0h-1" /><circle cx="12" cy="3" r="1" /></svg>;
+}
+function ChatIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>;
 }
 function UsersIcon({ className }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;

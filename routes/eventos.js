@@ -122,15 +122,42 @@ router.patch('/:id', async (req, res) => {
     .maybeSingle();
   if (e1) return res.status(500).json({ error: e1.message });
   if (!actual) return res.status(404).json({ error: 'Evento no encontrado.' });
-  if (actual.owner_id !== req.user.id) return res.status(403).json({ error: 'No autorizado.' });
+
+  /* Owner edita todo. Miembro activo edita según sus permisos de rol. */
+  let camposPermitidos = null; // null = todos (owner)
+  if (actual.owner_id !== req.user.id) {
+    const { data: m } = await supabase
+      .from('event_members')
+      .select('custom_permissions, rol_detail:event_roles!rol_id(permissions)')
+      .eq('evento_id', actual.id).eq('user_id', req.user.id).eq('status', 'active')
+      .maybeSingle();
+    if (!m) return res.status(403).json({ error: 'No autorizado.' });
+    const perms = new Set([
+      ...(m.rol_detail?.permissions || []),
+      ...(m.custom_permissions || []),
+    ]);
+    camposPermitidos = new Set();
+    if (perms.has('editar_pagina_publica')) camposPermitidos.add('page_json');
+    if (perms.has('gestionar_imagenes')) { camposPermitidos.add('cover_url'); camposPermitidos.add('gallery'); }
+    if (perms.has('editar_evento')) {
+      for (const c of CAMPOS_EDITABLES) {
+        if (!c.startsWith('pago_') && c !== 'page_json') camposPermitidos.add(c);
+      }
+    }
+    if (camposPermitidos.size === 0) {
+      return res.status(403).json({ error: 'Tu rol no puede editar este evento.' });
+    }
+  }
+
+  const puede = (k) => camposPermitidos === null || camposPermitidos.has(k);
 
   const updates = {};
   for (const k of CAMPOS_EDITABLES) {
-    if (k in req.body) updates[k] = req.body[k];
+    if (k in req.body && puede(k)) updates[k] = req.body[k];
   }
 
-  /* Permitir cambiar slug si lo mandan, asegurando unicidad */
-  if (req.body.slug && req.body.slug !== actual.slug) {
+  /* Permitir cambiar slug si lo mandan, asegurando unicidad (solo owner) */
+  if (camposPermitidos === null && req.body.slug && req.body.slug !== actual.slug) {
     updates.slug = await uniqueEventoSlug(supabase, req.body.slug);
   }
 

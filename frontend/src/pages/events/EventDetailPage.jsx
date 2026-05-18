@@ -16,6 +16,7 @@ import CheckinTab        from './tabs/CheckinTab.jsx';
 import ChatTab           from './tabs/ChatTab.jsx';
 import AgendaTab         from './tabs/AgendaTab.jsx';
 import TareasTab         from './tabs/TareasTab.jsx';
+import SolicitudesTab    from './tabs/SolicitudesTab.jsx';
 import AnalyticsTab      from './tabs/AnalyticsTab.jsx';
 import BroadcastModal    from './BroadcastModal.jsx';
 import PlaceholderTab    from './tabs/PlaceholderTab.jsx';
@@ -23,20 +24,48 @@ import WaitlistTab      from './tabs/WaitlistTab.jsx';
 
 /* Workspace por evento. Header + tabs. Cada tab carga su contenido. */
 
-const TABS = [
-  { id: 'resumen',  label: 'Resumen' },
-  { id: 'publica',  label: 'Página pública' },
-  { id: 'equipo',   label: 'Equipo y roles' },
-  { id: 'chat',     label: 'Chat' },
-  { id: 'tickets',  label: 'Tickets' },
-  { id: 'agenda',   label: 'Agenda' },
-  { id: 'tareas',   label: 'Tareas' },
-  { id: 'gente',    label: 'Clientes' },
-  { id: 'checkin',  label: 'Check-in' },
-  { id: 'pagos',    label: 'Pagos' },
-  { id: 'analytics',label: 'Analytics' },
-  { id: 'waitlist',  label: 'Lista de espera' },
+const GRUPOS = [
+  { label: 'General', items: [
+    { id: 'resumen', label: 'Resumen' },
+    { id: 'publica', label: 'Página pública' },
+  ] },
+  { label: 'Organización', items: [
+    { id: 'equipo',  label: 'Equipo y roles' },
+    { id: 'tareas',  label: 'Tareas' },
+    { id: 'solicitudes', label: 'Sugerencias' },
+    { id: 'agenda',  label: 'Agenda' },
+  ] },
+  { label: 'Facturación', items: [
+    { id: 'tickets',   label: 'Boletas' },
+    { id: 'pagos',     label: 'Pagos' },
+    { id: 'analytics', label: 'Analytics' },
+  ] },
+  { label: 'Asistentes', items: [
+    { id: 'checkin',  label: 'Check-in' },
+    { id: 'gente',    label: 'Clientes' },
+    { id: 'waitlist', label: 'Lista de espera' },
+  ] },
 ];
+const TAB_GRUPO = Object.fromEntries(
+  GRUPOS.flatMap(g => g.items.map(it => [it.id, g.label]))
+);
+
+/* Permiso requerido para que un MIEMBRO (no owner) vea cada tab.
+   null = visible para todo el equipo. El owner siempre ve todo. */
+const TAB_PERM = {
+  resumen: null, publica: 'editar_pagina_publica',
+  tickets: 'gestionar_tickets', pagos: 'ver_pagos', analytics: 'ver_analytics',
+  checkin: 'checkin', gente: 'ver_clientes', waitlist: '__solo_owner__',
+  equipo: ['gestionar_roles', 'invitar_staff', 'remover_miembros'],
+  agenda: null, tareas: null, solicitudes: null, chat: null,
+};
+function puedeVerTab(id, soyOwner, permisos) {
+  if (soyOwner) return true;
+  const req = TAB_PERM[id];
+  if (req == null) return true;
+  const arr = Array.isArray(req) ? req : [req];
+  return arr.some(p => (permisos || []).includes(p));
+}
 
 export default function EventDetailPage() {
   const { id }                       = useParams();
@@ -50,11 +79,21 @@ export default function EventDetailPage() {
   const [tab,     setTab]     = useState('resumen');
   const [err,     setErr]     = useState('');
   const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [soyOwner, setSoyOwner] = useState(true);
+  const [permisos, setPermisos] = useState(['*']);
 
   useEffect(() => {
     setLoading(true);
     eventosApi.get(id)
-      .then(data => setEvento(data.evento))
+      .then(data => {
+        setEvento(data.evento);
+        const owner = data.soyOwner !== false;
+        setSoyOwner(owner);
+        setPermisos(data.permisos || ['*']);
+        if (!owner) {
+          setTab(t => puedeVerTab(t, false, data.permisos || []) ? t : 'resumen');
+        }
+      })
       .catch(e   => setErr(e.message))
       .finally(()=> setLoading(false));
   }, [id]);
@@ -118,27 +157,68 @@ export default function EventDetailPage() {
         onBroadcast={() => setBroadcastOpen(true)}
       />
 
-      {/* TABS */}
-      <div className="relative">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-border -mx-4 px-4 sm:mx-0 sm:px-0">
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`relative px-4 py-3.5 text-[15px] font-medium whitespace-nowrap transition-colors
-                ${tab === t.id ? 'text-text-1' : 'text-text-3 hover:text-text-2'}
-              `}
-            >
-              {t.label}
-              {tab === t.id && (
-                <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-text-1 animate-[fadeIn_0.2s_ease_both]" />
-              )}
-            </button>
-          ))}
-        </div>
-        {/* Gradient fade indicador de scroll horizontal en mobile */}
-        <div className="sm:hidden absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-bg to-transparent pointer-events-none" />
-      </div>
+      {/* NAV agrupada: grupos + Chat aparte; sub-tabs del grupo activo */}
+      {(() => {
+        const esChat = tab === 'chat';
+        const gruposVis = GRUPOS
+          .map(g => ({ ...g, items: g.items.filter(it => puedeVerTab(it.id, soyOwner, permisos)) }))
+          .filter(g => g.items.length);
+        const grupoActivo = esChat ? null : (TAB_GRUPO[tab] || gruposVis[0]?.label);
+        const grupo = gruposVis.find(g => g.label === grupoActivo);
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+              {gruposVis.map(g => {
+                const act = g.label === grupoActivo;
+                return (
+                  <button
+                    key={g.label}
+                    onClick={() => setTab(g.items[0].id)}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all
+                      ${act
+                        ? 'bg-gradient-primary text-white shadow-glow-sm'
+                        : 'bg-surface-2 text-text-3 hover:text-text-1 border border-border'}`}
+                  >
+                    {g.label}
+                  </button>
+                );
+              })}
+              <span className="w-px h-6 bg-border mx-1 flex-shrink-0" />
+              <button
+                onClick={() => setTab('chat')}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
+                  whitespace-nowrap transition-all
+                  ${esChat
+                    ? 'bg-gradient-primary text-white shadow-glow-sm'
+                    : 'bg-surface-2 text-text-3 hover:text-text-1 border border-border'}`}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Chat
+              </button>
+            </div>
+            {grupo && (
+              <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-border
+                              -mx-4 px-4 sm:mx-0 sm:px-0">
+                {grupo.items.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                    className={`relative px-4 py-3 text-[15px] font-medium whitespace-nowrap transition-colors
+                      ${tab === t.id ? 'text-text-1' : 'text-text-3 hover:text-text-2'}`}
+                  >
+                    {t.label}
+                    {tab === t.id && (
+                      <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary animate-[fadeIn_0.2s_ease_both]" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* TAB CONTENT */}
       <div key={tab} className="animate-[fadeUp_0.3s_cubic-bezier(0.16,1,0.3,1)_both]">
@@ -150,6 +230,7 @@ export default function EventDetailPage() {
         {tab === 'checkin'   && <CheckinTab evento={evento} />}
         {tab === 'agenda'      && <AgendaTab evento={evento} />}
         {tab === 'tareas'      && <TareasTab evento={evento} />}
+        {tab === 'solicitudes' && <SolicitudesTab evento={evento} />}
         {tab === 'pagos'     && <PlaceholderTab title="Pagos" desc="Configura tu llave BRE-B, recibe transacciones, emite reembolsos." icon="wallet" />}
         {tab === 'chat'      && <ChatTab evento={evento} />}
         {tab === 'analytics' && <AnalyticsTab evento={evento} />}

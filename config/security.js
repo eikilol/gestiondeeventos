@@ -52,9 +52,17 @@ const corsOptions = {
 
 /* ── Helmet ──────────────────────────────────────────────── */
 const helmetOptions = {
-  /* CSP permisivo en dev (Vite + Supabase + MP); endurecer en prod si necesitamos.
-     Por ahora desactivada para no romper Supabase Storage / MP iframes. */
-  contentSecurityPolicy: false,
+  /* La API solo devuelve JSON — CSP ultra-restrictiva: nada se ejecuta ni se
+     embebe desde respuestas del backend. La CSP de la SPA va en frontend/index.html. */
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: {
+      defaultSrc  : ["'none'"],
+      frameAncestors: ["'none'"],
+      baseUri     : ["'none'"],
+      formAction  : ["'none'"],
+    },
+  },
   /* HSTS solo en producción (asume HTTPS) */
   hsts: env.IS_PROD
     ? { maxAge: 31536000, includeSubDomains: true, preload: true }

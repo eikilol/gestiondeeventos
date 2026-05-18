@@ -1,17 +1,15 @@
 const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
+const { auditar } = require('../lib/auditar.js');
+const { assertPermiso } = require('../lib/acceso.js');
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
 
-async function assertOwner(eventoId, userId) {
-  const { data, error } = await supabase
-    .from('eventos').select('id, owner_id, currency').eq('id', eventoId).maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Evento no encontrado.');
-  if (data.owner_id !== userId) throw new Error('No autorizado.');
-  return data;
+/* Owner o miembro con permiso 'gestionar_tickets'. */
+function assertOwner(eventoId, userId) {
+  return assertPermiso(eventoId, userId, ['gestionar_tickets'], 'id, owner_id, currency');
 }
 
 const CAMPOS_EDITABLES = [
@@ -75,6 +73,7 @@ router.post('/:eventoId/tickets', async (req, res) => {
     const { data, error } = await supabase
       .from('ticket_types').insert(payload).select().single();
     if (error) return res.status(500).json({ error: error.message });
+    auditar(req, eventoId, 'ticket.crear', { entidad: 'ticket', entidadId: data.id, detalle: { nombre: data.nombre, precio: data.precio } });
     res.status(201).json({ ticket: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
@@ -93,6 +92,7 @@ router.patch('/:eventoId/tickets/:ticketId', async (req, res) => {
       .eq('id', ticketId).eq('evento_id', eventoId)
       .select().single();
     if (error) return res.status(500).json({ error: error.message });
+    auditar(req, eventoId, 'ticket.editar', { entidad: 'ticket', entidadId: ticketId, detalle: { campos: Object.keys(updates) } });
     res.json({ ticket: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
@@ -112,12 +112,14 @@ router.delete('/:eventoId/tickets/:ticketId', async (req, res) => {
         .from('ticket_types').update({ activo: false })
         .eq('id', ticketId).eq('evento_id', eventoId);
       if (error) return res.status(500).json({ error: error.message });
+      auditar(req, eventoId, 'ticket.borrar', { entidad: 'ticket', entidadId: ticketId, detalle: { archivado: true } });
       return res.json({ ok: true, archivado: true });
     }
     const { error } = await supabase
       .from('ticket_types').delete()
       .eq('id', ticketId).eq('evento_id', eventoId);
     if (error) return res.status(500).json({ error: error.message });
+    auditar(req, eventoId, 'ticket.borrar', { entidad: 'ticket', entidadId: ticketId });
     res.json({ ok: true });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });

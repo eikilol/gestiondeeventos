@@ -2,6 +2,7 @@ const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { otorgarBadge } = require('../lib/gamificacion.js');
+const { esUrlImagenSegura } = require('../lib/urls.js');
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
@@ -27,6 +28,11 @@ router.patch('/', async (req, res) => {
   }
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ error: 'Sin campos válidos para actualizar.' });
+  }
+
+  /* Seguridad: avatar_url debe ser una URL de imagen segura (no javascript:/data ejecutable) */
+  if ('avatar_url' in updates && !esUrlImagenSegura(updates.avatar_url)) {
+    return res.status(400).json({ error: 'La URL de avatar no es válida.' });
   }
 
   const { data, error } = await supabase

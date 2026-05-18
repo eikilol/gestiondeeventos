@@ -6,21 +6,20 @@ import AvatarUploader from '../../components/ui/AvatarUploader.jsx';
 import { supabase } from '../../lib/supabase.js';
 import { pagosApi } from '../../api/pagos.js';
 import { usePush } from '../../hooks/usePush.js';
+import { notificarPlanCambiado } from '../../hooks/usePlan.js';
 
+/* Pagos, Notificaciones y Recompensas viven ahora como secciones
+   propias en el sidebar (páginas dedicadas). */
 const TABS = [
-  { label: 'Perfil',         icon: UserIcon       },
-  { label: 'Pagos',          icon: WalletIcon     },
-  { label: 'Notificaciones', icon: BellIcon       },
-  { label: 'White-label',    icon: PaintIcon      },
-  { label: 'Logros',         icon: TrophyIcon     },
-  { label: 'Recompensas',    icon: GiftIcon       },
-  { label: 'API',            icon: CodeIcon       },
+  { key: 'perfil',        label: 'Perfil',        icon: UserIcon  },
+  { key: 'logros',        label: 'Logros',        icon: TrophyIcon },
+  { key: 'integraciones', label: 'Integraciones', icon: CodeIcon  },
 ];
 
 export default function SettingsPage() {
   const { usuario, updateProfile, updatePassword } = useAuth();
   const { success, error, warning } = useToast();
-  const [tab,     setTab]     = useState(0);
+  const [tab,     setTab]     = useState('perfil');
   const [loading, setLoading] = useState(false);
 
   const [perfil, setPerfil] = useState({
@@ -61,34 +60,40 @@ export default function SettingsPage() {
   const initials = usuario?.nombre?.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'U';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-[fadeUp_0.4s_ease_both]">
+    <div className="max-w-6xl mx-auto space-y-6 animate-[fadeUp_0.4s_ease_both]">
       <div>
-        <h1 className="text-xl font-bold font-display text-text-1">Configuración</h1>
+        <h1 className="text-2xl font-bold font-display text-text-1">Configuración</h1>
         <p className="text-sm text-text-2 mt-0.5">Administra tu cuenta y opciones de la plataforma.</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-border">
-        {TABS.map((t, i) => {
-          const Icon = t.icon;
-          return (
-            <button
-              key={i}
-              onClick={() => setTab(i)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px
-                ${tab === i
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-text-2 hover:text-text-1'}`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+      <div className="grid lg:grid-cols-[230px_1fr] gap-6 items-start">
+        {/* Nav lateral de secciones */}
+        <nav className="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar
+                        lg:bg-surface/60 lg:border lg:border-border-2 lg:rounded-2xl lg:p-2 lg:sticky lg:top-2">
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium
+                  whitespace-nowrap transition-all flex-shrink-0
+                  ${tab === t.key
+                    ? 'bg-gradient-primary text-white shadow-glow-sm'
+                    : 'text-text-2 hover:text-text-1 hover:bg-surface-2'}`}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {t.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Contenido de la sección activa */}
+        <div className="min-w-0 space-y-6">
 
       {/* Perfil */}
-      {tab === 0 && (
+      {tab === 'perfil' && (
         <div className="space-y-5">
           {/* Avatar + datos */}
           <div className="card p-5">
@@ -160,99 +165,52 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Pagos */}
-      {tab === 1 && <PagosTab />}
-
-      {/* Notificaciones */}
-      {tab === 2 && <NotificacionesTab />}
-
-      {/* White-label */}
-      {tab === 3 && <WhiteLabelTab />}
-
       {/* Logros */}
-      {tab === 4 && <LogrosTab />}
+      {tab === 'logros' && <LogrosTab />}
 
-      {/* Recompensas (organizador) */}
-      {tab === 5 && <RecompensasTab />}
-
-      {/* API */}
-      {tab === 6 && (
-        <div className="card">
-          <div className="card-header">
-            <h3 className="text-sm font-semibold text-text-1">Referencia de la API</h3>
-            <div className="flex items-center gap-1.5">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-60" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
-              </span>
-              <span className="text-xs text-success">Operativa</span>
-            </div>
-          </div>
-          <div className="card-body space-y-5">
-            <div className="bg-surface-2 rounded-xl p-4 border border-border space-y-2.5">
-              {[
-                { label: 'Base URL',  value: window.location.origin + '/'  },
-                { label: 'Versión',   value: '2.0.0'                       },
-                { label: 'Auth',      value: 'Bearer JWT (8h)'             },
-                { label: 'Rate limit',value: '100 req/min'                 },
-              ].map(r => (
-                <div key={r.label} className="flex items-center justify-between">
-                  <span className="text-xs text-text-2">{r.label}</span>
-                  <code className="text-xs text-primary-light font-mono bg-primary/10 px-2 py-0.5 rounded">{r.value}</code>
-                </div>
-              ))}
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-text-3 mb-3">Endpoints</p>
-              <div className="space-y-1">
-                {[
-                  ['POST',   '/auth/register',          'Registrar usuario'    ],
-                  ['POST',   '/auth/login',             'Iniciar sesión'       ],
-                  ['GET',    '/auth/me',                'Perfil del usuario'   ],
-                  ['GET',    '/eventos',                'Listar eventos'       ],
-                  ['POST',   '/eventos',                'Crear evento'         ],
-                  ['PATCH',  '/eventos/:id',            'Actualizar evento'    ],
-                  ['DELETE', '/eventos/:id',            'Eliminar evento'      ],
-                  ['POST',   '/eventos/:id/publicar',   'Publicar evento'      ],
-                  ['POST',   '/eventos/:id/inscribirse','Inscribirse'          ],
-                  ['GET',    '/usuarios',               'Listar usuarios'      ],
-                ].map(([method, path, desc]) => (
-                  <div key={path} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-2 transition-colors group">
-                    <span className={`text-[10px] font-mono font-bold w-12 flex-shrink-0 ${
-                      method === 'GET'    ? 'text-success'    :
-                      method === 'POST'   ? 'text-primary'    :
-                      method === 'PATCH'  ? 'text-warning'    :
-                      'text-danger'
-                    }`}>{method}</span>
-                    <code className="text-xs font-mono text-text-2 flex-1">{path}</code>
-                    <span className="text-[10px] text-text-3 hidden group-hover:block">{desc}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+      {/* Integraciones (API + Webhooks) */}
+      {tab === 'integraciones' && <IntegracionesTab />}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
 /* ──────────── White-label Tab ──────────── */
-function WhiteLabelTab() {
+export function WhiteLabelTab() {
   const { usuario } = useAuth();
   const { success, error } = useToast();
   const branding = usuario?.raw?.user_metadata?.branding || {};
   const [logo,     setLogo]    = useState(usuario?.raw?.user_metadata?.empresa_logo_url || '');
   const [primary,  setPrimary] = useState(branding.primary || '#3B82F6');
   const [accent,   setAccent]  = useState(branding.accent || '#8B5CF6');
+  const [bg,       setBg]      = useState(branding.bg || '#070C18');
+  const [font,     setFont]    = useState(branding.font || 'sans');
   const [plataforma, setPlataforma] = useState(branding.plataforma || '');
+  const [tagline,  setTagline] = useState(branding.tagline || '');
+  const [web,      setWeb]     = useState(branding.web || '');
+  const [instagram, setInstagram] = useState(branding.instagram || '');
+  const [whatsapp, setWhatsapp] = useState(branding.whatsapp || '');
+  const [footer,   setFooter]  = useState(branding.footer || '');
+  const [radius,   setRadius]  = useState(branding.radius || 'lg');
+  const [theme,    setTheme]   = useState(branding.theme || 'oscuro');
   const [saving, setSaving] = useState(false);
+
+  const FONT_CSS = {
+    sans   : "'Inter', system-ui, sans-serif",
+    display: "'Space Grotesk', 'Inter', sans-serif",
+    serif  : "Georgia, 'Times New Roman', serif",
+    mono   : "'JetBrains Mono', monospace",
+  };
 
   const onGuardar = async () => {
     setSaving(true);
     try {
-      const newBranding = { primary, accent, plataforma };
+      const newBranding = {
+        primary, accent, bg, font, radius, theme, plataforma, tagline,
+        web: web.trim() || null, instagram: instagram.trim() || null,
+        whatsapp: whatsapp.trim() || null, footer: footer.trim() || null,
+      };
       await supabase.auth.updateUser({
         data: { branding: newBranding, empresa_logo_url: logo || null },
       });
@@ -260,7 +218,7 @@ function WhiteLabelTab() {
         empresa_logo_url: logo || null,
         branding: newBranding,
       }).eq('id', usuario.id);
-      success('Branding guardado.');
+      success('Branding guardado. Se aplica en tus páginas públicas.');
     } catch (e) { error(e.message); }
     finally    { setSaving(false); }
   };
@@ -270,7 +228,7 @@ function WhiteLabelTab() {
       <div className="card">
         <div className="card-header">
           <h3 className="text-base font-semibold text-text-1">Marca de tu empresa</h3>
-          <span className="badge-yellow text-xs">Plan Pro</span>
+          <span className="badge-blue text-xs">Disponible en todos los planes</span>
         </div>
         <div className="card-body grid lg:grid-cols-[1fr_320px] gap-6">
           {/* Form */}
@@ -296,9 +254,81 @@ function WhiteLabelTab() {
               <p className="text-xs text-text-3 mt-1.5">Lo que verán tus asistentes en lugar de &quot;GESTEK&quot;.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="field">
+              <label className="label">Frase / tagline</label>
+              <input
+                value={tagline} onChange={e => setTagline(e.target.value)}
+                placeholder="Experiencias inolvidables"
+                className="input rounded-2xl py-3"
+              />
+              <p className="text-xs text-text-3 mt-1.5">Aparece bajo el nombre en el header público.</p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               <ColorField label="Color primario"  value={primary} onChange={setPrimary} />
               <ColorField label="Color accent"    value={accent}  onChange={setAccent} />
+              <ColorField label="Fondo público"   value={bg}      onChange={setBg} />
+            </div>
+
+            <div className="field">
+              <label className="label">Tipografía</label>
+              <select value={font} onChange={e => setFont(e.target.value)}
+                className="input rounded-2xl py-3" style={{ fontFamily: FONT_CSS[font] }}>
+                <option value="sans">Inter (moderna)</option>
+                <option value="display">Space Grotesk (display)</option>
+                <option value="serif">Serif (elegante)</option>
+                <option value="mono">Mono (técnica)</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="field">
+                <label className="label">Radio de bordes</label>
+                <select value={radius} onChange={e => setRadius(e.target.value)}
+                  className="input rounded-2xl py-3">
+                  <option value="none">Cuadrado</option>
+                  <option value="sm">Sutil</option>
+                  <option value="md">Medio</option>
+                  <option value="lg">Redondeado</option>
+                  <option value="xl">Muy redondeado</option>
+                </select>
+              </div>
+              <div className="field">
+                <label className="label">Modo</label>
+                <select value={theme} onChange={e => setTheme(e.target.value)}
+                  className="input rounded-2xl py-3">
+                  <option value="oscuro">Oscuro</option>
+                  <option value="claro">Claro</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="field">
+                <label className="label">Sitio web</label>
+                <input value={web} onChange={e => setWeb(e.target.value)}
+                  placeholder="https://tuempresa.com" className="input rounded-2xl py-3" />
+              </div>
+              <div className="field">
+                <label className="label">Instagram</label>
+                <input value={instagram} onChange={e => setInstagram(e.target.value)}
+                  placeholder="https://instagram.com/tu" className="input rounded-2xl py-3" />
+              </div>
+              <div className="field">
+                <label className="label">WhatsApp</label>
+                <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)}
+                  placeholder="+57 300 000 0000" className="input rounded-2xl py-3" />
+              </div>
+            </div>
+
+            <div className="field">
+              <label className="label">Texto del footer (Pro)</label>
+              <input value={footer} onChange={e => setFooter(e.target.value)}
+                placeholder="© 2026 Tu Empresa · Todos los derechos reservados"
+                className="input rounded-2xl py-3" />
+              <p className="text-xs text-text-3 mt-1.5">
+                En Pro reemplaza el &quot;gestionado con GESTEK&quot;. Vacío = sin footer.
+              </p>
             </div>
 
             <div className="flex justify-end">
@@ -311,25 +341,42 @@ function WhiteLabelTab() {
           {/* Preview */}
           <aside>
             <p className="label">Vista previa</p>
-            <div className="rounded-3xl border border-border-2 overflow-hidden">
-              {/* "Navbar" simulado */}
-              <div className="px-4 py-3 flex items-center gap-2 border-b border-border" style={{ background: `linear-gradient(90deg, ${primary}15, ${accent}10)` }}>
-                {logo
-                  ? <img src={logo} alt="" className="w-7 h-7 rounded-lg object-cover" />
-                  : <div className="w-7 h-7 rounded-lg" style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }} />}
-                <span className="text-sm font-bold text-text-1">{plataforma || 'Tu plataforma'}</span>
-              </div>
-              <div className="p-4 space-y-3 bg-surface">
-                <div className="aspect-video rounded-xl" style={{ background: `linear-gradient(135deg, ${primary}30, ${accent}20)` }} />
-                <p className="text-base font-semibold text-text-1">Tu evento aquí</p>
-                <p className="text-sm text-text-2 leading-relaxed">Así se vería el header de tus páginas públicas con tus colores.</p>
-                <button className="px-4 py-2 rounded-full text-sm font-semibold text-white" style={{ background: primary }}>
-                  Reservar
-                </button>
-              </div>
-            </div>
+            {(() => {
+              const RAD = { none: '0px', sm: '6px', md: '12px', lg: '18px', xl: '26px' };
+              const r = RAD[radius] ?? '18px';
+              const light = theme === 'claro';
+              const efBg = bg || (light ? '#F4F6FB' : '#070C18');
+              const txt = light ? '#0B1220' : '#FFFFFF';
+              const sub = light ? '#475569' : 'rgba(255,255,255,.6)';
+              return (
+                <div className="border border-border-2 overflow-hidden"
+                     style={{ background: efBg, fontFamily: FONT_CSS[font], borderRadius: r }}>
+                  <div className="px-4 py-3 flex items-center gap-2.5"
+                       style={{ borderBottom: `1px solid ${light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.1)'}` }}>
+                    {logo
+                      ? <img src={logo} alt="" className="w-8 h-8 object-cover" style={{ borderRadius: r }} />
+                      : <div className="w-8 h-8" style={{ borderRadius: r, background: `linear-gradient(135deg, ${primary}, ${accent})` }} />}
+                    <div>
+                      <span className="block text-sm font-bold" style={{ color: txt }}>{plataforma || 'Tu plataforma'}</span>
+                      {tagline && <span className="block text-[11px]" style={{ color: sub }}>{tagline}</span>}
+                    </div>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <div className="aspect-video" style={{ borderRadius: r, background: `linear-gradient(135deg, ${primary}40, ${accent}25)` }} />
+                    <p className="text-base font-semibold" style={{ color: txt }}>Tu evento aquí</p>
+                    <p className="text-sm leading-relaxed" style={{ color: sub }}>Así se ven tus páginas públicas con tu marca.</p>
+                    <button className="px-4 py-2 text-sm font-semibold text-white"
+                            style={{ background: primary, borderRadius: radius === 'none' ? '0px' : '9999px' }}>
+                      Reservar
+                    </button>
+                    {footer && <p className="text-[10px] pt-2" style={{ color: sub }}>{footer}</p>}
+                  </div>
+                </div>
+              );
+            })()}
             <p className="text-xs text-text-3 mt-3 leading-relaxed">
-              La aplicación real del branding en las páginas públicas se habilita con el plan Pro. Por ahora guardas tus preferencias.
+              Con plan Pro esto se aplica de verdad en las páginas públicas de tus eventos
+              (colores, fondo, tipografía, header y footer).
             </p>
           </aside>
         </div>
@@ -358,8 +405,196 @@ function ColorField({ label, value, onChange }) {
   );
 }
 
+/* ──────────── Integraciones (API + Webhooks) ──────────── */
+const WH_TIPOS = [
+  { id: 'ticket.pagado',      label: 'Boleta pagada' },
+  { id: 'checkin.realizado',  label: 'Check-in realizado' },
+  { id: 'evento.publicado',   label: 'Evento publicado' },
+];
+
+function IntegracionesTab() {
+  const { success, error: toastErr } = useToast();
+  const [tokens, setTokens]     = useState([]);
+  const [webhooks, setWebhooks] = useState([]);
+  const [pro, setPro]           = useState(false);
+  const [loading, setLoading]   = useState(true);
+  const [nuevoToken, setNuevoToken] = useState(null); // {valor} mostrado una vez
+  const [tokNombre, setTokNombre]   = useState('');
+  const [whUrl, setWhUrl]           = useState('');
+  const [whEventos, setWhEventos]   = useState([]);
+  const [busy, setBusy]             = useState(false);
+
+  const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:3000');
+
+  const cargar = async () => {
+    setLoading(true);
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      const [t, w] = await Promise.all([integracionesApi.listTokens(), integracionesApi.listWebhooks()]);
+      setTokens(t.tokens || []); setPro(Boolean(t.pro));
+      setWebhooks(w.webhooks || []);
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally     { setLoading(false); }
+  };
+  useEffect(() => { cargar(); /* eslint-disable-next-line */ }, []);
+
+  const crearToken = async () => {
+    if (!tokNombre.trim()) return;
+    setBusy(true);
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      const r = await integracionesApi.crearToken(tokNombre.trim());
+      setNuevoToken(r.token);
+      setTokNombre('');
+      cargar();
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally     { setBusy(false); }
+  };
+  const revocar = async (id) => {
+    if (!window.confirm('¿Revocar este token? Las integraciones que lo usen dejarán de funcionar.')) return;
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      await integracionesApi.revocarToken(id); success('Token revocado.'); cargar();
+    } catch (e) { toastErr(e.message); }
+  };
+  const crearWebhook = async () => {
+    if (!/^https?:\/\//.test(whUrl) || whEventos.length === 0) { toastErr('URL https + al menos un evento.'); return; }
+    setBusy(true);
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      await integracionesApi.crearWebhook(whUrl, whEventos);
+      success('Webhook creado.'); setWhUrl(''); setWhEventos([]); cargar();
+    } catch (e) { toastErr(e.response?.data?.error || e.message); }
+    finally     { setBusy(false); }
+  };
+  const borrarWebhook = async (id) => {
+    if (!window.confirm('¿Borrar webhook?')) return;
+    try {
+      const { integracionesApi } = await import('../../api/integraciones.js');
+      await integracionesApi.borrarWebhook(id); success('Borrado.'); cargar();
+    } catch (e) { toastErr(e.message); }
+  };
+
+  if (loading) return <div className="card p-6"><Spinner size="md" /></div>;
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl bg-accent/5 border border-accent/20 px-4 py-3 text-sm text-text-2 leading-relaxed flex items-center justify-between gap-3">
+        <span>API REST + Webhooks para conectar GESTEK con tus sistemas (CRM, automatizaciones, facturación).</span>
+        <span className="badge badge-purple text-[10px] flex-shrink-0">Pro</span>
+      </div>
+
+      {!pro && (
+        <div className="rounded-2xl bg-warning/10 border border-warning/25 px-4 py-3 text-sm text-text-2">
+          Necesitás plan Pro para crear tokens y webhooks. Activalo en la pestaña <strong className="text-text-1">Pagos</strong>.
+        </div>
+      )}
+
+      {/* API Tokens */}
+      <div className="card">
+        <div className="card-header"><h3 className="text-base font-semibold text-text-1">API Tokens</h3></div>
+        <div className="card-body space-y-4">
+          {nuevoToken && (
+            <div className="rounded-2xl border border-success/30 bg-success/10 p-4">
+              <p className="text-sm font-semibold text-success-light mb-1">Token creado — copialo ahora, no se vuelve a mostrar</p>
+              <code className="block text-xs font-mono text-text-1 bg-bg/50 rounded-lg px-3 py-2 break-all">{nuevoToken.valor}</code>
+              <button onClick={() => { navigator.clipboard?.writeText(nuevoToken.valor); success('Copiado.'); }}
+                className="btn-secondary btn-sm mt-2">Copiar</button>
+            </div>
+          )}
+          {pro && (
+            <div className="flex items-end gap-2">
+              <div className="field flex-1">
+                <label className="label">Nombre del token</label>
+                <input className="input rounded-2xl py-2.5" value={tokNombre}
+                  onChange={e => setTokNombre(e.target.value)} placeholder="ej. Integración CRM" />
+              </div>
+              <button onClick={crearToken} disabled={busy || !tokNombre.trim()} className="btn-gradient">Generar</button>
+            </div>
+          )}
+          {tokens.length === 0 ? (
+            <p className="text-sm text-text-3 text-center py-3">Sin tokens.</p>
+          ) : (
+            <div className="space-y-2">
+              {tokens.map(t => (
+                <div key={t.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-surface-2/40 border border-border ${t.revoked ? 'opacity-50' : ''}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-text-1">{t.nombre}</p>
+                    <p className="text-xs text-text-3 font-mono">{t.prefix} · {t.last_used_at ? `usado ${new Date(t.last_used_at).toLocaleDateString('es-CO')}` : 'sin uso'}</p>
+                  </div>
+                  {t.revoked
+                    ? <span className="text-[10px] uppercase tracking-widest text-text-3">revocado</span>
+                    : <button onClick={() => revocar(t.id)} className="btn-ghost btn-sm text-danger/80 hover:text-danger">Revocar</button>}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="rounded-xl bg-surface-2/40 border border-border p-3 text-xs text-text-3 font-mono leading-relaxed">
+            curl -H "Authorization: Bearer gtk_live_..." {apiBase}/api/v1/eventos
+          </div>
+        </div>
+      </div>
+
+      {/* Webhooks */}
+      <div className="card">
+        <div className="card-header"><h3 className="text-base font-semibold text-text-1">Webhooks</h3></div>
+        <div className="card-body space-y-4">
+          {pro && (
+            <div className="space-y-3">
+              <div className="field">
+                <label className="label">URL de destino</label>
+                <input className="input rounded-2xl py-2.5 font-mono" value={whUrl}
+                  onChange={e => setWhUrl(e.target.value)} placeholder="https://tu-sistema.com/webhook" />
+              </div>
+              <div>
+                <label className="label">Eventos</label>
+                <div className="flex flex-wrap gap-2">
+                  {WH_TIPOS.map(t => {
+                    const on = whEventos.includes(t.id);
+                    return (
+                      <button key={t.id} type="button"
+                        onClick={() => setWhEventos(s => on ? s.filter(x => x !== t.id) : [...s, t.id])}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${on ? 'border-primary/40 bg-primary/15 text-primary-light' : 'border-border text-text-3 hover:text-text-2'}`}>
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button onClick={crearWebhook} disabled={busy} className="btn-gradient">Crear webhook</button>
+              </div>
+            </div>
+          )}
+          {webhooks.length === 0 ? (
+            <p className="text-sm text-text-3 text-center py-3">Sin webhooks.</p>
+          ) : (
+            <div className="space-y-2">
+              {webhooks.map(w => (
+                <div key={w.id} className={`px-3 py-3 rounded-xl bg-surface-2/40 border border-border ${w.activo ? '' : 'opacity-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-mono text-text-1 truncate">{w.url}</p>
+                      <p className="text-xs text-text-3">{w.eventos.join(' · ')}</p>
+                    </div>
+                    <button onClick={() => borrarWebhook(w.id)} aria-label="Borrar"
+                      className="w-8 h-8 rounded-lg text-text-3 hover:text-danger hover:bg-danger/10 flex items-center justify-center">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-text-3 mt-2">Secret HMAC: <code className="font-mono">{w.secret}</code> — verificá el header <code className="font-mono">x-gestek-signature</code>.</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ──────────── Pagos Tab (Mercado Pago) ──────────── */
-function PagosTab() {
+export function PagosTab() {
   const { usuario } = useAuth();
   const { success, error } = useToast();
 
@@ -550,7 +785,7 @@ function PlanProCard() {
       success('¡Pago recibido! Tu plan Pro se activará en cuanto MP nos confirme (suele ser instantáneo).');
       url.searchParams.delete('plan');
       window.history.replaceState({}, '', url.toString());
-      setTimeout(cargar, 2500);
+      setTimeout(() => { cargar(); notificarPlanCambiado(); }, 2500);
     }
   }, []);
 
@@ -592,7 +827,7 @@ function PlanProCard() {
           {plan?.dev_activation && (
             <button onClick={async () => {
               setWorking(true);
-              try { await pagosApi.activarProDev(); success('Pro activado (modo dev).'); await cargar(); }
+              try { await pagosApi.activarProDev(); success('Pro activado (modo dev).'); await cargar(); notificarPlanCambiado(); }
               catch (e) { error(e.response?.data?.error || e.message); }
               finally    { setWorking(false); }
             }} disabled={working} className="btn-secondary btn-sm" title="Activa Pro sin pasar por MP (solo dev)">
@@ -826,7 +1061,7 @@ function EmptyMini({ titulo, desc }) {
 }
 
 /* ──────────── Recompensas Tab (organizador define cliente + empleado) ──────────── */
-function RecompensasTab() {
+export function RecompensasTab() {
   const { success, error: toastErr } = useToast();
   const [aud, setAud] = useState('cliente'); // cliente | empleado
   const [items, setItems] = useState([]);
@@ -964,7 +1199,7 @@ function RecompensasTab() {
 }
 
 /* ──────────── Notificaciones Tab ──────────── */
-function NotificacionesTab() {
+export function NotificacionesTab() {
   const { success, error: toastErr } = useToast();
   const { supported, permission, subscribed, working, subscribe, unsubscribe, test } = usePush();
 

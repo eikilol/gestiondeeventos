@@ -136,6 +136,178 @@ export const TEMPLATES = [
       },
     ],
   },
+
+  {
+    key: 'webinar',
+    nombre: 'Webinar / evento virtual',
+    desc: 'Online-first: foco en el acceso virtual, agenda y speakers. Para charlas remotas, demos y clases en vivo.',
+    accent: 'from-primary/30 to-primary/10',
+    preview: ['Hero claro', 'Cómo conectarse', 'Agenda en vivo', 'Speakers'],
+    pages: [
+      {
+        id: id('p'),
+        nombre: 'Inicio',
+        blocks: [
+          { id: id(), type: 'hero', data: { titulo: 'Sumate desde donde estés', subtitulo: 'Un evento 100% online. Te mandamos el link de acceso al registrarte.', imagen: '', cta_texto: 'Registrarme gratis', cta_url: '#tickets' } },
+          { id: id(), type: 'titulo',      data: {} },
+          { id: id(), type: 'descripcion', data: {} },
+          { id: id(), type: 'info',        data: {} },
+          { id: id(), type: 'countdown',   data: { titulo: 'Empieza en', fecha: null } },
+          { id: id(), type: 'texto', data: {
+            titulo: '¿Cómo me conecto?',
+            texto: '1. Registrate con tu email.\n2. Recibís el link de acceso por correo (revisá spam).\n3. Te llega un recordatorio 1 hora antes.\n4. Entrás desde cualquier dispositivo, sin instalar nada.',
+          }},
+          { id: id(), type: 'speakers', data: { titulo: 'Quién expone', items: [
+            { nombre: 'Speaker 1', cargo: 'Cargo', empresa: 'Empresa', foto: '', bio: '' },
+            { nombre: 'Speaker 2', cargo: 'Cargo', empresa: 'Empresa', foto: '', bio: '' },
+          ]}},
+          { id: id(), type: 'tickets',     data: {} },
+          { id: id(), type: 'faq', data: { titulo: 'Preguntas frecuentes', items: [
+            { q: '¿Queda grabado?', a: 'Sí, los registrados reciben la grabación por 30 días.' },
+            { q: '¿Necesito cámara?', a: 'No, solo escuchás y participás por chat si querés.' },
+            { q: '¿Tiene costo?', a: 'Indicado en la sección de inscripción.' },
+          ]}},
+          { id: id(), type: 'redes', data: { titulo: 'Seguinos', items: [{ tipo: 'linkedin', url: '' }, { tipo: 'youtube', url: '' }] } },
+          { id: id(), type: 'links',       data: {} },
+        ],
+      },
+    ],
+  },
+
+  {
+    key: 'networking',
+    nombre: 'Networking / meetup',
+    desc: 'Comunidad y contactos. Agenda liviana, quién asiste, ubicación clara. Para meetups, afterworks y encuentros.',
+    accent: 'from-success/30 to-primary/10',
+    preview: ['Hero cálido', 'Para quién es', 'Agenda simple', 'Cómo llegar'],
+    pages: [
+      {
+        id: id('p'),
+        nombre: 'Inicio',
+        blocks: [
+          { id: id(), type: 'hero', data: { titulo: 'Conectá con gente de tu área', subtitulo: 'Una noche para conocer colegas, compartir ideas y ampliar tu red.', imagen: '', cta_texto: 'Reservar mi lugar', cta_url: '#tickets' } },
+          { id: id(), type: 'titulo',      data: {} },
+          { id: id(), type: 'descripcion', data: {} },
+          { id: id(), type: 'texto', data: {
+            titulo: '¿Para quién es?',
+            texto: 'Profesionales, emprendedores y curiosos que quieran ampliar su red en un ambiente relajado. Sin pitch agresivo: charla real.',
+          }},
+          { id: id(), type: 'info',        data: {} },
+          { id: id(), type: 'texto', data: {
+            titulo: 'Cómo es la dinámica',
+            texto: '• 19:00 — Recepción y bienvenida.\n• 19:30 — Ronda de presentaciones rápidas.\n• 20:00 — Networking libre + bebida.\n• 21:30 — Cierre.',
+          }},
+          { id: id(), type: 'tickets',     data: {} },
+          { id: id(), type: 'direccion',   data: {} },
+          { id: id(), type: 'mapa',        data: { titulo: 'Cómo llegar', direccion: '' } },
+          { id: id(), type: 'redes',       data: { titulo: 'Seguinos', items: [{ tipo: 'instagram', url: '' }, { tipo: 'linkedin', url: '' }] } },
+          { id: id(), type: 'links',       data: {} },
+        ],
+      },
+    ],
+  },
+
+  {
+    key: 'gala',
+    nombre: 'Gala / cena benéfica',
+    desc: 'Elegante y formal. Causa, patrocinadores destacados, programa de la noche. Para galas, cenas y recaudaciones.',
+    accent: 'from-warning/30 to-accent/15',
+    preview: ['Hero sobrio', 'La causa', 'Programa', 'Patrocinadores'],
+    pages: [
+      {
+        id: id('p'),
+        nombre: 'Inicio',
+        blocks: [
+          { id: id(), type: 'hero', data: { titulo: 'Una noche con propósito', subtitulo: 'Acompañanos en una velada para celebrar y apoyar una causa que importa.', imagen: '', cta_texto: 'Reservar lugar / mesa', cta_url: '#tickets' } },
+          { id: id(), type: 'portada',     data: {} },
+          { id: id(), type: 'titulo',      data: {} },
+          { id: id(), type: 'descripcion', data: {} },
+          { id: id(), type: 'texto', data: {
+            titulo: 'La causa',
+            texto: 'Lo recaudado se destina a [describir la causa / organización beneficiada]. Cada lugar reservado es un aporte directo.',
+          }},
+          { id: id(), type: 'info',        data: {} },
+          { id: id(), type: 'texto', data: {
+            titulo: 'Programa de la noche',
+            texto: '• Cóctel de recepción.\n• Cena de gala.\n• Palabras y reconocimiento.\n• Subasta / sorteo a beneficio.\n• Música y cierre.',
+          }},
+          { id: id(), type: 'tickets',     data: {} },
+          { id: id(), type: 'direccion',   data: {} },
+          { id: id(), type: 'sponsors',    data: { titulo: 'Gracias a quienes hacen posible esta noche', items: [] } },
+          { id: id(), type: 'cita',        data: { texto: 'Juntos podemos lograr un impacto real.', autor: '— Comité organizador' } },
+          { id: id(), type: 'links',       data: {} },
+        ],
+      },
+    ],
+  },
+
+  {
+    key: 'lanzamiento',
+    nombre: 'Lanzamiento de producto',
+    desc: 'Expectativa y conversión. Hero fuerte, countdown, video, CTA claro. Para launches, releases y reveals.',
+    accent: 'from-accent/30 to-primary/20',
+    preview: ['Hero impactante', 'Countdown', 'Video teaser', 'Qué vas a ver'],
+    pages: [
+      {
+        id: id('p'),
+        nombre: 'Inicio',
+        blocks: [
+          { id: id(), type: 'hero', data: { titulo: 'Algo nuevo está por llegar', subtitulo: 'Sé de los primeros en verlo. Registrate y te avisamos antes que a nadie.', imagen: '', cta_texto: 'Quiero estar', cta_url: '#tickets' } },
+          { id: id(), type: 'countdown',   data: { titulo: 'Revelación en', fecha: null } },
+          { id: id(), type: 'titulo',      data: {} },
+          { id: id(), type: 'descripcion', data: {} },
+          { id: id(), type: 'video',       data: { titulo: 'Teaser', url: '' } },
+          { id: id(), type: 'texto', data: {
+            titulo: 'Qué vas a ver',
+            texto: '• La presentación oficial del producto.\n• Demo en vivo.\n• Preguntas y respuestas con el equipo.\n• Beneficio exclusivo para los que asistan.',
+          }},
+          { id: id(), type: 'info',        data: {} },
+          { id: id(), type: 'tickets',     data: {} },
+          { id: id(), type: 'cta',         data: { texto: 'Reservar mi acceso', url: '#tickets', estilo: 'primary' } },
+          { id: id(), type: 'redes',       data: { titulo: 'Seguí el lanzamiento', items: [{ tipo: 'instagram', url: '' }, { tipo: 'twitter', url: '' }] } },
+          { id: id(), type: 'links',       data: {} },
+        ],
+      },
+    ],
+  },
+
+  {
+    key: 'curso',
+    nombre: 'Curso / formación',
+    desc: 'Multi-sesión y temario. Agenda detallada, instructor, qué te llevás. Para cursos, diplomados y formaciones.',
+    accent: 'from-primary/25 to-success/15',
+    preview: ['Hero formativo', 'Temario', 'Instructor', 'Certificado'],
+    pages: [
+      {
+        id: id('p'),
+        nombre: 'Inicio',
+        blocks: [
+          { id: id(), type: 'hero', data: { titulo: 'Formate con un programa serio', subtitulo: 'Varias sesiones, contenido aplicado y acompañamiento. Cupos limitados.', imagen: '', cta_texto: 'Inscribirme', cta_url: '#tickets' } },
+          { id: id(), type: 'titulo',      data: {} },
+          { id: id(), type: 'descripcion', data: {} },
+          { id: id(), type: 'texto', data: {
+            titulo: 'Temario',
+            texto: '• Módulo 1 — Fundamentos.\n• Módulo 2 — Práctica guiada.\n• Módulo 3 — Casos reales.\n• Módulo 4 — Proyecto final + feedback.',
+          }},
+          { id: id(), type: 'info',        data: {} },
+          { id: id(), type: 'speakers', data: { titulo: 'Tu instructor', items: [
+            { nombre: 'Nombre del instructor', cargo: 'Cargo', empresa: 'Empresa', foto: '', bio: 'Experiencia y por qué está calificado para enseñar esto.' },
+          ]}},
+          { id: id(), type: 'texto', data: {
+            titulo: '¿Qué te llevás?',
+            texto: '• Certificado de finalización.\n• Material descargable.\n• Acceso a la comunidad de egresados.\n• Grabaciones de cada sesión.',
+          }},
+          { id: id(), type: 'tickets',     data: {} },
+          { id: id(), type: 'faq', data: { titulo: 'Preguntas frecuentes', items: [
+            { q: '¿Necesito conocimientos previos?', a: 'Se aclara el nivel requerido al inscribirte.' },
+            { q: '¿Las sesiones quedan grabadas?', a: 'Sí, tenés acceso a las grabaciones.' },
+            { q: '¿Dan certificado?', a: 'Sí, al completar el programa.' },
+          ]}},
+          { id: id(), type: 'links',       data: {} },
+        ],
+      },
+    ],
+  },
 ];
 
 export function TemplatesPicker({ onPick, onCancel }) {

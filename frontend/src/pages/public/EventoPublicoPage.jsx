@@ -5,6 +5,7 @@ import { eventosApi } from '../../api/eventos.js';
 import { pagosApi }   from '../../api/pagos.js';
 import { BLOCKS } from '../events/editor/blocks.jsx';
 import { BrandingProvider, BrandHeader, PoweredBy } from '../../components/public/Branding.jsx';
+import Turnstile, { turnstileActivo } from '../../components/public/Turnstile.jsx';
 
 /* Página pública de un evento.
    Renderiza los bloques de page_json.pages[N].blocks dinámicamente.
@@ -145,15 +146,18 @@ function WaitlistModal({ tipo, slug, onClose }) {
   const [working, setWorking] = useState(false);
   const [done, setDone] = useState(null); // { posicion }
   const [err, setErr] = useState('');
+  const [captcha, setCaptcha] = useState(null);
 
   const submit = async (e) => {
     e.preventDefault();
+    if (turnstileActivo && !captcha) { setErr('Completá la verificación anti-bot.'); return; }
     setWorking(true); setErr('');
     try {
       const { waitlistApi } = await import('../../api/waitlist.js');
       const r = await waitlistApi.join(slug, {
         ticket_type_id: tipo.id,
         nombre: form.nombre, email: form.email,
+        captcha_token: captcha,
       });
       setDone({ posicion: r.entry?.posicion });
     } catch (e) {
@@ -203,6 +207,7 @@ function WaitlistModal({ tipo, slug, onClose }) {
             <input value={form.telefono} onChange={e => setForm(f => ({...f, telefono: e.target.value}))}
               className="input rounded-2xl py-3 text-base" placeholder="300 000 0000" />
           </div>
+          <Turnstile onToken={setCaptcha} />
           <div className="flex items-center justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-full text-sm text-text-2 hover:text-text-1">Cancelar</button>
             <button type="submit" disabled={working}
@@ -222,6 +227,7 @@ function ReservaModal({ tipo, slug, currency, evento, onClose, onSuccess }) {
   const [form, setForm] = useState({ nombre: '', email: '', telefono: '' });
   const [working, setWorking] = useState(false);
   const [err, setErr] = useState('');
+  const [captcha, setCaptcha] = useState(null);
 
   const hasEarly = tipo.early_bird_precio != null && tipo.early_bird_hasta && new Date(tipo.early_bird_hasta) > new Date();
   const precio = hasEarly ? Number(tipo.early_bird_precio) : Number(tipo.precio);
@@ -230,18 +236,21 @@ function ReservaModal({ tipo, slug, currency, evento, onClose, onSuccess }) {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (turnstileActivo && !captcha) { setErr('Completá la verificación anti-bot.'); return; }
     setWorking(true); setErr('');
     try {
       if (isFree || tienePagoSimple) {
         const res = await eventosApi.reservar(slug, {
           ticket_type_id: tipo.id,
           nombre: form.nombre, email: form.email, telefono: form.telefono,
+          captcha_token: captcha,
         });
         onSuccess({ ...res.ticket, requierePago: !isFree, tipo, pagoSimple: tienePagoSimple && !isFree });
       } else {
         const res = await pagosApi.comprar(slug, {
           ticket_type_id: tipo.id,
           nombre: form.nombre, email: form.email, telefono: form.telefono,
+          captcha_token: captcha,
         });
         const url = res.checkout?.init_point || res.checkout?.sandbox_init_point;
         if (!url) throw new Error('Mercado Pago no devolvió el link de pago.');
@@ -307,6 +316,7 @@ function ReservaModal({ tipo, slug, currency, evento, onClose, onSuccess }) {
             Al continuar serás redirigido a <strong className="text-text-1">Mercado Pago</strong> para completar el pago de forma segura. Al volver verás tu boleta con QR.
           </div>
         )}
+        <Turnstile onToken={setCaptcha} />
         <div className="flex items-center justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-full text-sm text-text-2 hover:text-text-1">Cancelar</button>
           <button type="submit" disabled={working}

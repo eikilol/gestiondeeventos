@@ -1,20 +1,38 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { usePlan } from '../../hooks/usePlan.js';
 import logoG from '../../assets/logo-g.svg';
 
 const NAV_SECTIONS = [
   {
     label: 'Principal',
     items: [
-      { to: '/dashboard', icon: HomeIcon,     label: 'Dashboard' },
-      { to: '/eventos',   icon: CalendarIcon, label: 'Eventos'   },
+      { to: '/dashboard',  icon: HomeIcon,     label: 'Dashboard' },
+      { to: '/eventos',    icon: CalendarIcon, label: 'Eventos'   },
+      { to: '/mi-trabajo', icon: BriefcaseIcon, label: 'Mi trabajo' },
     ],
   },
   {
-    label: 'Administración',
+    label: 'Asistente',
     items: [
-      { to: '/usuarios',      icon: UsersIcon,   label: 'Usuarios',      permiso: 'usuarios:ver' },
-      { to: '/configuracion', icon: SettingsIcon, label: 'Configuración' },
+      { to: '/gestbot',   icon: RobotIcon, label: 'Gestbot', pro: true },
+      { to: '/chat',      icon: ChatIcon,  label: 'Chat'  },
+    ],
+  },
+  {
+    label: 'Cuenta',
+    items: [
+      { to: '/pagos',          icon: WalletIcon, label: 'Pagos' },
+      { to: '/notificaciones', icon: BellIcon,   label: 'Notificaciones' },
+      { to: '/recompensas',    icon: GiftIcon,   label: 'Recompensas' },
+      { to: '/white-label',    icon: PaintIcon,  label: 'White-label' },
+    ],
+  },
+  {
+    label: 'Admin',
+    items: [
+      { to: '/usuarios',      icon: UsersIcon,    label: 'Usuarios', permiso: 'usuarios:ver' },
+      { to: '/configuracion', icon: SettingsIcon, label: 'Ajustes' },
     ],
   },
 ];
@@ -32,9 +50,8 @@ export default function Sidebar({ mobile = false, onClose }) {
     .join('')
     .toUpperCase() || 'U';
 
-  /* Pro = futuro. Por ahora se marca solo si el usuario tiene plan='pro' en metadata.
-     Cuando construyamos el upgrade flow, esto se reemplaza con la suscripción real. */
-  const esPro = usuario?.raw?.user_metadata?.plan === 'pro';
+  /* Plan real (lee /me/plan). */
+  const { esPro } = usePlan();
 
   return (
     <aside className={`${mobile ? 'w-full' : 'w-[var(--sidebar-w)]'} h-full flex-shrink-0 bg-surface border-r border-border flex flex-col`}>
@@ -70,7 +87,7 @@ export default function Sidebar({ mobile = false, onClose }) {
         {NAV_SECTIONS.map(section => (
           <div key={section.label}>
             <p className="nav-section">{section.label}</p>
-            {section.items.map(({ to, icon: Icon, label, permiso }) => {
+            {section.items.map(({ to, icon: Icon, label, permiso, pro }) => {
               if (permiso && !hasPermiso(permiso)) return null;
               return (
                 <NavLink
@@ -79,7 +96,13 @@ export default function Sidebar({ mobile = false, onClose }) {
                   className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
                 >
                   <Icon className="w-[18px] h-[18px] flex-shrink-0" />
-                  <span>{label}</span>
+                  <span className="flex-1">{label}</span>
+                  {pro && !esPro && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-accent-light
+                                     bg-accent/15 border border-accent/30 rounded px-1.5 py-0.5">
+                      Pro
+                    </span>
+                  )}
                 </NavLink>
               );
             })}
@@ -114,6 +137,27 @@ function HomeIcon({ className }) {
 }
 function CalendarIcon({ className }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
+}
+function RobotIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v3m-5 3h10a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6a2 2 0 012-2zm2 5h.01M14 14h.01M9 17h6M4 12H3m18 0h-1" /><circle cx="12" cy="3" r="1" /></svg>;
+}
+function ChatIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>;
+}
+function WalletIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h.01M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /></svg>;
+}
+function BellIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>;
+}
+function BriefcaseIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 6V5a2 2 0 012-2h2a2 2 0 012 2v1m4 0H5a2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2zM3 13v5a2 2 0 002 2h14a2 2 0 002-2v-5M12 12v2" /></svg>;
+}
+function PaintIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2h-7a2 2 0 00-2 2v2a4 4 0 01-4 4z" /></svg>;
+}
+function GiftIcon({ className }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v13m0-13a4 4 0 10-4-4 4 4 0 004 4zm0 0a4 4 0 114-4 4 4 0 01-4 4zM5 8h14a1 1 0 011 1v3H4V9a1 1 0 011-1zm0 4h14v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8z" /></svg>;
 }
 function UsersIcon({ className }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;

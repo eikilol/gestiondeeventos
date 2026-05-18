@@ -4,6 +4,11 @@ const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWTOptional } = require('../middleware/auth.js');
 const { signTicketQR } = require('../lib/qr.js');
 const { notificar } = require('../lib/notificar.js');
+const { verifyTurnstile } = require('../lib/turnstile.js');
+
+function clientIp(req) {
+  return (req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || '').trim();
+}
 
 function visitorHash(req) {
   const ip = (req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '').trim();
@@ -88,6 +93,57 @@ router.get('/ticket/:codigo', async (req, res) => {
   res.json({ ticket: data });
 });
 
+/* GET /eventos/publicos/slug/:slug — un evento publicado por slug
+   (lo consume la página pública / preview). */
+router.get('/slug/:slug', async (req, res) => {
+  const { slug } = req.params;
+
+  const { data: evento, error } = await supabase
+    .from('eventos')
+    .select(`
+      id, slug, titulo, descripcion, cover_url, gallery, modalidad,
+      fecha_inicio, fecha_fin, timezone, location_nombre, location_direccion,
+      lat, lng, url_virtual, links, currency, edad_minima,
+      aforo_total, aforo_vendido, page_json, estado,
+      pago_llave, pago_qr_url, pago_instrucciones,
+      categoria:categorias(slug, nombre),
+      organizador:profiles!owner_id(nombre, handle, avatar_url, empresa, branding, empresa_logo_url, plan, plan_expires_at),
+      ticket_types(id, nombre, descripcion, precio, currency, cupo, vendidos,
+                   early_bird_precio, early_bird_hasta, venta_hasta, zonas_acceso, orden, activo)
+    `)
+    .eq('slug', slug)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (error) return res.status(500).json({ error: error.message });
+  if (!evento || evento.estado !== 'publicado') {
+    return res.status(404).json({ error: 'Este evento no existe o no está publicado.' });
+  }
+
+  /* Solo tipos de boleta activos, ordenados */
+  evento.ticket_types = (evento.ticket_types || [])
+    .filter(t => t.activo)
+    .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+
+  /* Plan efectivo del organizador (para white-label / "Powered by") */
+  if (evento.organizador) {
+    const o = evento.organizador;
+    o.plan = (o.plan === 'pro' && (!o.plan_expires_at || new Date(o.plan_expires_at) > new Date()))
+      ? 'pro' : 'free';
+    delete o.plan_expires_at;
+  }
+
+  /* Registro de visita (best-effort, para Analytics) */
+  supabase.from('event_views').insert({
+    evento_id    : evento.id,
+    visitor_hash : visitorHash(req),
+    source       : classifySource(req.headers['referer'] || req.headers['referrer']),
+    referrer     : req.headers['referer'] || null,
+  }).then(() => {}, () => {});
+
+  res.json({ evento });
+});
+
 /* POST /eventos/publicos/slug/:slug/reservar — reservar una boleta gratis.
    Pagos reales (BRE-B) se manejan en otro endpoint con webhook. */
 router.post('/slug/:slug/reservar', async (req, res) => {
@@ -98,6 +154,9 @@ router.post('/slug/:slug/reservar', async (req, res) => {
   if (!email?.includes('@')) return res.status(400).json({ error: 'Email válido requerido.' });
   if (!nombre?.trim())  return res.status(400).json({ error: 'Tu nombre es requerido.' });
 
+  const cap = await verifyTurnstile(req.body.captcha_token, clientIp(req));
+  if (!cap.ok) return res.status(400).json({ error: 'Verificación anti-bot fallida. Recargá e intentá de nuevo.' });
+
   /* Trae el evento + el tipo de ticket que quieren reservar */
   const { data: evento, error: e1 } = await supabase
     .from('eventos')
@@ -106,6 +165,17 @@ router.post('/slug/:slug/reservar', async (req, res) => {
   if (e1) return res.status(500).json({ error: e1.message });
   if (!evento || evento.deleted_at || evento.estado !== 'publicado')
     return res.status(404).json({ error: 'Evento no disponible.' });
+
+  /* Anti-abuso: límite de boletas por email en un mismo evento */
+  const MAX_POR_EMAIL = Number(process.env.MAX_TICKETS_POR_EMAIL || 5);
+  const { count: yaTiene } = await supabase
+    .from('tickets')
+    .select('id', { count: 'exact', head: true })
+    .eq('evento_id', evento.id)
+    .eq('guest_email', email.toLowerCase().trim());
+  if ((yaTiene || 0) >= MAX_POR_EMAIL) {
+    return res.status(429).json({ error: `Alcanzaste el máximo de ${MAX_POR_EMAIL} boletas con este email para este evento.` });
+  }
 
   const { data: tipo, error: e2 } = await supabase
     .from('ticket_types')
@@ -197,6 +267,9 @@ router.post('/slug/:slug/waitlist', async (req, res) => {
   if (!ticket_type_id)       return res.status(400).json({ error: 'Selecciona un tipo de boleta.' });
   if (!email?.includes('@')) return res.status(400).json({ error: 'Email válido requerido.' });
   if (!nombre?.trim())       return res.status(400).json({ error: 'Tu nombre es requerido.' });
+
+  const capWl = await verifyTurnstile(req.body.captcha_token, clientIp(req));
+  if (!capWl.ok) return res.status(400).json({ error: 'Verificación anti-bot fallida. Recargá e intentá de nuevo.' });
 
   const { data: evento, error: e1 } = await supabase
     .from('eventos')

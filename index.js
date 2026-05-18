@@ -22,8 +22,12 @@ app.use((req, _res, next) => {
 });
 
 /* Rutas */
+app.use('/api/v1',           require('./routes/api.js'));
 app.use('/me',               require('./routes/me.js'));
+app.use('/me',               require('./routes/integraciones.js'));
+app.use('/',                 require('./routes/agente.js'));
 app.use('/',                 require('./routes/notificaciones.js'));
+app.use('/',                 require('./routes/solicitudes.js'));
 app.use('/',                 require('./routes/recompensas.js'));
 app.use('/',                 require('./routes/loyalty.js'));
 app.use('/categorias',       require('./routes/categorias.js'));
@@ -43,6 +47,7 @@ app.use('/eventos',          require('./routes/chat.js'));
 app.use('/eventos',          require('./routes/agenda.js'));
 app.use('/eventos',          require('./routes/tareas.js'));
 app.use('/eventos',          require('./routes/waitlist.js'));
+app.use('/eventos',          require('./routes/auditoria.js'));
 app.use('/eventos',          require('./routes/analytics.js'));
 app.use('/eventos',          require('./routes/eventos.js'));
 

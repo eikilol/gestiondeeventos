@@ -3,6 +3,9 @@ const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { slugify, uniqueEventoSlug } = require('../lib/slug.js');
 const { otorgarBadge } = require('../lib/gamificacion.js');
+const { auditar } = require('../lib/auditar.js');
+const { esUrlImagenSegura } = require('../lib/urls.js');
+const { dispatch } = require('../lib/webhooks.js');
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
@@ -42,19 +45,38 @@ router.get('/', async (req, res) => {
   res.json({ eventos: data, total: count ?? 0 });
 });
 
-/* GET /eventos/:id — un evento mío */
+/* GET /eventos/:id — evento del owner O de un miembro activo (vista por rol) */
 router.get('/:id', async (req, res) => {
   const { data, error } = await supabase
     .from('eventos')
     .select('*, categoria:categorias(slug, nombre)')
     .eq('id', req.params.id)
-    .eq('owner_id', req.user.id)
     .is('deleted_at', null)
     .maybeSingle();
 
   if (error) return res.status(500).json({ error: error.message });
   if (!data) return res.status(404).json({ error: 'Evento no encontrado.' });
-  res.json({ evento: data });
+
+  if (String(data.owner_id) === String(req.user.id)) {
+    return res.json({ evento: data, soyOwner: true, permisos: ['*'] });
+  }
+
+  /* ¿Miembro activo? → acceso de solo-rol */
+  const { data: m } = await supabase
+    .from('event_members')
+    .select('custom_permissions, rol, rol_detail:event_roles!rol_id(permissions)')
+    .eq('evento_id', data.id)
+    .eq('user_id', req.user.id)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (!m) return res.status(404).json({ error: 'Evento no encontrado.' });
+
+  const permisos = [...new Set([
+    ...(m.rol_detail?.permissions || []),
+    ...(m.custom_permissions || []),
+  ])];
+  res.json({ evento: data, soyOwner: false, mi_rol: m.rol, permisos });
 });
 
 /* POST /eventos — crear */
@@ -85,6 +107,7 @@ router.post('/', async (req, res) => {
       if ((count || 0) >= 5) otorgarBadge(req.user.id, 'organizador_pro');
     });
 
+  auditar(req, data.id, 'evento.crear', { entidad: 'evento', entidadId: data.id, detalle: { titulo: data.titulo } });
   res.status(201).json({ evento: data });
 });
 
@@ -99,20 +122,54 @@ router.patch('/:id', async (req, res) => {
     .maybeSingle();
   if (e1) return res.status(500).json({ error: e1.message });
   if (!actual) return res.status(404).json({ error: 'Evento no encontrado.' });
-  if (actual.owner_id !== req.user.id) return res.status(403).json({ error: 'No autorizado.' });
+
+  /* Owner edita todo. Miembro activo edita según sus permisos de rol. */
+  let camposPermitidos = null; // null = todos (owner)
+  if (actual.owner_id !== req.user.id) {
+    const { data: m } = await supabase
+      .from('event_members')
+      .select('custom_permissions, rol_detail:event_roles!rol_id(permissions)')
+      .eq('evento_id', actual.id).eq('user_id', req.user.id).eq('status', 'active')
+      .maybeSingle();
+    if (!m) return res.status(403).json({ error: 'No autorizado.' });
+    const perms = new Set([
+      ...(m.rol_detail?.permissions || []),
+      ...(m.custom_permissions || []),
+    ]);
+    camposPermitidos = new Set();
+    if (perms.has('editar_pagina_publica')) camposPermitidos.add('page_json');
+    if (perms.has('gestionar_imagenes')) { camposPermitidos.add('cover_url'); camposPermitidos.add('gallery'); }
+    if (perms.has('editar_evento')) {
+      for (const c of CAMPOS_EDITABLES) {
+        if (!c.startsWith('pago_') && c !== 'page_json') camposPermitidos.add(c);
+      }
+    }
+    if (camposPermitidos.size === 0) {
+      return res.status(403).json({ error: 'Tu rol no puede editar este evento.' });
+    }
+  }
+
+  const puede = (k) => camposPermitidos === null || camposPermitidos.has(k);
 
   const updates = {};
   for (const k of CAMPOS_EDITABLES) {
-    if (k in req.body) updates[k] = req.body[k];
+    if (k in req.body && puede(k)) updates[k] = req.body[k];
   }
 
-  /* Permitir cambiar slug si lo mandan, asegurando unicidad */
-  if (req.body.slug && req.body.slug !== actual.slug) {
+  /* Permitir cambiar slug si lo mandan, asegurando unicidad (solo owner) */
+  if (camposPermitidos === null && req.body.slug && req.body.slug !== actual.slug) {
     updates.slug = await uniqueEventoSlug(supabase, req.body.slug);
   }
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ error: 'Sin cambios.' });
+  }
+
+  /* Seguridad: URLs de imagen provistas a mano deben ser seguras */
+  for (const campo of ['cover_url', 'pago_qr_url']) {
+    if (campo in updates && !esUrlImagenSegura(updates[campo])) {
+      return res.status(400).json({ error: `URL inválida en ${campo}.` });
+    }
   }
 
   const { data, error } = await supabase
@@ -122,6 +179,7 @@ router.patch('/:id', async (req, res) => {
     .select('*, categoria:categorias(slug, nombre)')
     .single();
   if (error) return res.status(500).json({ error: error.message });
+  auditar(req, data.id, 'evento.editar', { entidad: 'evento', entidadId: data.id, detalle: { campos: Object.keys(updates) } });
   res.json({ evento: data });
 });
 
@@ -137,6 +195,7 @@ router.delete('/:id', async (req, res) => {
     .update({ deleted_at: new Date().toISOString(), estado: 'cancelado' })
     .eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
+  auditar(req, req.params.id, 'evento.borrar', { entidad: 'evento', entidadId: req.params.id });
   res.json({ ok: true });
 });
 
@@ -160,6 +219,10 @@ router.post('/:id/estado', async (req, res) => {
     .select('*, categoria:categorias(slug, nombre)').single();
   if (error) return res.status(500).json({ error: error.message });
 
+  auditar(req, req.params.id, 'evento.estado', { entidad: 'evento', entidadId: req.params.id, detalle: { estado } });
+  if (estado === 'publicado') {
+    dispatch(req.user.id, 'evento.publicado', { evento_id: data.id, titulo: data.titulo, slug: data.slug });
+  }
   res.json({ evento: data });
 });
 

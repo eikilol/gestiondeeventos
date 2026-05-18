@@ -2,20 +2,19 @@ const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { notificar } = require('../lib/notificar.js');
+const { auditar } = require('../lib/auditar.js');
+const { assertPermiso } = require('../lib/acceso.js');
 
-/* Se monta en /eventos. Los paths internos incluyen :eventoId.
-   Esto evita issues con path-to-regexp v6 al usar param en mount path. */
+/* Se monta en /eventos. Los paths internos incluyen :eventoId. */
 const router = express.Router();
 router.use(verifySupabaseJWT);
 
-/* Helper: verifica que el usuario sea owner del evento */
-async function assertOwner(eventoId, userId) {
-  const { data, error } = await supabase
-    .from('eventos').select('id, owner_id').eq('id', eventoId).maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Evento no encontrado.');
-  if (data.owner_id !== userId) throw new Error('No autorizado.');
-  return data;
+const PERMS_EQUIPO = ['invitar_staff', 'gestionar_roles', 'remover_miembros'];
+
+/* Owner o miembro con permiso de equipo. Por defecto cualquiera de los
+   de equipo (para ver la lista); cada acción pasa el suyo específico. */
+function assertOwner(eventoId, userId, perms = PERMS_EQUIPO) {
+  return assertPermiso(eventoId, userId, perms, 'id, owner_id');
 }
 
 /* GET /eventos/:eventoId/equipo — listar miembros + el owner */
@@ -55,7 +54,7 @@ router.post('/:eventoId/equipo', async (req, res) => {
   if (!rol_id)                        return res.status(400).json({ error: 'Selecciona un rol primero.' });
 
   try {
-    await assertOwner(eventoId, req.user.id);
+    await assertOwner(eventoId, req.user.id, ['invitar_staff']);
 
     /* Verifica que el rol pertenezca al evento */
     const { data: rol } = await supabase
@@ -103,6 +102,7 @@ router.post('/:eventoId/equipo', async (req, res) => {
       });
     }
 
+    auditar(req, eventoId, 'equipo.invitar', { entidad: 'miembro', entidadId: data.id, detalle: { email: email.toLowerCase(), rol: rol.nombre } });
     res.status(201).json({ miembro: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
@@ -116,7 +116,7 @@ router.patch('/:eventoId/equipo/:miembroId', async (req, res) => {
   if (!rol_id) return res.status(400).json({ error: 'rol_id requerido.' });
 
   try {
-    await assertOwner(eventoId, req.user.id);
+    await assertOwner(eventoId, req.user.id, ['gestionar_roles']);
     const { data: rol } = await supabase
       .from('event_roles').select('id, nombre').eq('id', rol_id).eq('evento_id', eventoId).maybeSingle();
     if (!rol) return res.status(400).json({ error: 'Rol inválido para este evento.' });
@@ -130,6 +130,7 @@ router.patch('/:eventoId/equipo/:miembroId', async (req, res) => {
       .single();
 
     if (error) return res.status(500).json({ error: error.message });
+    auditar(req, eventoId, 'equipo.rol', { entidad: 'miembro', entidadId: miembroId, detalle: { rol: rol.nombre } });
     res.json({ miembro: data });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });
@@ -140,13 +141,14 @@ router.patch('/:eventoId/equipo/:miembroId', async (req, res) => {
 router.delete('/:eventoId/equipo/:miembroId', async (req, res) => {
   const { eventoId, miembroId } = req.params;
   try {
-    await assertOwner(eventoId, req.user.id);
+    await assertOwner(eventoId, req.user.id, ['remover_miembros']);
     const { error } = await supabase
       .from('event_members')
       .update({ status: 'removed' })
       .eq('id', miembroId)
       .eq('evento_id', eventoId);
     if (error) return res.status(500).json({ error: error.message });
+    auditar(req, eventoId, 'equipo.quitar', { entidad: 'miembro', entidadId: miembroId });
     res.json({ ok: true });
   } catch (e) {
     res.status(e.message === 'No autorizado.' ? 403 : 400).json({ error: e.message });

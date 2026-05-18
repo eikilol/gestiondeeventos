@@ -45,19 +45,38 @@ router.get('/', async (req, res) => {
   res.json({ eventos: data, total: count ?? 0 });
 });
 
-/* GET /eventos/:id — un evento mío */
+/* GET /eventos/:id — evento del owner O de un miembro activo (vista por rol) */
 router.get('/:id', async (req, res) => {
   const { data, error } = await supabase
     .from('eventos')
     .select('*, categoria:categorias(slug, nombre)')
     .eq('id', req.params.id)
-    .eq('owner_id', req.user.id)
     .is('deleted_at', null)
     .maybeSingle();
 
   if (error) return res.status(500).json({ error: error.message });
   if (!data) return res.status(404).json({ error: 'Evento no encontrado.' });
-  res.json({ evento: data });
+
+  if (String(data.owner_id) === String(req.user.id)) {
+    return res.json({ evento: data, soyOwner: true, permisos: ['*'] });
+  }
+
+  /* ¿Miembro activo? → acceso de solo-rol */
+  const { data: m } = await supabase
+    .from('event_members')
+    .select('custom_permissions, rol, rol_detail:event_roles!rol_id(permissions)')
+    .eq('evento_id', data.id)
+    .eq('user_id', req.user.id)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (!m) return res.status(404).json({ error: 'Evento no encontrado.' });
+
+  const permisos = [...new Set([
+    ...(m.rol_detail?.permissions || []),
+    ...(m.custom_permissions || []),
+  ])];
+  res.json({ evento: data, soyOwner: false, mi_rol: m.rol, permisos });
 });
 
 /* POST /eventos — crear */

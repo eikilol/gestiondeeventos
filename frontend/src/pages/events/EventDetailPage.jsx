@@ -50,6 +50,23 @@ const TAB_GRUPO = Object.fromEntries(
   GRUPOS.flatMap(g => g.items.map(it => [it.id, g.label]))
 );
 
+/* Permiso requerido para que un MIEMBRO (no owner) vea cada tab.
+   null = visible para todo el equipo. El owner siempre ve todo. */
+const TAB_PERM = {
+  resumen: null, publica: 'editar_pagina_publica',
+  tickets: 'gestionar_tickets', pagos: 'ver_pagos', analytics: 'ver_analytics',
+  checkin: 'checkin', gente: 'ver_clientes', waitlist: 'ver_clientes',
+  equipo: ['gestionar_roles', 'invitar_staff', 'remover_miembros'],
+  agenda: null, tareas: null, solicitudes: null, chat: null,
+};
+function puedeVerTab(id, soyOwner, permisos) {
+  if (soyOwner) return true;
+  const req = TAB_PERM[id];
+  if (req == null) return true;
+  const arr = Array.isArray(req) ? req : [req];
+  return arr.some(p => (permisos || []).includes(p));
+}
+
 export default function EventDetailPage() {
   const { id }                       = useParams();
   const navigate                     = useNavigate();
@@ -62,11 +79,21 @@ export default function EventDetailPage() {
   const [tab,     setTab]     = useState('resumen');
   const [err,     setErr]     = useState('');
   const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [soyOwner, setSoyOwner] = useState(true);
+  const [permisos, setPermisos] = useState(['*']);
 
   useEffect(() => {
     setLoading(true);
     eventosApi.get(id)
-      .then(data => setEvento(data.evento))
+      .then(data => {
+        setEvento(data.evento);
+        const owner = data.soyOwner !== false;
+        setSoyOwner(owner);
+        setPermisos(data.permisos || ['*']);
+        if (!owner) {
+          setTab(t => puedeVerTab(t, false, data.permisos || []) ? t : 'resumen');
+        }
+      })
       .catch(e   => setErr(e.message))
       .finally(()=> setLoading(false));
   }, [id]);
@@ -133,12 +160,15 @@ export default function EventDetailPage() {
       {/* NAV agrupada: grupos + Chat aparte; sub-tabs del grupo activo */}
       {(() => {
         const esChat = tab === 'chat';
-        const grupoActivo = esChat ? null : (TAB_GRUPO[tab] || GRUPOS[0].label);
-        const grupo = GRUPOS.find(g => g.label === grupoActivo);
+        const gruposVis = GRUPOS
+          .map(g => ({ ...g, items: g.items.filter(it => puedeVerTab(it.id, soyOwner, permisos)) }))
+          .filter(g => g.items.length);
+        const grupoActivo = esChat ? null : (TAB_GRUPO[tab] || gruposVis[0]?.label);
+        const grupo = gruposVis.find(g => g.label === grupoActivo);
         return (
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-              {GRUPOS.map(g => {
+              {gruposVis.map(g => {
                 const act = g.label === grupoActivo;
                 return (
                   <button

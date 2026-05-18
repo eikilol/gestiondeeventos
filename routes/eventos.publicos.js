@@ -107,7 +107,7 @@ router.get('/slug/:slug', async (req, res) => {
       aforo_total, aforo_vendido, page_json, estado,
       pago_llave, pago_qr_url, pago_instrucciones,
       categoria:categorias(slug, nombre),
-      organizador:profiles!owner_id(nombre, handle, avatar_url, empresa, branding, empresa_logo_url),
+      organizador:profiles!owner_id(nombre, handle, avatar_url, empresa, branding, empresa_logo_url, plan, plan_expires_at),
       ticket_types(id, nombre, descripcion, precio, currency, cupo, vendidos,
                    early_bird_precio, early_bird_hasta, venta_hasta, zonas_acceso, orden, activo)
     `)
@@ -124,6 +124,14 @@ router.get('/slug/:slug', async (req, res) => {
   evento.ticket_types = (evento.ticket_types || [])
     .filter(t => t.activo)
     .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+
+  /* Plan efectivo del organizador (para white-label / "Powered by") */
+  if (evento.organizador) {
+    const o = evento.organizador;
+    o.plan = (o.plan === 'pro' && (!o.plan_expires_at || new Date(o.plan_expires_at) > new Date()))
+      ? 'pro' : 'free';
+    delete o.plan_expires_at;
+  }
 
   /* Registro de visita (best-effort, para Analytics) */
   supabase.from('event_views').insert({

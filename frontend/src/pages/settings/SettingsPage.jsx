@@ -188,13 +188,31 @@ function WhiteLabelTab() {
   const [logo,     setLogo]    = useState(usuario?.raw?.user_metadata?.empresa_logo_url || '');
   const [primary,  setPrimary] = useState(branding.primary || '#3B82F6');
   const [accent,   setAccent]  = useState(branding.accent || '#8B5CF6');
+  const [bg,       setBg]      = useState(branding.bg || '#070C18');
+  const [font,     setFont]    = useState(branding.font || 'sans');
   const [plataforma, setPlataforma] = useState(branding.plataforma || '');
+  const [tagline,  setTagline] = useState(branding.tagline || '');
+  const [web,      setWeb]     = useState(branding.web || '');
+  const [instagram, setInstagram] = useState(branding.instagram || '');
+  const [whatsapp, setWhatsapp] = useState(branding.whatsapp || '');
+  const [footer,   setFooter]  = useState(branding.footer || '');
   const [saving, setSaving] = useState(false);
+
+  const FONT_CSS = {
+    sans   : "'Inter', system-ui, sans-serif",
+    display: "'Space Grotesk', 'Inter', sans-serif",
+    serif  : "Georgia, 'Times New Roman', serif",
+    mono   : "'JetBrains Mono', monospace",
+  };
 
   const onGuardar = async () => {
     setSaving(true);
     try {
-      const newBranding = { primary, accent, plataforma };
+      const newBranding = {
+        primary, accent, bg, font, plataforma, tagline,
+        web: web.trim() || null, instagram: instagram.trim() || null,
+        whatsapp: whatsapp.trim() || null, footer: footer.trim() || null,
+      };
       await supabase.auth.updateUser({
         data: { branding: newBranding, empresa_logo_url: logo || null },
       });
@@ -202,7 +220,7 @@ function WhiteLabelTab() {
         empresa_logo_url: logo || null,
         branding: newBranding,
       }).eq('id', usuario.id);
-      success('Branding guardado.');
+      success('Branding guardado. Se aplica en tus páginas públicas.');
     } catch (e) { error(e.message); }
     finally    { setSaving(false); }
   };
@@ -238,9 +256,59 @@ function WhiteLabelTab() {
               <p className="text-xs text-text-3 mt-1.5">Lo que verán tus asistentes en lugar de &quot;GESTEK&quot;.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="field">
+              <label className="label">Frase / tagline</label>
+              <input
+                value={tagline} onChange={e => setTagline(e.target.value)}
+                placeholder="Experiencias inolvidables"
+                className="input rounded-2xl py-3"
+              />
+              <p className="text-xs text-text-3 mt-1.5">Aparece bajo el nombre en el header público.</p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               <ColorField label="Color primario"  value={primary} onChange={setPrimary} />
               <ColorField label="Color accent"    value={accent}  onChange={setAccent} />
+              <ColorField label="Fondo público"   value={bg}      onChange={setBg} />
+            </div>
+
+            <div className="field">
+              <label className="label">Tipografía</label>
+              <select value={font} onChange={e => setFont(e.target.value)}
+                className="input rounded-2xl py-3" style={{ fontFamily: FONT_CSS[font] }}>
+                <option value="sans">Inter (moderna)</option>
+                <option value="display">Space Grotesk (display)</option>
+                <option value="serif">Serif (elegante)</option>
+                <option value="mono">Mono (técnica)</option>
+              </select>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="field">
+                <label className="label">Sitio web</label>
+                <input value={web} onChange={e => setWeb(e.target.value)}
+                  placeholder="https://tuempresa.com" className="input rounded-2xl py-3" />
+              </div>
+              <div className="field">
+                <label className="label">Instagram</label>
+                <input value={instagram} onChange={e => setInstagram(e.target.value)}
+                  placeholder="https://instagram.com/tu" className="input rounded-2xl py-3" />
+              </div>
+              <div className="field">
+                <label className="label">WhatsApp</label>
+                <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)}
+                  placeholder="+57 300 000 0000" className="input rounded-2xl py-3" />
+              </div>
+            </div>
+
+            <div className="field">
+              <label className="label">Texto del footer (Pro)</label>
+              <input value={footer} onChange={e => setFooter(e.target.value)}
+                placeholder="© 2026 Tu Empresa · Todos los derechos reservados"
+                className="input rounded-2xl py-3" />
+              <p className="text-xs text-text-3 mt-1.5">
+                En Pro reemplaza el &quot;gestionado con GESTEK&quot;. Vacío = sin footer.
+              </p>
             </div>
 
             <div className="flex justify-end">
@@ -253,25 +321,31 @@ function WhiteLabelTab() {
           {/* Preview */}
           <aside>
             <p className="label">Vista previa</p>
-            <div className="rounded-3xl border border-border-2 overflow-hidden">
-              {/* "Navbar" simulado */}
-              <div className="px-4 py-3 flex items-center gap-2 border-b border-border" style={{ background: `linear-gradient(90deg, ${primary}15, ${accent}10)` }}>
+            <div className="rounded-3xl border border-border-2 overflow-hidden"
+                 style={{ background: bg, fontFamily: FONT_CSS[font] }}>
+              {/* Header de marca simulado */}
+              <div className="px-4 py-3 flex items-center gap-2.5 border-b border-white/10">
                 {logo
-                  ? <img src={logo} alt="" className="w-7 h-7 rounded-lg object-cover" />
-                  : <div className="w-7 h-7 rounded-lg" style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }} />}
-                <span className="text-sm font-bold text-text-1">{plataforma || 'Tu plataforma'}</span>
+                  ? <img src={logo} alt="" className="w-8 h-8 rounded-lg object-cover" />
+                  : <div className="w-8 h-8 rounded-lg" style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }} />}
+                <div>
+                  <span className="block text-sm font-bold text-white">{plataforma || 'Tu plataforma'}</span>
+                  {tagline && <span className="block text-[11px] text-white/60">{tagline}</span>}
+                </div>
               </div>
-              <div className="p-4 space-y-3 bg-surface">
-                <div className="aspect-video rounded-xl" style={{ background: `linear-gradient(135deg, ${primary}30, ${accent}20)` }} />
-                <p className="text-base font-semibold text-text-1">Tu evento aquí</p>
-                <p className="text-sm text-text-2 leading-relaxed">Así se vería el header de tus páginas públicas con tus colores.</p>
+              <div className="p-4 space-y-3">
+                <div className="aspect-video rounded-xl" style={{ background: `linear-gradient(135deg, ${primary}40, ${accent}25)` }} />
+                <p className="text-base font-semibold text-white">Tu evento aquí</p>
+                <p className="text-sm text-white/60 leading-relaxed">Así se ven tus páginas públicas con tu marca.</p>
                 <button className="px-4 py-2 rounded-full text-sm font-semibold text-white" style={{ background: primary }}>
                   Reservar
                 </button>
+                {footer && <p className="text-[10px] text-white/40 pt-2">{footer}</p>}
               </div>
             </div>
             <p className="text-xs text-text-3 mt-3 leading-relaxed">
-              La aplicación real del branding en las páginas públicas se habilita con el plan Pro. Por ahora guardas tus preferencias.
+              Con plan Pro esto se aplica de verdad en las páginas públicas de tus eventos
+              (colores, fondo, tipografía, header y footer).
             </p>
           </aside>
         </div>

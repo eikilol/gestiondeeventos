@@ -4,8 +4,10 @@
    localStorage. Adjuntar PDFs/imágenes para que el bot los analice. */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import Criatura from '../../components/agente/Criatura.jsx';
 import { agenteApi } from '../../api/agente.js';
+import { usePlan } from '../../hooks/usePlan.js';
 
 const LS_KEY = 'gestbot:convs';
 const SALUDO = {
@@ -55,6 +57,7 @@ export default function GestbotPage() {
   const [adjuntos, setAdjuntos] = useState([]);
   const scrollRef = useRef(null);
   const fileRef   = useRef(null);
+  const { esPro, loading: planLoading } = usePlan();
 
   const conv = convs.find(c => c.id === activa) || convs[0];
   const mensajes = conv.mensajes;
@@ -171,6 +174,26 @@ export default function GestbotPage() {
     : mood === 'happy' ? '¡Listo! Resultado correcto ✓'
     : mood === 'error' ? 'Hubo un problema con la solicitud'
     : mood === 'talking' ? 'Respondiendo…' : 'Listo para ayudarte';
+
+  if (!planLoading && !esPro) {
+    return (
+      <div className="max-w-lg mx-auto mt-12 text-center space-y-5">
+        <div className="flex justify-center"><Criatura mood="happy" size={170} /></div>
+        <span className="inline-block text-[11px] uppercase tracking-widest text-accent-light
+                         border border-accent/40 rounded-full px-3 py-1">Función Pro</span>
+        <h1 className="text-2xl font-display font-bold text-text-1">Gestbot es parte del plan Pro</h1>
+        <p className="text-text-2">
+          Tu asistente de eventos con IA — crea y publica eventos, arma boletas,
+          analiza PDFs y más, hablando en lenguaje natural. Disponible al activar Pro.
+        </p>
+        <Link to="/configuracion"
+          className="inline-block rounded-xl bg-gradient-primary px-6 py-3 text-white font-semibold
+                     hover:opacity-90 active:scale-95 transition">
+          Activar Pro
+        </Link>
+      </div>
+    );
+  }
 
   if (disponible === false) {
     return (

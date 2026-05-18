@@ -34,11 +34,11 @@ const GRUPOS = [
     { id: 'agenda',  label: 'Agenda' },
   ] },
   { label: 'Facturación', items: [
+    { id: 'tickets',   label: 'Boletas' },
     { id: 'pagos',     label: 'Pagos' },
     { id: 'analytics', label: 'Analytics' },
   ] },
   { label: 'Asistentes', items: [
-    { id: 'tickets',  label: 'Tickets' },
     { id: 'checkin',  label: 'Check-in' },
     { id: 'gente',    label: 'Clientes' },
     { id: 'waitlist', label: 'Lista de espera' },

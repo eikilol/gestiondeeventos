@@ -93,6 +93,49 @@ router.get('/ticket/:codigo', async (req, res) => {
   res.json({ ticket: data });
 });
 
+/* GET /eventos/publicos/slug/:slug — un evento publicado por slug
+   (lo consume la página pública / preview). */
+router.get('/slug/:slug', async (req, res) => {
+  const { slug } = req.params;
+
+  const { data: evento, error } = await supabase
+    .from('eventos')
+    .select(`
+      id, slug, titulo, descripcion, cover_url, gallery, modalidad,
+      fecha_inicio, fecha_fin, timezone, location_nombre, location_direccion,
+      lat, lng, url_virtual, links, currency, edad_minima,
+      aforo_total, aforo_vendido, page_json, estado,
+      pago_llave, pago_qr_url, pago_instrucciones,
+      categoria:categorias(slug, nombre),
+      organizador:profiles!owner_id(nombre, handle, avatar_url, empresa, branding, empresa_logo_url),
+      ticket_types(id, nombre, descripcion, precio, currency, cupo, vendidos,
+                   early_bird_precio, early_bird_hasta, venta_hasta, zonas_acceso, orden, activo)
+    `)
+    .eq('slug', slug)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (error) return res.status(500).json({ error: error.message });
+  if (!evento || evento.estado !== 'publicado') {
+    return res.status(404).json({ error: 'Este evento no existe o no está publicado.' });
+  }
+
+  /* Solo tipos de boleta activos, ordenados */
+  evento.ticket_types = (evento.ticket_types || [])
+    .filter(t => t.activo)
+    .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+
+  /* Registro de visita (best-effort, para Analytics) */
+  supabase.from('event_views').insert({
+    evento_id    : evento.id,
+    visitor_hash : visitorHash(req),
+    source       : classifySource(req.headers['referer'] || req.headers['referrer']),
+    referrer     : req.headers['referer'] || null,
+  }).then(() => {}, () => {});
+
+  res.json({ evento });
+});
+
 /* POST /eventos/publicos/slug/:slug/reservar — reservar una boleta gratis.
    Pagos reales (BRE-B) se manejan en otro endpoint con webhook. */
 router.post('/slug/:slug/reservar', async (req, res) => {

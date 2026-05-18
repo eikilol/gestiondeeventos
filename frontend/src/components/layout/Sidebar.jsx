@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { usePlan } from '../../hooks/usePlan.js';
 import logoG from '../../assets/logo-g.svg';
 
 const NAV_SECTIONS = [
@@ -8,8 +9,13 @@ const NAV_SECTIONS = [
     items: [
       { to: '/dashboard', icon: HomeIcon,     label: 'Dashboard' },
       { to: '/eventos',   icon: CalendarIcon, label: 'Eventos'   },
-      { to: '/gestbot',   icon: RobotIcon,    label: 'Gestbot'   },
-      { to: '/chat',      icon: ChatIcon,     label: 'Chat'      },
+    ],
+  },
+  {
+    label: 'Asistente & Comunicación',
+    items: [
+      { to: '/gestbot',   icon: RobotIcon, label: 'Gestbot', pro: true },
+      { to: '/chat',      icon: ChatIcon,  label: 'Chat'  },
     ],
   },
   {
@@ -34,9 +40,8 @@ export default function Sidebar({ mobile = false, onClose }) {
     .join('')
     .toUpperCase() || 'U';
 
-  /* Pro = futuro. Por ahora se marca solo si el usuario tiene plan='pro' en metadata.
-     Cuando construyamos el upgrade flow, esto se reemplaza con la suscripción real. */
-  const esPro = usuario?.raw?.user_metadata?.plan === 'pro';
+  /* Plan real (lee /me/plan). */
+  const { esPro } = usePlan();
 
   return (
     <aside className={`${mobile ? 'w-full' : 'w-[var(--sidebar-w)]'} h-full flex-shrink-0 bg-surface border-r border-border flex flex-col`}>
@@ -72,7 +77,7 @@ export default function Sidebar({ mobile = false, onClose }) {
         {NAV_SECTIONS.map(section => (
           <div key={section.label}>
             <p className="nav-section">{section.label}</p>
-            {section.items.map(({ to, icon: Icon, label, permiso }) => {
+            {section.items.map(({ to, icon: Icon, label, permiso, pro }) => {
               if (permiso && !hasPermiso(permiso)) return null;
               return (
                 <NavLink
@@ -81,7 +86,13 @@ export default function Sidebar({ mobile = false, onClose }) {
                   className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
                 >
                   <Icon className="w-[18px] h-[18px] flex-shrink-0" />
-                  <span>{label}</span>
+                  <span className="flex-1">{label}</span>
+                  {pro && !esPro && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-accent-light
+                                     bg-accent/15 border border-accent/30 rounded px-1.5 py-0.5">
+                      Pro
+                    </span>
+                  )}
                 </NavLink>
               );
             })}

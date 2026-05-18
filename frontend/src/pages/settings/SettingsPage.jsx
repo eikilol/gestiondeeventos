@@ -6,6 +6,7 @@ import AvatarUploader from '../../components/ui/AvatarUploader.jsx';
 import { supabase } from '../../lib/supabase.js';
 import { pagosApi } from '../../api/pagos.js';
 import { usePush } from '../../hooks/usePush.js';
+import { notificarPlanCambiado } from '../../hooks/usePlan.js';
 
 const TABS = [
   { label: 'Perfil',         icon: UserIcon       },
@@ -61,31 +62,37 @@ export default function SettingsPage() {
   const initials = usuario?.nombre?.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'U';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-[fadeUp_0.4s_ease_both]">
+    <div className="max-w-6xl mx-auto space-y-6 animate-[fadeUp_0.4s_ease_both]">
       <div>
-        <h1 className="text-xl font-bold font-display text-text-1">Configuración</h1>
+        <h1 className="text-2xl font-bold font-display text-text-1">Configuración</h1>
         <p className="text-sm text-text-2 mt-0.5">Administra tu cuenta y opciones de la plataforma.</p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-border">
-        {TABS.map((t, i) => {
-          const Icon = t.icon;
-          return (
-            <button
-              key={i}
-              onClick={() => setTab(i)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px
-                ${tab === i
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-text-2 hover:text-text-1'}`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+      <div className="grid lg:grid-cols-[230px_1fr] gap-6 items-start">
+        {/* Nav lateral de secciones */}
+        <nav className="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar
+                        lg:bg-surface/60 lg:border lg:border-border-2 lg:rounded-2xl lg:p-2 lg:sticky lg:top-2">
+          {TABS.map((t, i) => {
+            const Icon = t.icon;
+            return (
+              <button
+                key={i}
+                onClick={() => setTab(i)}
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium
+                  whitespace-nowrap transition-all flex-shrink-0
+                  ${tab === i
+                    ? 'bg-gradient-primary text-white shadow-glow-sm'
+                    : 'text-text-2 hover:text-text-1 hover:bg-surface-2'}`}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {t.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Contenido de la sección activa */}
+        <div className="min-w-0 space-y-6">
 
       {/* Perfil */}
       {tab === 0 && (
@@ -178,6 +185,8 @@ export default function SettingsPage() {
       {/* API */}
       {/* Integraciones (API + Webhooks) */}
       {tab === 6 && <IntegracionesTab />}
+        </div>
+      </div>
     </div>
   );
 }
@@ -682,7 +691,7 @@ function PlanProCard() {
       success('¡Pago recibido! Tu plan Pro se activará en cuanto MP nos confirme (suele ser instantáneo).');
       url.searchParams.delete('plan');
       window.history.replaceState({}, '', url.toString());
-      setTimeout(cargar, 2500);
+      setTimeout(() => { cargar(); notificarPlanCambiado(); }, 2500);
     }
   }, []);
 
@@ -724,7 +733,7 @@ function PlanProCard() {
           {plan?.dev_activation && (
             <button onClick={async () => {
               setWorking(true);
-              try { await pagosApi.activarProDev(); success('Pro activado (modo dev).'); await cargar(); }
+              try { await pagosApi.activarProDev(); success('Pro activado (modo dev).'); await cargar(); notificarPlanCambiado(); }
               catch (e) { error(e.response?.data?.error || e.message); }
               finally    { setWorking(false); }
             }} disabled={working} className="btn-secondary btn-sm" title="Activa Pro sin pasar por MP (solo dev)">

@@ -24,6 +24,7 @@ export default function AgenteGestek() {
   const [input, setInput]       = useState('');
   const [cargando, setCargando] = useState(false);
   const [mood, setMood]         = useState('idle');
+  const [formActivo, setForm]   = useState(null);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function AgenteGestek() {
     const msg = (texto ?? input).trim();
     if (!msg || cargando) return;
     setInput('');
+    setForm(null);
     const histo = [...mensajes, { role: 'user', content: msg }];
     setMensajes(histo);
     setCargando(true);
@@ -52,6 +54,8 @@ export default function AgenteGestek() {
       );
       setMensajes(m => [...m, { role: 'assistant', content: r.reply, acciones: r.acciones }]);
       setMood(r.mood || 'talking');
+      setForm(r.formulario && Array.isArray(r.formulario.campos) && r.formulario.campos.length
+        ? r.formulario : null);
       /* Si creó/publicó un evento, ofrecemos navegar */
       const navAccion = (r.acciones || []).find(
         a => a.ok && ['crear_evento', 'publicar_evento', 'editar_evento', 'duplicar_evento', 'cambiar_estado_evento'].includes(a.tool)
@@ -66,6 +70,17 @@ export default function AgenteGestek() {
       setCargando(false);
     }
   }, [input, mensajes, cargando]);
+
+  const enviarFormulario = useCallback((valores) => {
+    const f = formActivo;
+    if (!f) return;
+    const lineas = f.campos.map(c => {
+      const v = valores[c.clave];
+      return `- ${c.etiqueta}: ${v == null || v === '' ? '(sin dato)' : v}`;
+    });
+    setForm(null);
+    enviar(`Datos de "${f.titulo}":\n${lineas.join('\n')}`);
+  }, [formActivo, enviar]);
 
   if (disponible === false) return null;   // servidor sin IA → no estorbar
 
@@ -150,7 +165,15 @@ export default function AgenteGestek() {
               </div>
             )}
 
-            {mensajes.length === 1 && !cargando && (
+            {formActivo && !cargando && (
+              <FormAgente
+                form={formActivo}
+                onSubmit={enviarFormulario}
+                onCancel={() => setForm(null)}
+              />
+            )}
+
+            {mensajes.length === 1 && !cargando && !formActivo && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {SUGERENCIAS.map((s, i) => (
                   <button key={i} onClick={() => enviar(s)}
@@ -196,5 +219,95 @@ export default function AgenteGestek() {
         </div>
       )}
     </>
+  );
+}
+
+/* ── Formulario estructurado que envía el agente ── */
+const TIPO_INPUT = {
+  texto: 'text', numero: 'number', email: 'email',
+  telefono: 'tel', fecha: 'date', fechahora: 'datetime-local',
+};
+
+function FormAgente({ form, onSubmit, onCancel }) {
+  const [vals, setVals] = useState({});
+  const set = (k, v) => setVals(s => ({ ...s, [k]: v }));
+
+  const submit = (e) => {
+    e.preventDefault();
+    const faltan = (form.campos || [])
+      .filter(c => c.requerido !== false &&
+        (vals[c.clave] == null || String(vals[c.clave]).trim() === ''));
+    if (faltan.length) {
+      set('__err', `Completa: ${faltan.map(c => c.etiqueta).join(', ')}`);
+      return;
+    }
+    onSubmit(vals);
+  };
+
+  return (
+    <form onSubmit={submit}
+      className="rounded-2xl border border-accent/40 bg-surface-2/80 p-3.5 space-y-3 animate-scale-in">
+      <div>
+        <p className="font-display font-semibold text-text-1 text-sm">{form.titulo}</p>
+        {form.descripcion && <p className="text-xs text-text-2 mt-0.5">{form.descripcion}</p>}
+      </div>
+
+      {(form.campos || []).map((c, i) => (
+        <div key={c.clave || i} className="space-y-1">
+          <label className="block text-xs font-medium text-text-2">
+            {i + 1}. {c.etiqueta}
+            {c.requerido !== false && <span className="text-danger"> *</span>}
+          </label>
+          {c.tipo === 'textarea' ? (
+            <textarea
+              rows={2}
+              placeholder={c.placeholder || ''}
+              value={vals[c.clave] || ''}
+              onChange={(e) => set(c.clave, e.target.value)}
+              className="w-full resize-none rounded-lg bg-surface border border-border
+                         px-2.5 py-2 text-sm text-text-1 placeholder:text-text-3
+                         focus:outline-none focus:border-primary/60"
+            />
+          ) : c.tipo === 'opcion' ? (
+            <select
+              value={vals[c.clave] || ''}
+              onChange={(e) => set(c.clave, e.target.value)}
+              className="w-full rounded-lg bg-surface border border-border
+                         px-2.5 py-2 text-sm text-text-1 focus:outline-none focus:border-primary/60"
+            >
+              <option value="">— elegir —</option>
+              {(c.opciones || []).map((o, j) => (
+                <option key={j} value={o}>{o}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type={TIPO_INPUT[c.tipo] || 'text'}
+              placeholder={c.placeholder || ''}
+              value={vals[c.clave] || ''}
+              onChange={(e) => set(c.clave, e.target.value)}
+              className="w-full rounded-lg bg-surface border border-border
+                         px-2.5 py-2 text-sm text-text-1 placeholder:text-text-3
+                         focus:outline-none focus:border-primary/60"
+            />
+          )}
+        </div>
+      ))}
+
+      {vals.__err && <p className="text-xs text-danger">{vals.__err}</p>}
+
+      <div className="flex gap-2 pt-1">
+        <button type="submit"
+          className="flex-1 rounded-lg bg-gradient-primary py-2 text-sm font-semibold text-white
+                     hover:opacity-90 active:scale-95 transition">
+          Enviar a Gestek
+        </button>
+        <button type="button" onClick={onCancel}
+          className="rounded-lg border border-border px-3 py-2 text-sm text-text-2
+                     hover:text-text-1 hover:border-border-2 transition">
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }

@@ -23,20 +23,31 @@ import WaitlistTab      from './tabs/WaitlistTab.jsx';
 
 /* Workspace por evento. Header + tabs. Cada tab carga su contenido. */
 
-const TABS = [
-  { id: 'resumen',  label: 'Resumen' },
-  { id: 'publica',  label: 'Página pública' },
-  { id: 'equipo',   label: 'Equipo y roles' },
-  { id: 'chat',     label: 'Chat' },
-  { id: 'tickets',  label: 'Tickets' },
-  { id: 'agenda',   label: 'Agenda' },
-  { id: 'tareas',   label: 'Tareas' },
-  { id: 'gente',    label: 'Clientes' },
-  { id: 'checkin',  label: 'Check-in' },
-  { id: 'pagos',    label: 'Pagos' },
-  { id: 'analytics',label: 'Analytics' },
-  { id: 'waitlist',  label: 'Lista de espera' },
+const GRUPOS = [
+  { label: 'General', items: [
+    { id: 'resumen', label: 'Resumen' },
+    { id: 'publica', label: 'Página pública' },
+  ] },
+  { label: 'Asistentes', items: [
+    { id: 'tickets',  label: 'Tickets' },
+    { id: 'gente',    label: 'Clientes' },
+    { id: 'checkin',  label: 'Check-in' },
+    { id: 'waitlist', label: 'Lista de espera' },
+  ] },
+  { label: 'Organización', items: [
+    { id: 'equipo',  label: 'Equipo y roles' },
+    { id: 'agenda',  label: 'Agenda' },
+    { id: 'tareas',  label: 'Tareas' },
+    { id: 'chat',    label: 'Chat' },
+  ] },
+  { label: 'Facturación', items: [
+    { id: 'pagos',     label: 'Pagos' },
+    { id: 'analytics', label: 'Analytics' },
+  ] },
 ];
+const TAB_GRUPO = Object.fromEntries(
+  GRUPOS.flatMap(g => g.items.map(it => [it.id, g.label]))
+);
 
 export default function EventDetailPage() {
   const { id }                       = useParams();
@@ -118,27 +129,48 @@ export default function EventDetailPage() {
         onBroadcast={() => setBroadcastOpen(true)}
       />
 
-      {/* TABS */}
-      <div className="relative">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-border -mx-4 px-4 sm:mx-0 sm:px-0">
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`relative px-4 py-3.5 text-[15px] font-medium whitespace-nowrap transition-colors
-                ${tab === t.id ? 'text-text-1' : 'text-text-3 hover:text-text-2'}
-              `}
-            >
-              {t.label}
-              {tab === t.id && (
-                <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-text-1 animate-[fadeIn_0.2s_ease_both]" />
-              )}
-            </button>
-          ))}
-        </div>
-        {/* Gradient fade indicador de scroll horizontal en mobile */}
-        <div className="sm:hidden absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-bg to-transparent pointer-events-none" />
-      </div>
+      {/* NAV agrupada: grupos arriba, sub-tabs del grupo activo abajo */}
+      {(() => {
+        const grupoActivo = TAB_GRUPO[tab] || GRUPOS[0].label;
+        const items = (GRUPOS.find(g => g.label === grupoActivo) || GRUPOS[0]).items;
+        return (
+          <div className="space-y-3">
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+              {GRUPOS.map(g => {
+                const act = g.label === grupoActivo;
+                return (
+                  <button
+                    key={g.label}
+                    onClick={() => setTab(g.items[0].id)}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all
+                      ${act
+                        ? 'bg-gradient-primary text-white shadow-glow-sm'
+                        : 'bg-surface-2 text-text-3 hover:text-text-1 border border-border'}`}
+                  >
+                    {g.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-border
+                            -mx-4 px-4 sm:mx-0 sm:px-0">
+              {items.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`relative px-4 py-3 text-[15px] font-medium whitespace-nowrap transition-colors
+                    ${tab === t.id ? 'text-text-1' : 'text-text-3 hover:text-text-2'}`}
+                >
+                  {t.label}
+                  {tab === t.id && (
+                    <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary animate-[fadeIn_0.2s_ease_both]" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* TAB CONTENT */}
       <div key={tab} className="animate-[fadeUp_0.3s_cubic-bezier(0.16,1,0.3,1)_both]">

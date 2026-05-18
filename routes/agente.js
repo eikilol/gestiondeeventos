@@ -19,13 +19,13 @@ router.post('/me/agente/chat', async (req, res) => {
     });
   }
 
-  const { mensajes } = req.body || {};
+  const { mensajes, archivos } = req.body || {};
   if (!Array.isArray(mensajes) || mensajes.length === 0) {
     return res.status(400).json({ error: 'mensajes requerido.' });
   }
 
   try {
-    const out = await agente.chat(req.user.id, mensajes);
+    const out = await agente.chat(req.user.id, mensajes, archivos);
     res.json(out);
   } catch (e) {
     console.warn('[agente] chat error:', e.message);

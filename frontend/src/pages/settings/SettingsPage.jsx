@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { confirmDialog } from '../../components/ui/Confirm.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
@@ -446,7 +447,7 @@ function IntegracionesTab() {
     finally     { setBusy(false); }
   };
   const revocar = async (id) => {
-    if (!window.confirm('¿Revocar este token? Las integraciones que lo usen dejarán de funcionar.')) return;
+    if (!(await confirmDialog({ message:('¿Revocar este token? Las integraciones que lo usen dejarán de funcionar.'), danger:true }))) return;
     try {
       const { integracionesApi } = await import('../../api/integraciones.js');
       await integracionesApi.revocarToken(id); success('Token revocado.'); cargar();
@@ -463,7 +464,7 @@ function IntegracionesTab() {
     finally     { setBusy(false); }
   };
   const borrarWebhook = async (id) => {
-    if (!window.confirm('¿Borrar webhook?')) return;
+    if (!(await confirmDialog({ message:('¿Borrar webhook?'), danger:true }))) return;
     try {
       const { integracionesApi } = await import('../../api/integraciones.js');
       await integracionesApi.borrarWebhook(id); success('Borrado.'); cargar();
@@ -647,7 +648,7 @@ export function PagosTab() {
   };
 
   const onDesconectar = async () => {
-    if (!window.confirm('¿Desconectar tu cuenta de Mercado Pago? Los pagos quedarán deshabilitados.')) return;
+    if (!(await confirmDialog({ message:('¿Desconectar tu cuenta de Mercado Pago? Los pagos quedarán deshabilitados.'), danger:true }))) return;
     setWorking(true);
     try {
       await pagosApi.desconectar();
@@ -1114,7 +1115,7 @@ export function RecompensasTab() {
     } catch (e) { toastErr(e.message); }
   };
   const borrar = async (r) => {
-    if (!window.confirm(`¿Borrar "${r.titulo}"?`)) return;
+    if (!(await confirmDialog({ message:(`¿Borrar "${r.titulo}"?`), danger:true }))) return;
     try {
       const { recompensasApi } = await import('../../api/loyalty.js');
       await recompensasApi.borrar(r.id);

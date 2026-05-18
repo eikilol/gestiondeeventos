@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { confirmDialog } from '../../../components/ui/Confirm.jsx';
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -90,15 +91,15 @@ export default function PageBuilder({ evento, onClose }) {
     if (!nombre?.trim()) return;
     setPages(p => p.map(x => x.id === id ? { ...x, nombre: nombre.trim() } : x));
   };
-  const removePage = (id) => {
+  const removePage = async (id) => {
     if (pages.length <= 1) { toastErr('No puedes borrar la única página.'); return; }
-    if (!window.confirm('¿Borrar esta página y todos sus bloques?')) return;
+    if (!(await confirmDialog({ message:('¿Borrar esta página y todos sus bloques?'), danger:true }))) return;
     setPages(p => p.filter(x => x.id !== id));
     if (activeId === id) setActiveId(pages.find(p => p.id !== id)?.id);
   };
 
-  const aplicarTemplate = (template) => {
-    if (!window.confirm(`¿Reemplazar la página actual "${activePage?.nombre}" con la plantilla "${template.nombre}"? Los bloques existentes se borrarán.`)) return;
+  const aplicarTemplate = async (template) => {
+    if (!(await confirmDialog({ message:(`¿Reemplazar la página actual "${activePage?.nombre}" con la plantilla "${template.nombre}"? Los bloques existentes se borrarán.`), danger:true }))) return;
     const nuevasPages = instanciarTemplate(template);
     /* Reemplazamos solo la página activa con la primera página del template,
        agregando el resto como páginas nuevas. */

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { confirmDialog } from '../../../components/ui/Confirm.jsx';
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors, useDraggable, useDroppable } from '@dnd-kit/core';
 import { tareasApi } from '../../../api/tareas.js';
 import { equipoApi } from '../../../api/equipo.js';
@@ -80,7 +81,7 @@ export default function TareasTab({ evento }) {
   };
 
   const onBorrar = async (t) => {
-    if (!window.confirm(`¿Borrar "${t.titulo}"?`)) return;
+    if (!(await confirmDialog({ message:(`¿Borrar "${t.titulo}"?`), danger:true }))) return;
     try { await tareasApi.borrar(evento.id, t.id); success('Tarea borrada.'); reload(); }
     catch (e) { toastErr(e.message); }
   };

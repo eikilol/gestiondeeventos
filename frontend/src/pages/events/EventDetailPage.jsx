@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { confirmDialog } from '../../components/ui/Confirm.jsx';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { eventosApi } from '../../api/eventos.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -105,7 +106,7 @@ export default function EventDetailPage() {
   };
 
   const doAction = async (action, confirmMsg) => {
-    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    if (confirmMsg && !(await confirmDialog({ message:(confirmMsg), danger:true }))) return;
     setWorking(true);
     try {
       if (action === 'publicar') await eventosApi.publicar(id);
@@ -120,7 +121,7 @@ export default function EventDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('¿Eliminar este evento? Esta acción no se puede deshacer.')) return;
+    if (!(await confirmDialog({ message:('¿Eliminar este evento? Esta acción no se puede deshacer.'), danger:true }))) return;
     setWorking(true);
     try {
       await eventosApi.delete(id);

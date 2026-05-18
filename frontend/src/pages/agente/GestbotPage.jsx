@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import Criatura from '../../components/agente/Criatura.jsx';
 import { agenteApi } from '../../api/agente.js';
 import { usePlan } from '../../hooks/usePlan.js';
+import { alertDialog } from '../../components/ui/Confirm.jsx';
 
 const LS_KEY = 'gestbot:convs';
 const SALUDO = {
@@ -155,7 +156,7 @@ export default function GestbotPage() {
     })));
     const ok = leidos.filter(Boolean);
     const total = ok.reduce((s, a) => s + a.size, 0);
-    if (total > 7 * 1024 * 1024) { alert('Los adjuntos superan 7 MB. Sube archivos más livianos.'); return; }
+    if (total > 7 * 1024 * 1024) { alertDialog('Los adjuntos superan 7 MB. Sube archivos más livianos.'); return; }
     setAdjuntos(a => [...a, ...ok].slice(0, 5));
   };
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { confirmDialog } from '../../../components/ui/Confirm.jsx';
 import { waitlistApi } from '../../../api/waitlist.js';
 import { useToast } from '../../../context/ToastContext.jsx';
 import GLoader from '../../../components/ui/GLoader.jsx';
@@ -60,7 +61,7 @@ export default function WaitlistTab({ evento }) {
   };
 
   const eliminar = async (waitlistId) => {
-    if (!window.confirm('¿Quitar esta persona de la lista de espera?')) return;
+    if (!(await confirmDialog({ message:('¿Quitar esta persona de la lista de espera?'), danger:true }))) return;
     try {
       await waitlistApi.remove(evento.id, waitlistId);
       success('Entrada eliminada.');

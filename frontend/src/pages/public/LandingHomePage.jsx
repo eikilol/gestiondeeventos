@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import Criatura from '../../components/agente/Criatura.jsx';
 
 function useReveal(threshold = 0.15) {
   const ref = useRef(null);
@@ -157,6 +158,13 @@ function Hero() {
         <p className={`mt-4 text-base sm:text-lg text-primary-light font-semibold tracking-[0.3em] uppercase transition-all duration-700 delay-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           Manage · Automate · Scale
         </p>
+
+        <div className={`mt-6 flex justify-center transition-all duration-700 delay-250 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/40
+                           bg-accent/10 text-accent-light text-xs sm:text-sm font-semibold">
+            ✦ La primera plataforma de gestión de eventos con IA que los automatiza
+          </span>
+        </div>
 
         <p className={`mt-8 text-lg sm:text-2xl text-text-2 max-w-3xl mx-auto leading-relaxed transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           La plataforma de gestión de eventos que reemplaza tu stack actual.
@@ -517,45 +525,89 @@ function CodeMockup() {
 /* ─────────── AI Pro callout ─────────── */
 function AIPro() {
   const [ref, visible] = useReveal();
-  return (
-    <section className="px-5 sm:px-8 py-24 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-accent/12 blur-[160px] rounded-full animate-[glowPulse_8s_ease-in-out_infinite]" />
-      </div>
-      <div ref={ref} className={`relative max-w-4xl mx-auto text-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/30 bg-accent/10 text-accent-light text-xs font-semibold uppercase tracking-widest mb-6">
-          Plan Pro · Opcional
-        </span>
-        <h2 className="text-4xl sm:text-5xl font-bold font-display tracking-tight text-text-1 leading-tight mb-5">
-          Gestbot — tu asistente IA<br />que opera el evento por ti
-        </h2>
-        <p className="text-base sm:text-lg text-text-2 max-w-2xl mx-auto mb-10 leading-relaxed">
-          Háblale en lenguaje natural y ejecuta de verdad: crea y publica eventos, arma
-          boletas, registra check-ins, manda recordatorios, gestiona equipo y más — más de
-          50 acciones reales. Te pide los datos con formularios y hasta lee un PDF o fotos
-          para armar el evento.
-        </p>
+  const MOODS = ['idle', 'thinking', 'talking', 'happy'];
+  const [mi, setMi] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setMi(i => (i + 1) % MOODS.length), 2600);
+    return () => clearInterval(id);
+  }, []);
 
-        <div className="rounded-3xl border border-accent/25 bg-surface/60 backdrop-blur p-6 sm:p-8 text-left max-w-2xl mx-auto">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="w-9 h-9 rounded-full bg-text-1 flex-shrink-0" />
-            <div className="flex-1 px-4 py-3 rounded-2xl rounded-tl-sm bg-bg/60 border border-border text-sm text-text-1">
-              Organiza un summit de tecnología para 200 personas el 15 de agosto en Ibagué, modalidad híbrida, entrada gratuita.
+  return (
+    <section className="px-5 sm:px-8 py-28 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[760px] h-[560px] bg-accent/14 blur-[170px] rounded-full animate-[glowPulse_8s_ease-in-out_infinite]" />
+        <div className="absolute top-1/3 right-1/4 w-[360px] h-[360px] bg-primary/12 blur-[140px] rounded-full animate-[glowPulse_7s_ease-in-out_infinite_1s]" />
+      </div>
+
+      <div ref={ref} className={`relative max-w-6xl mx-auto transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+        {/* Claim de protagonismo */}
+        <div className="text-center mb-12">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/40 bg-accent/10 text-accent-light text-xs font-semibold uppercase tracking-widest mb-6">
+            ✦ Primera plataforma de eventos con IA que opera por ti
+          </span>
+          <h2 className="text-4xl sm:text-6xl font-bold font-display tracking-tight text-text-1 leading-[1.05] mb-5">
+            Conoce a <span className="bg-gradient-to-br from-primary-light to-accent-light bg-clip-text text-transparent">Gestbot</span>
+          </h2>
+          <p className="text-base sm:text-xl text-text-2 max-w-2xl mx-auto leading-relaxed">
+            No es un chatbot que sugiere: <strong className="text-text-1">ejecuta</strong>. Crea y
+            publica eventos, arma boletas, hace check-ins, manda recordatorios, gestiona tu
+            equipo — <strong className="text-text-1">50+ acciones reales</strong>. Le hablas, te
+            pide lo que falta con formularios y hasta lee un PDF o fotos para armar el evento.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
+          {/* El robot, protagonista */}
+          <div className="relative flex items-center justify-center">
+            <div className="absolute w-72 h-72 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 blur-2xl" />
+            <div className="relative">
+              <Criatura mood={MOODS[mi]} size={300} />
+            </div>
+            <div className="absolute bottom-2 px-4 py-1.5 rounded-full bg-surface/80 backdrop-blur
+                            border border-border-2 text-xs text-text-2">
+              {MOODS[mi] === 'thinking' ? 'trabajando…' : MOODS[mi] === 'happy' ? '¡listo!' : 'en línea'}
             </div>
           </div>
-          <div className="flex items-start gap-3 flex-row-reverse">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">IA</div>
-            <div className="flex-1 px-4 py-3 rounded-2xl rounded-tr-sm bg-accent/10 border border-accent/20 text-sm text-text-1">
-              Listo. Creé <span className="font-semibold">Summit Tech Ibagué 2026</span> con 200 cupos, fecha 15 Ago,
-              agenda base de 6 bloques, página pública y QR de asistencia. ¿Publico ahora?
+
+          {/* Conversación */}
+          <div className="rounded-3xl border border-accent/25 bg-surface/60 backdrop-blur p-6 sm:p-7 text-left space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-text-1/90 flex-shrink-0" />
+              <div className="flex-1 px-4 py-3 rounded-2xl rounded-tl-sm bg-bg/60 border border-border text-sm text-text-1">
+                Crea un summit de tecnología para 200 personas el 15 de agosto en Ibagué, híbrido, entrada gratis.
+              </div>
+            </div>
+            <div className="flex items-start gap-3 flex-row-reverse">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold">G</div>
+              <div className="flex-1 px-4 py-3 rounded-2xl rounded-tr-sm bg-accent/10 border border-accent/20 text-sm text-text-1">
+                Listo ✅ Creé <span className="font-semibold">Summit Tech Ibagué 2026</span> (200 cupos, 15 Ago,
+                híbrido), agenda base, página pública y QR. ¿Lo publico?
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-text-1/90 flex-shrink-0" />
+              <div className="flex-1 px-4 py-3 rounded-2xl rounded-tl-sm bg-bg/60 border border-border text-sm text-text-1">
+                Publícalo y crea una boleta VIP a 50.000.
+              </div>
+            </div>
+            <div className="flex items-start gap-3 flex-row-reverse">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold">G</div>
+              <div className="flex-1 px-4 py-3 rounded-2xl rounded-tr-sm bg-accent/10 border border-accent/20 text-sm text-text-1">
+                Hecho 🎉 Evento publicado y boleta <span className="font-semibold">VIP · $50.000</span> creada.
+              </div>
             </div>
           </div>
         </div>
 
-        <Link to="/planes" className="inline-flex items-center gap-2 mt-10 text-sm text-accent-light hover:text-accent transition-colors">
-          Ver plan Pro
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-        </Link>
+        <div className="text-center mt-12">
+          <Link to="/register?plan=pro"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-primary to-accent
+                       text-white text-sm font-semibold hover:opacity-90 transition-all shadow-glow-accent">
+            Probar Gestbot 14 días gratis
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+          </Link>
+          <p className="text-xs text-text-3 mt-3">Función Pro · sin tarjeta · cancela cuando quieras</p>
+        </div>
       </div>
     </section>
   );

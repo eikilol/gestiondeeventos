@@ -55,7 +55,7 @@ const TAB_GRUPO = Object.fromEntries(
 const TAB_PERM = {
   resumen: null, publica: 'editar_pagina_publica',
   tickets: 'gestionar_tickets', pagos: 'ver_pagos', analytics: 'ver_analytics',
-  checkin: 'checkin', gente: 'ver_clientes', waitlist: 'ver_clientes',
+  checkin: 'checkin', gente: 'ver_clientes', waitlist: '__solo_owner__',
   equipo: ['gestionar_roles', 'invitar_staff', 'remover_miembros'],
   agenda: null, tareas: null, solicitudes: null, chat: null,
 };

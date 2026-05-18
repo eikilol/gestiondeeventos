@@ -2,17 +2,14 @@ const express = require('express');
 const supabase = require('../lib/supabase.js');
 const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { auditar } = require('../lib/auditar.js');
+const { assertPermiso } = require('../lib/acceso.js');
 
 const router = express.Router();
 router.use(verifySupabaseJWT);
 
-async function assertOwner(eventoId, userId) {
-  const { data, error } = await supabase
-    .from('eventos').select('id, owner_id, currency').eq('id', eventoId).maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Evento no encontrado.');
-  if (data.owner_id !== userId) throw new Error('No autorizado.');
-  return data;
+/* Owner o miembro con permiso 'gestionar_tickets'. */
+function assertOwner(eventoId, userId) {
+  return assertPermiso(eventoId, userId, ['gestionar_tickets'], 'id, owner_id, currency');
 }
 
 const CAMPOS_EDITABLES = [

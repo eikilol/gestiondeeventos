@@ -4,6 +4,7 @@ const { verifySupabaseJWT } = require('../middleware/auth.js');
 const { verifyTicketQR, signTicketQR } = require('../lib/qr.js');
 const { otorgarPuntos, otorgarBadge } = require('../lib/gamificacion.js');
 const { dispatch } = require('../lib/webhooks.js');
+const { assertPermiso } = require('../lib/acceso.js');
 
 function generarCodigo() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -15,13 +16,10 @@ function generarCodigo() {
 const router = express.Router();
 router.use(verifySupabaseJWT);
 
-async function assertOwner(eventoId, userId) {
-  const { data, error } = await supabase
-    .from('eventos').select('id, owner_id').eq('id', eventoId).maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Evento no encontrado.');
-  if (data.owner_id !== userId) throw new Error('No autorizado.');
-  return data;
+/* Owner o miembro con permiso. Por defecto 'gestionar_clientes'
+   (editar/importar); el listado acepta también 'ver_clientes'. */
+function assertOwner(eventoId, userId, perms = ['gestionar_clientes']) {
+  return assertPermiso(eventoId, userId, perms, 'id, owner_id');
 }
 
 /* Verifica que el usuario es owner O miembro con permiso 'checkin'. */
@@ -49,7 +47,7 @@ router.get('/:eventoId/clientes', async (req, res) => {
   const hasta = desde + Number(limit) - 1;
 
   try {
-    await assertOwner(eventoId, req.user.id);
+    await assertOwner(eventoId, req.user.id, ['ver_clientes', 'gestionar_clientes']);
 
     let query = supabase
       .from('tickets')

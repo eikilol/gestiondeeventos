@@ -299,87 +299,57 @@ function HeroDashMockup() {
 /* ─────────── MARQUEE infinito ─────────── */
 function Marquee() {
   const items = [
-    'CREAR EVENTOS',
-    'QR DE ASISTENCIA',
-    'RECORDATORIOS EMAIL',
-    'GAMIFICACIÓN',
-    'PAGOS BRE-B',
-    'API + WEBHOOKS',
-    'PÁGINA PÚBLICA',
-    'MULTI-TENANT',
-    'NOTIFICACIONES',
-    'ANALYTICS',
-    'INSCRIPCIONES',
-    'CHECK-IN',
+    { label: 'Crear eventos', icon: '📅' },
+    { label: 'QR Check-in', icon: '📱' },
+    { label: 'Pagos BRE-B', icon: '💳' },
+    { label: 'Gamificación', icon: '🏆' },
+    { label: 'API + Webhooks', icon: '🔗' },
+    { label: 'Recordatorios', icon: '🔔' },
+    { label: 'Analytics', icon: '📊' },
+    { label: 'Multi-tenant', icon: '🏢' },
+    { label: 'White-label', icon: '🎨' },
+    { label: 'Inscripciones', icon: '✅' },
   ];
   return (
-    <div className="relative border-y border-border py-7 overflow-hidden bg-gradient-to-r from-bg via-surface/40 to-bg">
-      <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
-      <div className="flex items-center gap-14 animate-marquee" style={{ width: 'max-content', animationDirection: 'reverse' }}>
+    <div className="relative overflow-hidden py-5" style={{ borderTop: '1px solid rgba(16,185,129,0.12)', borderBottom: '1px solid rgba(16,185,129,0.12)', background: 'rgba(6,20,16,0.6)' }}>
+      <div className="absolute inset-y-0 left-0 w-24 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, #020B07, transparent)' }} />
+      <div className="absolute inset-y-0 right-0 w-24 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, #020B07, transparent)' }} />
+      <div className="flex items-center gap-8 animate-marquee" style={{ width: 'max-content' }}>
         {[...items, ...items].map((t, i) => (
-          <div key={i} className="flex items-center gap-14 flex-shrink-0">
-            <span className="text-sm font-semibold tracking-[0.25em] text-text-2 whitespace-nowrap hover:text-text-1 transition-colors">
-              {t}
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-primary/40 flex-shrink-0" />
-          </div>
+          <span key={i} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full flex-shrink-0 text-xs font-semibold tracking-wide text-text-2 hover:text-primary-light transition-colors"
+                style={{ border: '1px solid rgba(16,185,129,0.15)', background: 'rgba(16,185,129,0.05)' }}>
+            <span>{t.icon}</span>{t.label}
+          </span>
         ))}
       </div>
     </div>
   );
 }
 
-/* ─────────── VALUE PROPS ─────────── */
+/* ─────────── VALUE PROPS — fila horizontal con líneas divisorias ─────────── */
 function Stats() {
   const props = [
-    {
-      kicker: 'Velocidad',
-      title: 'Eventos grandes',
-      highlight: '< 15 min',
-      desc: 'Wizard de 4 pasos. Sin curva de aprendizaje, sin onboarding obligatorio.',
-    },
-    {
-      kicker: 'Cero comisiones',
-      title: 'Cobra boletas',
-      highlight: 'directo a ti',
-      desc: 'Pasarela BRE-B con tu llave o QR. El dinero entra a tu cuenta, no a la nuestra.',
-    },
-    {
-      kicker: 'Sin trucos',
-      title: 'Empieza',
-      highlight: 'gratis',
-      desc: 'Crea y vende sin tarjeta. Pro suma IA, API, white-label y más — con 14 días de prueba.',
-    },
-    {
-      kicker: 'Escala',
-      title: 'API y agente IA',
-      highlight: 'cuando los necesites',
-      desc: 'Si tu volumen crece, Pro suma agente IA, white-label y API. No antes.',
-    },
+    { numero: '< 15 min', etiq: 'Crear un evento', desc: 'Wizard de 4 pasos sin curva de aprendizaje.' },
+    { numero: '0%',       etiq: 'Comisión BRE-B',  desc: 'El dinero va directo a tu cuenta.' },
+    { numero: '∞',        etiq: 'Eventos gratis',   desc: 'Sin límite de eventos ni asistentes.' },
+    { numero: '50+',      etiq: 'Acciones con IA',  desc: 'Gestbot ejecuta, no solo sugiere.' },
   ];
   return (
-    <section className="relative px-5 sm:px-8 py-20 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/4 w-[300px] h-[300px] bg-primary/6 blur-[120px] rounded-full" />
-        <div className="absolute top-1/2 right-1/4 w-[300px] h-[300px] bg-accent/6 blur-[120px] rounded-full" />
-      </div>
-      <div className="relative max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {props.map((p, i) => (
-          <div
-            key={p.title}
-            className="group relative p-6 rounded-3xl border border-border bg-surface/40 hover:bg-surface/70 hover:border-border-2 hover:-translate-y-1 transition-all overflow-hidden"
-            style={{ animationDelay: `${i * 100}ms` }}
-          >
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/8 rounded-full blur-2xl group-hover:bg-primary/15 transition-colors" />
-            <p className="relative text-[10px] uppercase tracking-widest text-primary-light font-bold mb-4">{p.kicker}</p>
-            <h3 className="relative text-xl font-bold font-display text-text-1 leading-tight mb-1">{p.title}</h3>
-            <p className="relative text-2xl font-bold font-display bg-gradient-to-br from-primary-light to-accent-light bg-clip-text text-transparent mb-3">
-              {p.highlight}
-            </p>
-            <p className="relative text-sm text-text-2 leading-relaxed">{p.desc}</p>
-          </div>
-        ))}
+    <section className="px-5 sm:px-8 py-16">
+      <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden"
+           style={{ border: '1px solid rgba(16,185,129,0.15)', background: 'rgba(6,20,16,0.7)' }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4">
+          {props.map((p, i) => (
+            <div key={p.etiq}
+                 className="group px-7 py-8 hover:bg-primary/5 transition-colors relative"
+                 style={{ borderRight: i < 3 ? '1px solid rgba(16,185,129,0.12)' : 'none',
+                          borderBottom: i < 2 ? '1px solid rgba(16,185,129,0.12)' : 'none' }}>
+              <p className="text-4xl font-bold font-display text-gradient mb-1">{p.numero}</p>
+              <p className="text-sm font-semibold text-text-1 mb-1">{p.etiq}</p>
+              <p className="text-xs text-text-3 leading-relaxed">{p.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -410,34 +380,33 @@ function FreeIntro() {
 function Pillars() {
   const [ref, visible] = useReveal();
   const items = [
-    { title: 'Gratis para empezar', desc: 'Eventos y asistentes ilimitados, QR de check-in, agenda, equipo con roles, fidelidad, chat y página pública. Lo esencial sin pagar.' },
-    { title: 'Pagos sin fricción', desc: 'Conecta tu llave o QR de BRE-B y vende boletas. El dinero va directo a tu cuenta — GESTEK no se queda con comisión.' },
-    { title: 'Pro cuando escalas', desc: 'Gestbot (IA que opera el evento), API + Webhooks y auditoría. 14 días de prueba gratis, luego US$ 19.99/mes.' },
+    { paso: '01', title: 'Gratis para empezar', desc: 'Eventos ilimitados, QR de check-in, agenda, equipo con roles, fidelidad y página pública. Sin tarjeta.', color: 'rgba(16,185,129,0.8)' },
+    { paso: '02', title: 'Pagos directos a ti', desc: 'Conecta tu llave BRE-B y cobra boletas. El dinero va a tu cuenta — GESTEK no cobra comisión.', color: 'rgba(6,182,212,0.8)' },
+    { paso: '03', title: 'IA cuando escales', desc: 'Gestbot ejecuta acciones reales: crea eventos, registra check-ins, envía recordatorios. Plan Pro con 14 días gratis.', color: 'rgba(34,197,94,0.8)' },
   ];
   return (
-    <section className="px-5 sm:px-8 py-24 sm:py-28">
+    <section className="px-5 sm:px-8 py-20 sm:py-24">
       <div className="max-w-5xl mx-auto" ref={ref}>
-        <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          <p className="text-sm uppercase tracking-widest text-primary-light font-semibold mb-4">Por qué GESTEK</p>
+        <div className={`mb-14 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+          <p className="text-xs uppercase tracking-[0.15em] text-primary/70 font-bold mb-3">Por qué GESTEK</p>
           <h2 className="text-4xl sm:text-5xl font-bold font-display text-text-1 tracking-tight leading-tight">
-            Lo principal, en gratis.<br />Lo cómodo, en Pro.
+            Lo principal, en gratis.<br /><span className="text-gradient">Lo cómodo, en Pro.</span>
           </h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="space-y-3">
           {items.map((it, i) => (
-            <div
-              key={it.title}
-              style={{ transitionDelay: `${i * 120}ms` }}
-              className={`group relative p-7 rounded-3xl border border-border bg-surface/40 hover:bg-surface/70 hover:border-border-2 hover:-translate-y-1 transition-all duration-700
-                ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
-            >
-              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-              <div className="relative">
-                <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/25 mb-5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <span className="text-primary-light text-lg font-bold">{i + 1}</span>
-                </div>
-                <h3 className="text-xl font-semibold text-text-1 mb-3">{it.title}</h3>
-                <p className="text-base text-text-2 leading-relaxed">{it.desc}</p>
+            <div key={it.title}
+                 style={{ transitionDelay: `${i * 100}ms`, borderLeft: `3px solid ${it.color}` }}
+                 className={`group flex items-start gap-6 p-6 rounded-2xl transition-all duration-700 hover:-translate-x-1
+                   ${visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'}`}
+                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.06)'}
+                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(6,20,16,0.5)'}
+                 style2={{ background: 'rgba(6,20,16,0.5)', border: '1px solid rgba(16,185,129,0.1)', borderLeft: `3px solid ${it.color}` }}>
+              <span className="text-3xl font-bold font-display flex-shrink-0 w-12 text-right"
+                    style={{ color: it.color, opacity: 0.5 }}>{it.paso}</span>
+              <div>
+                <h3 className="text-lg font-semibold text-text-1 mb-1.5">{it.title}</h3>
+                <p className="text-sm text-text-2 leading-relaxed">{it.desc}</p>
               </div>
             </div>
           ))}
@@ -738,74 +707,81 @@ function AIPro() {
   );
 }
 
-/* ─────────── Pricing teaser ─────────── */
+/* ─────────── Pricing teaser — tabla comparativa ─────────── */
 function PricingTeaser() {
   const [ref, visible] = useReveal();
+  const features = [
+    { label: 'Eventos y asistentes', free: true,  pro: true  },
+    { label: 'QR check-in / check-out', free: true,  pro: true  },
+    { label: 'Agenda + speakers + patrocinadores', free: true,  pro: true  },
+    { label: 'Equipo con roles + chat', free: true,  pro: true  },
+    { label: 'Pagos BRE-B sin comisión', free: true,  pro: true  },
+    { label: 'Gestbot IA (50+ acciones)', free: false, pro: true  },
+    { label: 'API REST + Webhooks HMAC', free: false, pro: true  },
+    { label: 'White-label sin marca', free: false, pro: true  },
+    { label: 'Analytics avanzados', free: false, pro: true  },
+  ];
   return (
     <section className="px-5 sm:px-8 py-24">
-      <div ref={ref} className="max-w-5xl mx-auto">
-        <div className={`text-center mb-12 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          <p className="text-sm uppercase tracking-widest text-primary-light font-semibold mb-4">Planes</p>
-          <h2 className="text-4xl sm:text-5xl font-bold font-display text-text-1 tracking-tight leading-tight mb-4">
-            Empieza gratis. Sube cuando quieras.
+      <div ref={ref} className="max-w-4xl mx-auto">
+        <div className={`mb-12 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+          <p className="text-xs uppercase tracking-[0.15em] text-primary/70 font-bold mb-3">Planes</p>
+          <h2 className="text-4xl sm:text-5xl font-bold font-display text-text-1 tracking-tight leading-tight">
+            Empieza gratis.<br /><span className="text-gradient">Sube cuando quieras.</span>
           </h2>
-          <p className="text-base sm:text-lg text-text-2 max-w-xl mx-auto">
-            Empieza gratis con lo esencial. Pro suma IA, API, white-label y soporte — pruébalo 14 días sin tarjeta.
-          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5">
-          <div className="p-7 rounded-3xl border border-border bg-surface/40 hover:bg-surface/60 transition-all">
-            <h3 className="text-2xl font-bold font-display text-text-1 mb-2">Free</h3>
-            <p className="text-sm text-text-2 mb-5">Lo esencial para empezar, sin tarjeta.</p>
-            <p className="text-4xl font-bold font-display text-text-1 mb-6">$0</p>
-            <ul className="space-y-2.5 text-sm text-text-1 mb-7">
-              {[
-                'Eventos y asistentes ilimitados',
-                'QR de check-in / check-out',
-                'Agenda (Día/Semana/Mes), speakers y patrocinadores',
-                'Equipo con roles + chat + sugerencias',
-                'Fidelidad: puntos, recompensas y ranking',
-                'Pasarela BRE-B sin comisiones',
-                'White-label básico + página pública',
-              ].map(f => (
-                <li key={f} className="flex items-start gap-2"><span className="text-primary-light mt-0.5">✓</span> {f}</li>
-              ))}
-            </ul>
-            <Link to="/register" className="block text-center py-3 rounded-full border border-border-2 hover:bg-surface-2 text-sm font-semibold text-text-1 transition-colors">
-              Crear cuenta gratis
-            </Link>
+        <div className={`rounded-2xl overflow-hidden transition-all duration-700 delay-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+             style={{ border: '1px solid rgba(16,185,129,0.15)' }}>
+          {/* Cabecera */}
+          <div className="grid grid-cols-[1fr_120px_140px]" style={{ background: 'rgba(6,20,16,0.9)', borderBottom: '1px solid rgba(16,185,129,0.12)' }}>
+            <div className="px-6 py-5 text-xs uppercase tracking-widest text-text-3 font-bold">Característica</div>
+            <div className="px-4 py-5 text-center">
+              <p className="text-sm font-bold text-text-1">Free</p>
+              <p className="text-xl font-bold font-display text-text-1">$0</p>
+            </div>
+            <div className="px-4 py-5 text-center" style={{ background: 'rgba(16,185,129,0.08)', borderLeft: '1px solid rgba(16,185,129,0.2)' }}>
+              <p className="text-sm font-bold text-primary-light">Pro ⭐</p>
+              <p className="text-xl font-bold font-display text-text-1">$19.99<span className="text-xs text-text-3 font-normal">/mes</span></p>
+            </div>
           </div>
 
-          <div className="relative p-7 rounded-3xl border border-primary/40 bg-surface/80 shadow-[0_0_60px_rgba(16,185,129,0.12)] hover:shadow-[0_0_80px_rgba(16,185,129,0.2)] transition-all">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-semibold tracking-widest uppercase bg-primary text-white">Recomendado</span>
-            <h3 className="text-2xl font-bold font-display text-text-1 mb-2">Pro</h3>
-            <p className="text-sm text-text-2 mb-5">IA, API, white-label y soporte. 14 días de prueba gratis.</p>
-            <p className="text-4xl font-bold font-display text-text-1 mb-1">$19.99 <span className="text-base text-text-3 font-medium">USD/mes</span></p>
-            <p className="text-xs text-primary-light mb-5">14 días gratis · sin tarjeta · cancela cuando quieras</p>
-            <ul className="space-y-2.5 text-sm text-text-1 mb-7">
-              {[
-                'Todo lo del Free',
-                'Gestbot — asistente IA que opera tu evento',
-                'API REST + Webhooks con HMAC',
-                'White-label sin marca GESTEK',
-                'Auditoría de acciones del equipo',
-                'Analytics avanzados',
-                'Soporte prioritario',
-              ].map(f => (
-                <li key={f} className="flex items-start gap-2"><span className="text-primary-light mt-0.5">✓</span> {f}</li>
-              ))}
-            </ul>
-            <Link to="/register?plan=pro" className="block text-center py-3 rounded-full bg-text-1 text-bg hover:bg-white text-sm font-semibold transition-colors">
-              Probar Pro
-            </Link>
+          {/* Filas */}
+          {features.map((f, i) => (
+            <div key={f.label} className="grid grid-cols-[1fr_120px_140px] hover:bg-primary/3 transition-colors"
+                 style={{ borderBottom: i < features.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+              <div className="px-6 py-3.5 text-sm text-text-2">{f.label}</div>
+              <div className="px-4 py-3.5 flex items-center justify-center">
+                {f.free
+                  ? <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  : <span className="w-4 h-0.5 rounded bg-surface-3" />}
+              </div>
+              <div className="px-4 py-3.5 flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.04)', borderLeft: '1px solid rgba(16,185,129,0.1)' }}>
+                {f.pro
+                  ? <svg className="w-4 h-4 text-primary-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  : <span className="w-4 h-0.5 rounded bg-surface-3" />}
+              </div>
+            </div>
+          ))}
+
+          {/* Footer CTA */}
+          <div className="grid grid-cols-[1fr_120px_140px]" style={{ borderTop: '1px solid rgba(16,185,129,0.12)', background: 'rgba(6,20,16,0.9)' }}>
+            <div className="px-6 py-4 text-xs text-text-3">14 días Pro gratis · sin tarjeta · cancela cuando quieras</div>
+            <div className="px-4 py-4 flex items-center justify-center">
+              <Link to="/register" className="text-xs font-semibold text-text-1 border border-border-2 rounded-full px-4 py-1.5 hover:bg-surface-2 transition-colors">
+                Gratis
+              </Link>
+            </div>
+            <div className="px-4 py-4 flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.06)', borderLeft: '1px solid rgba(16,185,129,0.1)' }}>
+              <Link to="/register?plan=pro" className="text-xs font-semibold text-white bg-primary rounded-full px-4 py-1.5 hover:bg-primary-dark transition-colors shadow-glow-sm">
+                Probar Pro
+              </Link>
+            </div>
           </div>
         </div>
 
-        <p className="text-center text-sm text-text-3 mt-8">
-          <Link to="/planes" className="underline underline-offset-2 hover:text-text-1 transition-colors">
-            Ver comparativa completa
-          </Link>
+        <p className="text-center text-sm text-text-3 mt-6">
+          <Link to="/planes" className="underline underline-offset-2 hover:text-text-1 transition-colors">Ver comparativa completa →</Link>
         </p>
       </div>
     </section>
@@ -821,61 +797,76 @@ function FAQTeaser() {
   ];
   const [open, setOpen] = useState(0);
   return (
-    <section className="px-5 sm:px-8 py-24">
+    <section className="px-5 sm:px-8 py-20">
       <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-10">
-          <p className="text-sm uppercase tracking-widest text-primary-light font-semibold mb-4">Preguntas frecuentes</p>
-          <h2 className="text-3xl sm:text-4xl font-bold font-display text-text-1 tracking-tight">
-            Lo que más nos preguntan
-          </h2>
+        <div className="flex items-end justify-between mb-10 gap-4 flex-wrap">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-primary/70 font-bold mb-2">FAQ</p>
+            <h2 className="text-3xl sm:text-4xl font-bold font-display text-text-1 tracking-tight">
+              Lo que más nos preguntan
+            </h2>
+          </div>
+          <Link to="/faq" className="text-sm text-primary-light hover:underline flex-shrink-0">Ver todas →</Link>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {items.map((f, i) => {
             const isOpen = open === i;
             return (
-              <div key={f.q} className="rounded-2xl border border-border bg-surface/40 overflow-hidden">
-                <button onClick={() => setOpen(isOpen ? -1 : i)} className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-surface/60 transition-colors">
-                  <span className="text-base font-medium text-text-1">{f.q}</span>
-                  <svg className={`w-4 h-4 text-text-2 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
+              <div key={f.q} className="rounded-xl overflow-hidden transition-all"
+                   style={{ border: isOpen ? '1px solid rgba(16,185,129,0.25)' : '1px solid rgba(255,255,255,0.06)',
+                            background: isOpen ? 'rgba(16,185,129,0.06)' : 'rgba(6,20,16,0.6)' }}>
+                <button onClick={() => setOpen(isOpen ? -1 : i)}
+                        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left">
+                  <span className="text-sm font-semibold text-text-1">{f.q}</span>
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all
+                    ${isOpen ? 'bg-primary text-white' : 'bg-surface-3 text-text-2'}`}>
+                    {isOpen ? '−' : '+'}
+                  </span>
                 </button>
-                <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96' : 'max-h-0'}`}>
-                  <p className="px-5 pb-5 text-base text-text-2 leading-relaxed">{f.a}</p>
+                <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-48' : 'max-h-0'}`}>
+                  <p className="px-5 pb-5 text-sm text-text-2 leading-relaxed">{f.a}</p>
                 </div>
               </div>
             );
           })}
         </div>
-        <p className="text-center text-sm text-text-3 mt-6">
-          <Link to="/faq" className="underline underline-offset-2 hover:text-text-1 transition-colors">Ver todas las preguntas</Link>
-        </p>
       </div>
     </section>
   );
 }
 
-/* ─────────── CTA final ─────────── */
+/* ─────────── CTA final — franja full-width ─────────── */
 function CTASection() {
   return (
-    <section className="px-5 sm:px-8 py-28">
-      <div className="relative max-w-3xl mx-auto text-center rounded-3xl border border-border-2 bg-gradient-to-br from-surface/80 to-surface/30 p-12 sm:p-16 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-primary/15 blur-[120px] rounded-full" />
-        </div>
-        <h2 className="relative text-4xl sm:text-5xl font-bold font-display tracking-tight text-text-1 leading-tight mb-5">
-          Tu próximo evento empieza hoy
-        </h2>
-        <p className="relative text-base sm:text-lg text-text-2 max-w-lg mx-auto mb-10">
-          Crea tu cuenta en menos de un minuto. Empieza gratis; Pro con 14 días de prueba.
-        </p>
-        <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link to="/register" className="w-full sm:w-auto px-8 py-4 rounded-full text-base font-semibold text-bg bg-text-1 hover:bg-white transition-all shadow-[0_0_40px_rgba(241,245,249,0.2)] hover:scale-[1.02]">
-            Crear cuenta gratis
-          </Link>
-          <Link to="/planes" className="w-full sm:w-auto px-8 py-4 rounded-full text-base font-medium text-text-1 border border-border-2 hover:bg-surface-2 transition-colors">
-            Ver planes
-          </Link>
+    <section className="relative overflow-hidden py-24" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(6,182,212,0.08) 100%)', borderTop: '1px solid rgba(16,185,129,0.15)' }}>
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: 'radial-gradient(circle, rgba(16,185,129,0.2) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
+        opacity: 0.25,
+      }} />
+      <div className="relative max-w-4xl mx-auto px-5 sm:px-8">
+        <div className="grid lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-primary/70 font-bold mb-4">Empieza hoy</p>
+            <h2 className="text-4xl sm:text-5xl font-bold font-display tracking-tight text-text-1 leading-tight mb-4">
+              Tu próximo evento<br />empieza <span className="text-gradient">aquí</span>
+            </h2>
+            <p className="text-base text-text-2 leading-relaxed">
+              Crea tu cuenta en menos de un minuto. Empieza gratis — Pro con 14 días de prueba sin tarjeta.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:items-start">
+            <Link to="/register"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full text-base font-semibold text-white bg-primary hover:bg-primary-dark shadow-glow transition-all active:scale-[0.97]">
+              Crear cuenta gratis
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </Link>
+            <Link to="/planes"
+              className="inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-medium text-text-1 border border-border-2 hover:bg-surface-2/60 transition-colors">
+              Ver planes
+            </Link>
+            <p className="text-xs text-text-3 pl-1">Sin tarjeta · Cancela cuando quieras</p>
+          </div>
         </div>
       </div>
     </section>

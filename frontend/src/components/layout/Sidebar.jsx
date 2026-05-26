@@ -54,9 +54,10 @@ export default function Sidebar({ mobile = false, onClose }) {
   const { esPro } = usePlan();
 
   return (
-    <aside className={`${mobile ? 'w-full' : 'w-[var(--sidebar-w)]'} h-full flex-shrink-0 bg-surface border-r border-border flex flex-col`}>
+    <aside className={`${mobile ? 'w-full' : 'w-[var(--sidebar-w)]'} h-full flex-shrink-0 flex flex-col`}
+           style={{ background: 'linear-gradient(180deg, #051210 0%, #020B07 100%)', borderRight: '1px solid rgba(16,185,129,0.1)', boxShadow: '4px 0 24px rgba(0,0,0,0.4)' }}>
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-border flex items-center justify-between gap-2">
+      <div className="px-4 py-5 flex items-center justify-between gap-2" style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
         <NavLink to="/dashboard" className="flex items-center gap-3 group flex-1 min-w-0">
           <div className="flex-shrink-0 transition-transform group-hover:scale-110
                           animate-[float_5s_ease-in-out_infinite]">
@@ -118,7 +119,7 @@ export default function Sidebar({ mobile = false, onClose }) {
       </nav>
 
       {/* User footer */}
-      <div className="px-2 pb-3 pt-2 border-t border-border space-y-1">
+      <div className="px-2 pb-3 pt-2 space-y-1" style={{ borderTop: '1px solid rgba(16,185,129,0.1)' }}>
         <NavLink to="/configuracion" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface-2 transition-colors">
           <div className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-primary flex items-center justify-center">
             {usuario?.foto

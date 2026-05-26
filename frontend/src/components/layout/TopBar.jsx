@@ -87,7 +87,8 @@ export default function TopBar({ onMenu }) {
   const showBack = !ROOT_PATHS.has(pathname);
 
   return (
-    <header className="h-14 flex-shrink-0 bg-surface border-b border-border flex items-center gap-3 px-4 sm:px-6 relative z-10">
+    <header className="h-14 flex-shrink-0 flex items-center gap-3 px-4 sm:px-6 relative z-10"
+            style={{ background: 'rgba(2,11,7,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
       {/* Hamburger mobile */}
       <button
         onClick={onMenu}

@@ -126,7 +126,7 @@
            hover:text-text-1 hover:bg-surface-2/80 border border-transparent;
   }
   .nav-item.active {
-    @apply text-primary-light bg-primary/8 border-border;
+    @apply text-primary-light bg-primary/10 border-border;
     border-left: 2px solid rgba(16,185,129,0.85);
     padding-left: calc(0.875rem - 2px);
   }

@@ -135,66 +135,164 @@ export default function LandingHomePage() {
 function Hero() {
   const [ref, visible] = useReveal(0);
   return (
-    <section className="relative px-5 sm:px-8 pt-12 sm:pt-20 pb-24 overflow-hidden">
+    <section className="relative px-5 sm:px-8 pt-14 sm:pt-20 pb-20 overflow-hidden">
+      {/* Fondo: gradiente lateral izquierdo */}
       <div className="absolute inset-0 pointer-events-none" style={{
         transform: 'translateZ(0)',
         backgroundImage:
-          'radial-gradient(48rem 30rem at 50% 0%, rgba(16,185,129,0.12), transparent 60%),'
-          + 'radial-gradient(26rem 26rem at 12% 35%, rgba(6,182,212,0.08), transparent 60%),'
-          + 'radial-gradient(20rem 20rem at 88% 25%, rgba(16,185,129,0.08), transparent 60%)',
+          'radial-gradient(55rem 40rem at -5% 50%, rgba(16,185,129,0.11), transparent 60%),'
+          + 'radial-gradient(35rem 30rem at 100% 20%, rgba(6,182,212,0.08), transparent 60%),'
+          + 'radial-gradient(25rem 25rem at 60% 100%, rgba(16,185,129,0.06), transparent 60%)',
+      }} />
+      {/* Grid de puntos decorativo */}
+      <div className="absolute inset-0 pointer-events-none opacity-30" style={{
+        backgroundImage: 'radial-gradient(circle, rgba(16,185,129,0.35) 1px, transparent 1px)',
+        backgroundSize: '36px 36px',
+        maskImage: 'radial-gradient(ellipse 70% 80% at 80% 50%, black 30%, transparent 100%)',
+        WebkitMaskImage: 'radial-gradient(ellipse 70% 80% at 80% 50%, black 30%, transparent 100%)',
       }} />
 
-      {/* Decorative orbits */}
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-        <div className="absolute w-[600px] h-[600px] rounded-full border border-border/40 animate-[spin-slow_60s_linear_infinite]" />
-        <div className="absolute w-[800px] h-[800px] rounded-full border border-border/25 animate-[spin-slow_90s_linear_infinite_reverse]" />
-        <div className="absolute w-[1000px] h-[1000px] rounded-full border border-border/15" />
-      </div>
+      <div className="relative max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-      <div className="relative max-w-5xl mx-auto text-center" ref={ref}>
-        <h1 className={`text-7xl sm:text-8xl lg:text-[8.5rem] font-bold font-display tracking-tight leading-none text-text-1 transition-all duration-700 delay-100 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <span className="bg-gradient-to-br from-text-1 via-primary-light to-accent-light bg-clip-text text-transparent animate-[shimmer_8s_linear_infinite]" style={{ backgroundSize: '200% 100%', animationDirection: 'reverse' }}>
-            GESTEK
-          </span>
-        </h1>
+          {/* ── Columna izquierda: texto ── */}
+          <div ref={ref} className={`transition-all duration-700 ${visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary-light text-xs font-bold mb-7 uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse flex-shrink-0" />
+              IA integrada · Gratis para empezar
+            </div>
 
-        <p className={`mt-4 text-base sm:text-lg text-primary-light font-semibold tracking-[0.3em] uppercase transition-all duration-700 delay-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          Manage · Automate · Scale
-        </p>
+            {/* Título — alineado a la izquierda, tamaño moderado */}
+            <h1 className="text-5xl sm:text-6xl lg:text-[4.25rem] font-bold font-display tracking-tight leading-[1.08] text-text-1 mb-6">
+              Gestiona tus eventos<br />
+              <span className="text-gradient">sin límites</span>
+            </h1>
 
-        <div className={`mt-6 flex justify-center transition-all duration-700 delay-250 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/40
-                           bg-accent/10 text-accent-light text-xs sm:text-sm font-semibold">
-Primera plataforma de gestión de eventos con IA integrada para automatizarlos
-          </span>
+            <p className="text-base sm:text-lg text-text-2 leading-relaxed mb-9 max-w-lg">
+              Crea, vende y opera eventos desde un solo lugar. QR de asistencia,
+              pagos BRE-B directos a tu cuenta, equipo con roles y un agente IA
+              que ejecuta por ti — todo gratis para empezar.
+            </p>
+
+            {/* CTA */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-10">
+              <Link to="/register"
+                className="px-7 py-3.5 rounded-full text-sm font-semibold text-white bg-primary hover:bg-primary-dark shadow-glow-sm hover:shadow-glow transition-all active:scale-[0.97] text-center">
+                Empezar gratis
+              </Link>
+              <Link to="/como-funciona"
+                className="px-7 py-3.5 rounded-full text-sm font-medium text-text-1 border border-border-2 hover:bg-surface-2 transition-all text-center">
+                Ver cómo funciona →
+              </Link>
+            </div>
+
+            {/* Mini stats horizontales */}
+            <div className="flex items-center gap-6 sm:gap-8 border-t border-border pt-7">
+              {[
+                { valor: '0%', etiq: 'Comisión en pagos' },
+                { valor: '∞', etiq: 'Eventos gratis' },
+                { valor: '< 15 min', etiq: 'Crear un evento' },
+              ].map(({ valor, etiq }) => (
+                <div key={etiq}>
+                  <p className="text-xl font-bold font-display text-primary-light">{valor}</p>
+                  <p className="text-xs text-text-3 mt-0.5">{etiq}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Columna derecha: mockup de dashboard ── */}
+          <div className={`hidden lg:block transition-all duration-700 delay-200 ${visible ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-8 scale-95'}`}>
+            <HeroDashMockup />
+          </div>
+
         </div>
-
-        <p className={`mt-8 text-lg sm:text-2xl text-text-2 max-w-3xl mx-auto leading-relaxed transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          La plataforma de gestión de eventos que reemplaza tu stack actual.
-          Creación, ventas, asistencia, pagos y comunidad. Empieza gratis y
-          sube a Pro cuando lo necesites — 14 días de prueba.
-        </p>
-
-        <div className={`mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 transition-all duration-700 delay-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <Link
-            to="/register"
-            className="w-full sm:w-auto px-8 py-4 rounded-full text-base font-semibold text-bg bg-text-1 hover:bg-white transition-all shadow-[0_0_40px_rgba(241,245,249,0.2)] hover:shadow-[0_0_60px_rgba(241,245,249,0.35)] hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Empezar gratis
-          </Link>
-          <Link
-            to="/como-funciona"
-            className="w-full sm:w-auto px-8 py-4 rounded-full text-base font-medium text-text-1 border border-border-2 hover:bg-surface-2 hover:border-text-3 transition-all"
-          >
-            Ver cómo funciona
-          </Link>
-        </div>
-
-        <p className={`mt-6 text-sm text-text-3 transition-all duration-700 delay-700 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-          Sin tarjeta de crédito · Todo lo principal incluido en el plan gratis
-        </p>
       </div>
     </section>
+  );
+}
+
+/* Mini-dashboard que aparece en la columna derecha del hero */
+function HeroDashMockup() {
+  return (
+    <div className="relative">
+      {/* Glow detrás */}
+      <div className="absolute inset-0 rounded-3xl blur-3xl bg-primary/10 scale-90" />
+      <div className="relative rounded-3xl border border-primary/20 overflow-hidden"
+           style={{ background: 'rgba(6,20,16,0.9)', backdropFilter: 'blur(20px)' }}>
+        {/* Barra superior */}
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/60">
+          <div className="flex gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-danger/60" />
+            <span className="w-2.5 h-2.5 rounded-full bg-warning/60" />
+            <span className="w-2.5 h-2.5 rounded-full bg-success/60" />
+          </div>
+          <span className="ml-2 text-xs font-mono text-text-3">gestek.io/dashboard</span>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] text-primary-light font-semibold">En vivo</span>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-px border-b border-border/60" style={{ background: 'rgba(255,255,255,0.04)' }}>
+          {[
+            { label: 'Inscritos', value: '847', delta: '+12 hoy' },
+            { label: 'Ingresos', value: '$4.2M', delta: 'BRE-B' },
+            { label: 'Check-ins', value: '623', delta: '73%' },
+          ].map(s => (
+            <div key={s.label} className="px-4 py-4" style={{ background: 'rgba(6,20,16,0.95)' }}>
+              <p className="text-[10px] uppercase tracking-widest text-text-3 mb-1">{s.label}</p>
+              <p className="text-lg font-bold font-display text-text-1">{s.value}</p>
+              <p className="text-[10px] text-primary-light font-semibold">{s.delta}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Event list */}
+        <div className="px-5 py-4 space-y-2.5">
+          {[
+            { nombre: 'Summit Tech Ibagué 2026', estado: 'Publicado', inscritos: 312 },
+            { nombre: 'Workshop UX Bogotá', estado: 'Publicado', inscritos: 89 },
+            { nombre: 'Hackathon Nacional', estado: 'Borrador', inscritos: 0 },
+          ].map(ev => (
+            <div key={ev.nombre} className="flex items-center justify-between py-2.5 px-3 rounded-xl"
+                 style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.1)' }}>
+              <div>
+                <p className="text-xs font-semibold text-text-1 leading-tight">{ev.nombre}</p>
+                <p className="text-[10px] text-text-3 mt-0.5">{ev.inscritos} inscritos</p>
+              </div>
+              <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full
+                ${ev.estado === 'Publicado'
+                  ? 'bg-primary/15 text-primary-light border border-primary/25'
+                  : 'bg-surface-3 text-text-3 border border-border'}`}>
+                {ev.estado}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* QR strip */}
+        <div className="px-5 pb-5">
+          <div className="flex items-center gap-3 p-3 rounded-xl"
+               style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}>
+            <div className="w-10 h-10 rounded-lg bg-text-1 p-1.5 flex-shrink-0">
+              <svg viewBox="0 0 100 100" className="w-full h-full">
+                {[...Array(6)].map((_, r) => [...Array(6)].map((__, c) => {
+                  const k = (r * 5 + c * 7) % 4;
+                  return <rect key={`${r}-${c}`} x={c*16+2} y={r*16+2} width="14" height="14" fill={k < 2 ? '#020B07' : 'transparent'} />;
+                }))}
+              </svg>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-accent-light font-bold">QR Check-in activo</p>
+              <p className="text-xs text-text-2 mt-0.5">Escanear para registrar asistencia</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

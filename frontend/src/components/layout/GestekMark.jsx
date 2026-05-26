@@ -1,4 +1,4 @@
-/* Marca GESTEK — lettermark "G".
+﻿/* Marca GESTEK — lettermark "G".
    - Free: gradiente de marca (azul→violeta).
    - Pro : gradiente DORADO + glow (destacable). */
 
@@ -11,9 +11,9 @@ export default function GestekMark({ size = 42, pro = false }) {
     >
       <defs>
         <linearGradient id="gk-g-brand" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%"  stopColor="#60A5FA" />
-          <stop offset="55%" stopColor="#3B82F6" />
-          <stop offset="100%" stopColor="#8B5CF6" />
+          <stop offset="0%"  stopColor="#34D399" />
+          <stop offset="55%" stopColor="#10B981" />
+          <stop offset="100%" stopColor="#06B6D4" />
         </linearGradient>
         <linearGradient id="gk-g-gold" x1="0" y1="0" x2="0.4" y2="1">
           <stop offset="0%"  stopColor="#FCEFA1" />

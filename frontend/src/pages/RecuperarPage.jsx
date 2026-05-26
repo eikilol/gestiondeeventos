@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import logoG from '../assets/logo-g.svg';
@@ -40,7 +40,7 @@ export default function RecuperarPage() {
 
       <div className="relative w-full max-w-md animate-[authCardIn_0.7s_cubic-bezier(0.16,1,0.3,1)_both]">
         <div className="flex items-center gap-3 mb-8">
-          <img src={logoG} alt="GESTEK" className="h-12 w-12 drop-shadow-[0_0_18px_rgba(59,130,246,0.45)]" />
+          <img src={logoG} alt="GESTEK" className="h-12 w-12 drop-shadow-[0_0_18px_rgba(16,185,129,0.45)]" />
           <span className="text-2xl font-bold font-display tracking-tight">GESTEK</span>
         </div>
 

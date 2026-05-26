@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { analyticsApi } from '../../../api/analytics.js';
 import { useToast } from '../../../context/ToastContext.jsx';
 import GLoader from '../../../components/ui/GLoader.jsx';
@@ -19,7 +19,7 @@ const SOURCE_LABEL = {
 
 const SOURCE_COLOR = {
   direct: '#64748b',
-  search: '#3b82f6',
+  search: '#10B981',
   social: '#a855f7',
   email : '#10b981',
   otro  : '#f59e0b',

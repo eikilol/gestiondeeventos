@@ -1,4 +1,4 @@
-export default function EmptyState({ icon: Icon, title, description, action }) {
+﻿export default function EmptyState({ icon: Icon, title, description, action }) {
   return (
     <div className="relative flex flex-col items-center justify-center py-24 text-center animate-[fadeUp_0.5s_cubic-bezier(0.16,1,0.3,1)_both] overflow-hidden rounded-3xl border border-border bg-surface/40">
       {/* Decorative background */}
@@ -12,7 +12,7 @@ export default function EmptyState({ icon: Icon, title, description, action }) {
 
       <div className="relative z-10">
         <div className="relative mb-6 mx-auto w-fit">
-          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/15 to-accent/15 border border-primary/20 flex items-center justify-center backdrop-blur-sm shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)] animate-[float_4s_ease-in-out_infinite]">
+          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/15 to-accent/15 border border-primary/20 flex items-center justify-center backdrop-blur-sm shadow-[0_0_40px_-10px_rgba(16,185,129,0.3)] animate-[float_4s_ease-in-out_infinite]">
             {Icon
               ? <Icon className="w-11 h-11 text-primary-light" />
               : <DefaultIcon />}

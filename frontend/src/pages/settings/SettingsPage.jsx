@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { confirmDialog } from '../../components/ui/Confirm.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -184,8 +184,8 @@ export function WhiteLabelTab() {
   const { success, error } = useToast();
   const branding = usuario?.raw?.user_metadata?.branding || {};
   const [logo,     setLogo]    = useState(usuario?.raw?.user_metadata?.empresa_logo_url || '');
-  const [primary,  setPrimary] = useState(branding.primary || '#3B82F6');
-  const [accent,   setAccent]  = useState(branding.accent || '#8B5CF6');
+  const [primary,  setPrimary] = useState(branding.primary || '#10B981');
+  const [accent,   setAccent]  = useState(branding.accent || '#06B6D4');
   const [bg,       setBg]      = useState(branding.bg || '#070C18');
   const [font,     setFont]    = useState(branding.font || 'sans');
   const [plataforma, setPlataforma] = useState(branding.plataforma || '');

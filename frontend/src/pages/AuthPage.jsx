@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
@@ -107,7 +107,7 @@ function LoginText() {
   return (
     <div className="space-y-6">
       <Link to="/" {...stagger(0)} className={`${stagger(0).className} inline-flex items-center gap-3 group`}>
-        <img src={logoG} alt="GESTEK" className="h-12 w-12 transition-transform group-hover:scale-110 drop-shadow-[0_0_18px_rgba(59,130,246,0.45)] animate-[float_5s_ease-in-out_infinite]" />
+        <img src={logoG} alt="GESTEK" className="h-12 w-12 transition-transform group-hover:scale-110 drop-shadow-[0_0_18px_rgba(16,185,129,0.45)] animate-[float_5s_ease-in-out_infinite]" />
         <span className="text-2xl font-bold font-display tracking-tight">GESTEK</span>
       </Link>
       <h2 {...stagger(1)} className={`${stagger(1).className} text-4xl xl:text-5xl font-bold font-display tracking-tight leading-[1.05]`}>
@@ -256,7 +256,7 @@ function RegisterText() {
   return (
     <div className="space-y-6">
       <Link to="/" {...stagger(0)} className={`${stagger(0).className} inline-flex items-center gap-3 group`}>
-        <img src={logoG} alt="GESTEK" className="h-12 w-12 transition-transform group-hover:scale-110 drop-shadow-[0_0_18px_rgba(139,92,246,0.45)] animate-[float_5s_ease-in-out_infinite]" />
+        <img src={logoG} alt="GESTEK" className="h-12 w-12 transition-transform group-hover:scale-110 drop-shadow-[0_0_18px_rgba(6,182,212,0.45)] animate-[float_5s_ease-in-out_infinite]" />
         <span className="text-2xl font-bold font-display tracking-tight">GESTEK</span>
       </Link>
       <p {...stagger(1)} className={`${stagger(1).className} text-xs uppercase tracking-widest text-accent-light font-semibold`}>

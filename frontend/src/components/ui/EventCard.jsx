@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { EstadoBadge, ModalidadBadge } from './Badge.jsx';
 
 export default function EventCard({ evento, onPublicar, onDelete, canEdit, canDelete, style }) {
@@ -15,7 +15,7 @@ export default function EventCard({ evento, onPublicar, onDelete, canEdit, canDe
   return (
     <article
       style={style}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-surface/60 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_60px_-20px_rgba(59,130,246,0.4)] animate-[fadeUp_0.5s_cubic-bezier(0.16,1,0.3,1)_both]"
+      className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-surface/60 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_60px_-20px_rgba(16,185,129,0.4)] animate-[fadeUp_0.5s_cubic-bezier(0.16,1,0.3,1)_both]"
     >
       {/* Glow border on hover */}
       <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/0 via-transparent to-accent/0 opacity-0 group-hover:from-primary/10 group-hover:to-accent/10 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />

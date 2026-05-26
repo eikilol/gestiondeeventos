@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
@@ -10,8 +10,8 @@ export default function AppLayout() {
   const { pathname } = useLocation();
   const { usuario } = useAuth();
   const b = useBranding(usuario?.raw?.user_metadata?.branding);
-  const bPrimary = b?.primary || '#3B82F6';
-  const bAccent  = b?.accent  || '#8B5CF6';
+  const bPrimary = b?.primary || '#10B981';
+  const bAccent  = b?.accent  || '#06B6D4';
   const bBg      = b?.bg || null;
 
   /* Cerrar drawer al navegar */

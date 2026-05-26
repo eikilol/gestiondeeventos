@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+﻿import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -192,7 +192,7 @@ export default function PlanesPage() {
               <div
                 key={p.name}
                 className={`relative rounded-3xl p-8 flex flex-col transition-all hover:-translate-y-1 ${p.highlight
-                  ? 'border border-primary/40 bg-surface/80 shadow-[0_0_60px_rgba(59,130,246,0.12)] hover:shadow-[0_0_80px_rgba(59,130,246,0.22)]'
+                  ? 'border border-primary/40 bg-surface/80 shadow-[0_0_60px_rgba(16,185,129,0.12)] hover:shadow-[0_0_80px_rgba(16,185,129,0.22)]'
                   : 'border border-border bg-surface/40 hover:bg-surface/60 hover:border-border-2'}`}
               >
                 {p.badge && (

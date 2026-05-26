@@ -17,9 +17,9 @@
   body {
     @apply bg-bg text-text-1 font-sans antialiased text-base;
     background-image:
-      radial-gradient(ellipse 60% 40% at 50% -10%, rgba(59,130,246,0.10), transparent 60%),
-      radial-gradient(ellipse 50% 35% at 100% 100%, rgba(139,92,246,0.08), transparent 70%),
-      url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(255,255,255,0.025)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+      radial-gradient(ellipse 60% 40% at 50% -10%, rgba(16,185,129,0.09), transparent 60%),
+      radial-gradient(ellipse 50% 35% at 100% 100%, rgba(6,182,212,0.07), transparent 70%),
+      url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(16,185,129,0.03)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
     /* background-attachment: fixed quitado: causaba jank de scroll
        (repintaba el fondo en cada frame). */
   }
@@ -36,7 +36,7 @@
     }
   }
 
-  ::selection { background: rgba(59,130,246,0.3); color: #F1F5F9; }
+  ::selection { background: rgba(16,185,129,0.3); color: #ECFDF5; }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -95,7 +95,7 @@
   .input {
     @apply w-full px-4 py-2.5 bg-surface-2 border border-border rounded-xl text-base text-text-1
            placeholder-text-3 transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50;
+           focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60;
   }
   .input-icon { @apply pl-10; }
   .label      { @apply block text-[13px] font-semibold text-text-2 mb-2 uppercase tracking-wider; }
@@ -144,12 +144,15 @@
   .divider { @apply border-t border-border; }
 
   /* ── Glow ring ───────────────────────────────── */
-  .glow-ring { box-shadow: 0 0 0 1px rgba(59,130,246,0.3), 0 0 20px rgba(59,130,246,0.15); }
+  .glow-ring { box-shadow: 0 0 0 1px rgba(16,185,129,0.35), 0 0 20px rgba(16,185,129,0.18); }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-light to-accent-light bg-clip-text text-transparent;
+    background: linear-gradient(135deg, #34D399, #67E8F9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   .text-gradient-gold {
     background: linear-gradient(135deg, #F59E0B, #EF4444);

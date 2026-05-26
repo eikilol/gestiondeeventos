@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
 import logoG from '../assets/logo-g.svg';
@@ -39,7 +39,7 @@ export default function ConfirmarPage() {
 
       <div className="relative w-full max-w-md text-center animate-[authCardIn_0.7s_cubic-bezier(0.16,1,0.3,1)_both]">
         <div className="flex items-center justify-center gap-3 mb-10">
-          <img src={logoG} alt="GESTEK" className="h-14 w-14 drop-shadow-[0_0_18px_rgba(59,130,246,0.45)]" />
+          <img src={logoG} alt="GESTEK" className="h-14 w-14 drop-shadow-[0_0_18px_rgba(16,185,129,0.45)]" />
           <span className="text-2xl font-bold font-display tracking-tight">GESTEK</span>
         </div>
 

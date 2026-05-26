@@ -1,4 +1,4 @@
-/* Gestbot — robot asistente (blanco/azul, sin morados).
+﻿/* Gestbot — robot asistente (blanco/azul, sin morados).
    Brazos con pivote correcto (transform-box: view-box) → siempre
    pegados al hombro y CON manos visibles en todos los estados.
 
@@ -61,7 +61,7 @@ function useInjectCss() {
 }
 
 const AURA = {
-  idle: '#60A5FA', thinking: '#3B82F6', talking: '#60A5FA',
+  idle: '#34D399', thinking: '#10B981', talking: '#34D399',
   happy: '#34D399', error: '#F87171',
 };
 
@@ -201,8 +201,8 @@ export default function Criatura({ mood = 'idle', size = 96 }) {
             <path d="M40 132 L100 132 L108 144 L32 144 Z" fill="#D7E0EC" stroke="#9FB2C9" strokeWidth="1.2" />
             <rect x="46" y="104" width="48" height="30" rx="4" fill="#0C1A30" stroke="#9FB2C9" strokeWidth="1.2" />
             <rect className="gb-scanl"  x="52" y="110" width="22" height="3.5" rx="1.75" fill="#34D399" />
-            <rect className="gb-scanl gb-scanl2" x="52" y="117" width="30" height="3.5" rx="1.75" fill="#60A5FA" />
-            <rect className="gb-scanl gb-scanl3" x="52" y="124" width="26" height="3.5" rx="1.75" fill="#60A5FA" />
+            <rect className="gb-scanl gb-scanl2" x="52" y="117" width="30" height="3.5" rx="1.75" fill="#34D399" />
+            <rect className="gb-scanl gb-scanl3" x="52" y="124" width="26" height="3.5" rx="1.75" fill="#34D399" />
           </g>
         )}
       </svg>

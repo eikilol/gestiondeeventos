@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
@@ -113,7 +113,7 @@ export default function CompletarPerfilPage() {
       <div className="relative w-full max-w-xl">
         {/* Header */}
         <div {...stagger(0)} className={`${stagger(0).className} flex items-center gap-3 mb-3`}>
-          <img src={logoG} alt="GESTEK" className="w-9 h-9 drop-shadow-[0_0_14px_rgba(59,130,246,0.45)] animate-[float_5s_ease-in-out_infinite]" />
+          <img src={logoG} alt="GESTEK" className="w-9 h-9 drop-shadow-[0_0_14px_rgba(16,185,129,0.45)] animate-[float_5s_ease-in-out_infinite]" />
           <span className="font-display font-bold text-xl tracking-tight">GESTEK</span>
         </div>
 

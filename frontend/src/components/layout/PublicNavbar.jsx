@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import logoG from '../../assets/logo-g.svg';
 
@@ -51,7 +51,7 @@ export default function PublicNavbar() {
             <img
               src={logoG}
               alt="GESTEK"
-              className="h-12 sm:h-14 w-12 sm:w-14 transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_0_18px_rgba(59,130,246,0.45)]"
+              className="h-12 sm:h-14 w-12 sm:w-14 transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_0_18px_rgba(16,185,129,0.45)]"
             />
           </span>
         </Link>

@@ -1,4 +1,4 @@
-/* Branding del organizador en páginas públicas (para TODOS los planes):
+﻿/* Branding del organizador en páginas públicas (para TODOS los planes):
    colores, fondo, tipografía, radio de bordes, modo claro/oscuro,
    header con tagline + redes, y footer. */
 
@@ -32,8 +32,8 @@ function injectCss() {
 export function BrandingProvider({ organizador, children }) {
   injectCss();
   const b = organizador?.branding || {};
-  const primary = b.primary || '#3B82F6';
-  const accent  = b.accent  || '#8B5CF6';
+  const primary = b.primary || '#10B981';
+  const accent  = b.accent  || '#06B6D4';
   const bg      = b.bg || '#070C18';
   const font    = FONTS[b.font] || null;
   const radius  = RADIUS[b.radius];

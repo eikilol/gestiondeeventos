@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import Criatura from '../../components/agente/Criatura.jsx';
 
@@ -139,9 +139,9 @@ function Hero() {
       <div className="absolute inset-0 pointer-events-none" style={{
         transform: 'translateZ(0)',
         backgroundImage:
-          'radial-gradient(48rem 30rem at 50% 0%, rgba(59,130,246,0.12), transparent 60%),'
-          + 'radial-gradient(26rem 26rem at 12% 35%, rgba(139,92,246,0.08), transparent 60%),'
-          + 'radial-gradient(20rem 20rem at 88% 25%, rgba(59,130,246,0.08), transparent 60%)',
+          'radial-gradient(48rem 30rem at 50% 0%, rgba(16,185,129,0.12), transparent 60%),'
+          + 'radial-gradient(26rem 26rem at 12% 35%, rgba(6,182,212,0.08), transparent 60%),'
+          + 'radial-gradient(20rem 20rem at 88% 25%, rgba(16,185,129,0.08), transparent 60%)',
       }} />
 
       {/* Decorative orbits */}
@@ -561,8 +561,8 @@ function AIPro() {
       <div className="absolute inset-0 pointer-events-none" style={{
         transform: 'translateZ(0)',
         backgroundImage:
-          'radial-gradient(42rem 30rem at 50% 50%, rgba(139,92,246,0.12), transparent 62%),'
-          + 'radial-gradient(22rem 22rem at 75% 30%, rgba(59,130,246,0.10), transparent 60%)',
+          'radial-gradient(42rem 30rem at 50% 50%, rgba(6,182,212,0.12), transparent 62%),'
+          + 'radial-gradient(22rem 22rem at 75% 30%, rgba(16,185,129,0.10), transparent 60%)',
       }} />
 
       <div ref={ref} className={`relative max-w-6xl mx-auto transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
@@ -679,7 +679,7 @@ function PricingTeaser() {
             </Link>
           </div>
 
-          <div className="relative p-7 rounded-3xl border border-primary/40 bg-surface/80 shadow-[0_0_60px_rgba(59,130,246,0.12)] hover:shadow-[0_0_80px_rgba(59,130,246,0.2)] transition-all">
+          <div className="relative p-7 rounded-3xl border border-primary/40 bg-surface/80 shadow-[0_0_60px_rgba(16,185,129,0.12)] hover:shadow-[0_0_80px_rgba(16,185,129,0.2)] transition-all">
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-semibold tracking-widest uppercase bg-primary text-white">Recomendado</span>
             <h3 className="text-2xl font-bold font-display text-text-1 mb-2">Pro</h3>
             <p className="text-sm text-text-2 mb-5">IA, API, white-label y soporte. 14 días de prueba gratis.</p>
